@@ -647,6 +647,8 @@ export const adminAPI = {
   },
   updateBusinessToggles: (body) =>
     adminClient.patch("/food/admin/business-settings/toggles", body ?? {}),
+  getDailySales: (date) =>
+    adminClient.get("/food/admin/daily-sales", { params: { date } }),
 };
 
 /** Restaurant API - OTP login via new backend; no email/password. */

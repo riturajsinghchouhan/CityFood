@@ -13,6 +13,7 @@ import * as liveMonitorController from '../controllers/liveMonitor.controller.js
 import * as appIntroAdController from '../controllers/appIntroAd.controller.js';
 import * as restaurantDelayAlertController from '../controllers/restaurantDelayAlert.controller.js';
 import * as payoutsController from '../controllers/payouts.controller.js';
+import * as dailySalesController from '../controllers/dailySales.controller.js';
 import { upload } from '../../../../middleware/upload.js';
 import menuBulkRoutes from './menuBulk.routes.js';
 
@@ -245,6 +246,10 @@ router.patch('/orders/:orderId/status', orderController.updateOrderStatusAdminCo
 router.delete('/orders/:orderId', orderController.deleteOrderAdminController);
 router.post('/orders/:orderId/assign-delivery', orderController.assignDeliveryPartnerController);
 router.post('/orders/:orderId/resend-notification', orderController.resendDeliveryNotificationAdminController);
+
+// ----- Daily Sales & Cash Audit -----
+router.get('/daily-sales', dailySalesController.getDailySalesController);
+router.get('/global-settings/daily-sales', dailySalesController.getDailySalesController);
 
 // ----- CMS Pages (About + legal) -----
 router.get('/pages-social-media/:key', getAdminPageController);
