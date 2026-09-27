@@ -19,7 +19,10 @@ import {
   PlusCircle,
   Bell,
   BellOff,
+  Loader2,
+  Wrench,
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -42,7 +45,7 @@ import {
 } from "@food/components/ui/popover";
 import { adminAPI } from "@food/api";
 import { clearModuleAuth } from "@food/utils/auth";
-import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings";
+import { getCachedSettings, loadBusinessSettings, setCachedSettings } from "@food/utils/businessSettings";
 import useAdminNotifications from "@food/hooks/useAdminNotifications";
 const debugLog = (...args) => { }
 const debugWarn = (...args) => { }
@@ -59,6 +62,7 @@ export default function AdminNavbar({ onMenuClick }) {
   const [isSearching, setIsSearching] = useState(false);
   const [adminData, setAdminData] = useState(null);
   const [businessSettings, setBusinessSettings] = useState(() => getCachedSettings() || null);
+  const [isUpdatingMaintenance, setIsUpdatingMaintenance] = useState(false);
   const searchInputRef = useRef(null);
   const { items: adminNotifications } = useAdminNotifications();
 
@@ -69,7 +73,17 @@ export default function AdminNavbar({ onMenuClick }) {
         const cached = getCachedSettings();
         if (cached) {
           setBusinessSettings(cached);
-        } else {
+        }
+        try {
+          const res = await adminAPI.getBusinessSettings();
+          const fresh = res?.data?.data || res?.data;
+          if (fresh) {
+            setCachedSettings(fresh);
+            setBusinessSettings(fresh);
+            return;
+          }
+        } catch (_) {}
+        if (!cached) {
           const settings = await loadBusinessSettings();
           if (settings) {
             setBusinessSettings(settings);
@@ -91,6 +105,43 @@ export default function AdminNavbar({ onMenuClick }) {
     window.addEventListener('businessSettingsUpdated', handleSettingsUpdate);
     return () => window.removeEventListener('businessSettingsUpdated', handleSettingsUpdate);
   }, []);
+
+  const handleToggleMaintenance = async (e) => {
+    e?.stopPropagation();
+    if (isUpdatingMaintenance) return;
+    const currentMode = Boolean(businessSettings?.maintenanceMode);
+    const nextMode = !currentMode;
+    setIsUpdatingMaintenance(true);
+
+    try {
+      const response = await adminAPI.updateBusinessToggles({
+        maintenanceMode: nextMode,
+      });
+      const updated = response?.data?.data || response?.data;
+      if (updated) {
+        setCachedSettings(updated);
+        setBusinessSettings(updated);
+        window.dispatchEvent(new CustomEvent("businessSettingsUpdated"));
+      } else {
+        const nextSettings = { ...(businessSettings || {}), maintenanceMode: nextMode };
+        setCachedSettings(nextSettings);
+        setBusinessSettings(nextSettings);
+        window.dispatchEvent(new CustomEvent("businessSettingsUpdated"));
+      }
+      toast.success(
+        nextMode
+          ? "Maintenance mode enabled (Customer ordering suspended)"
+          : "Maintenance mode disabled (Platform is live)"
+      );
+    } catch (error) {
+      debugError("Failed to update maintenance mode:", error);
+      toast.error(
+        error?.response?.data?.message || "Failed to update maintenance mode"
+      );
+    } finally {
+      setIsUpdatingMaintenance(false);
+    }
+  };
 
   // Load recent searches from localStorage
   useEffect(() => {
@@ -302,6 +353,75 @@ export default function AdminNavbar({ onMenuClick }) {
               <span className="hidden max-w-40 truncate text-red-600 font-extrabold text-xl ml-1 tracking-tight sm:block">
                 {businessSettings?.companyName || "Tuggo Food Delivery"}
               </span>
+            </div>
+
+            {/* Maintenance Mode Quick Toggle */}
+            <div className="flex items-center pl-1 sm:pl-3 border-l border-neutral-200 ml-1 sm:ml-2">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={Boolean(businessSettings?.maintenanceMode)}
+                aria-label="Toggle maintenance mode"
+                onClick={handleToggleMaintenance}
+                disabled={isUpdatingMaintenance}
+                title={
+                  businessSettings?.maintenanceMode
+                    ? "Maintenance Mode is ACTIVE: Customer ordering is suspended. Click to turn OFF."
+                    : "Maintenance Mode is OFF: Platform is live. Click to turn ON."
+                }
+                className={`group relative flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:py-1.5 rounded-full border transition-all duration-200 select-none ${
+                  businessSettings?.maintenanceMode
+                    ? "bg-amber-50 border-amber-300 text-amber-900 shadow-sm hover:bg-amber-100/80"
+                    : "bg-neutral-50 border-neutral-200 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+                } ${isUpdatingMaintenance ? "opacity-70 cursor-wait" : "cursor-pointer"}`}
+              >
+                {/* Status Dot */}
+                <span className="relative flex h-2 w-2 shrink-0">
+                  {businessSettings?.maintenanceMode ? (
+                    <>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                    </>
+                  ) : (
+                    <span className="inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  )}
+                </span>
+
+                {/* Label */}
+                <span className="text-xs font-semibold tracking-tight hidden sm:inline">
+                  Maintenance
+                </span>
+
+                {/* Status Tag */}
+                <span
+                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded leading-none transition-colors ${
+                    businessSettings?.maintenanceMode
+                      ? "bg-amber-200 text-amber-900"
+                      : "bg-neutral-200/80 text-neutral-600"
+                  }`}
+                >
+                  {businessSettings?.maintenanceMode ? "ON" : "OFF"}
+                </span>
+
+                {/* Switch Graphic */}
+                <div
+                  className={`relative inline-flex h-4 w-7 sm:h-5 sm:w-9 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out ${
+                    businessSettings?.maintenanceMode ? "bg-amber-500" : "bg-neutral-300"
+                  }`}
+                >
+                  {isUpdatingMaintenance ? (
+                    <Loader2 className="absolute inset-0 m-auto h-2.5 w-2.5 sm:h-3 sm:w-3 animate-spin text-white" />
+                  ) : (
+                    <span
+                      className={`pointer-events-none inline-block h-3 w-3 sm:h-3.5 sm:w-3.5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        businessSettings?.maintenanceMode
+                          ? "translate-x-3.5 sm:translate-x-4"
+                          : "translate-x-0.5 sm:translate-x-1"
+                      }`}
+                    />
+                  )}
+                </div>
+              </button>
             </div>
           </div>
 

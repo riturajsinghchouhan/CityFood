@@ -77,6 +77,7 @@ const EarningAddonHistory = lazy(() => import("@food/pages/admin/delivery-partne
 const DeliveryEarnings = lazy(() => import("@food/pages/admin/delivery-partners/DeliveryEarnings"));
 // Disbursement Management
 // Report Management
+const DailySales = lazy(() => import("@food/pages/admin/reports/DailySales"));
 const TransactionReport = lazy(() => import("@food/pages/admin/reports/TransactionReport"));
 const AdminEarningReport = lazy(() => import("@food/pages/admin/reports/AdminEarningReport"));
 const ExpenseReport = lazy(() => import("@food/pages/admin/reports/ExpenseReport"));
@@ -271,6 +272,8 @@ export default function AdminRouter() {
 
 
             {/* REPORTS & SETTINGS */}
+            <Route path="daily-sales" element={<DailySales />} />
+            <Route path="global-settings/daily-sales" element={<DailySales />} />
             <Route path="transaction-report" element={<TransactionReport />} />
             <Route path="admin-earning-report" element={<AdminEarningReport />} />
             <Route path="expense-report" element={<ExpenseReport />} />
@@ -332,6 +335,8 @@ export default function AdminRouter() {
             <Route path="dining-list" element={<DiningList />} />
             <Route path="dining-requests" element={<DiningRequests />} />
           </Route>
+
+          <Route path="global-settings/daily-sales" element={<DailySales />} />
 
           {/* TAXI ADMIN - Placeholder for future implementation */}
           <Route path="taxi/*" element={<div className="p-8 text-center text-gray-500 bg-white min-h-[50vh] flex items-center justify-center border rounded-xl m-4">Taxi Administration - Coming Soon</div>} />
