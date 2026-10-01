@@ -18,6 +18,12 @@ export const adminSidebarMenu = [
     icon: "Activity",
   },
   {
+    type: "link",
+    label: "Daily Report",
+    path: "/admin/food/daily-sales",
+    icon: "Receipt",
+  },
+  {
     type: "section",
     label: "ORDER MANAGEMENT",
     items: [
@@ -192,7 +198,6 @@ export const adminSidebarMenu = [
     type: "section",
     label: "REPORT MANAGEMENT",
     items: [
-      { type: "link", label: "Daily Sales & Cash Audit", path: "/admin/food/daily-sales", icon: "Receipt" },
       { type: "link", label: "Transaction Report", path: "/admin/food/transaction-report", icon: "FileText" },
       { type: "link", label: "Order Report", path: "/admin/food/order-report/regular", icon: "FileText" },
       { type: "link", label: "Tax Report", path: "/admin/food/tax-report", icon: "Receipt" },
