@@ -220,6 +220,12 @@ function createModuleClient(moduleName) {
 
         if (newAccessToken) {
           setModuleAccessToken(moduleName, newAccessToken);
+          const returnedRefreshToken = data?.data?.refreshToken || data?.refreshToken;
+          if (returnedRefreshToken && typeof returnedRefreshToken === "string") {
+            try {
+              localStorage.setItem(`${moduleName}_refreshToken`, returnedRefreshToken);
+            } catch {}
+          }
           window.dispatchEvent(new CustomEvent("authRefreshed", { 
             detail: { module: moduleName, token: newAccessToken } 
           }));

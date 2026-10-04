@@ -162,11 +162,23 @@ export function getCurrentUser(module) {
  */
 export function isModuleAuthenticated(module) {
   const token = getModuleToken(module);
-  return (
-    !!token &&
-    !isTokenExpired(token) &&
-    tokenCanAccessModule(token, module)
-  );
+  const refreshToken = getModuleRefreshToken(module);
+
+  // 1. If active access token is valid and unexpired
+  if (token && !isTokenExpired(token) && tokenCanAccessModule(token, module)) {
+    return true;
+  }
+
+  // 2. If access token is expired, but a valid refresh token exists, do NOT kick user out!
+  // The session is maintained and will be seamlessly renewed via background refresh on API calls.
+  if (refreshToken && typeof refreshToken === "string" && !isTokenExpired(refreshToken)) {
+    const tokenToCheck = token || refreshToken;
+    if (tokenCanAccessModule(tokenToCheck, module)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**

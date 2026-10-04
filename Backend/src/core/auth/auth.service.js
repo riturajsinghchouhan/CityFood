@@ -279,7 +279,7 @@ export const verifyUserOtpAndLogin = async (
   const accessToken = signAccessToken(payload);
   const refreshToken = signRefreshToken(payload);
 
-  const ttlMs = ms(config.jwtRefreshExpiresIn || "7d");
+  const ttlMs = ms(config.jwtRefreshExpiresIn || "365d");
   const expiresAt = new Date(Date.now() + ttlMs);
 
   await FoodRefreshToken.create({
@@ -317,7 +317,7 @@ export const adminLogin = async (email, password) => {
   const accessToken = signAccessToken(payload);
   const refreshToken = signRefreshToken(payload);
 
-  const ttlMs = ms(config.jwtRefreshExpiresIn || "7d");
+  const ttlMs = ms(config.jwtRefreshExpiresIn || "365d");
   const expiresAt = new Date(Date.now() + ttlMs);
 
   await FoodRefreshToken.create({
@@ -411,7 +411,7 @@ export const verifyRestaurantOtpAndLogin = async (phone, otp, fcmToken, platform
   const payload = { userId: restaurantDoc._id.toString(), role: ROLES.RESTAURANT };
   const accessToken = signAccessToken(payload);
   const refreshToken = signRefreshToken(payload);
-  const ttlMs = ms(config.jwtRefreshExpiresIn || "7d");
+  const ttlMs = ms(config.jwtRefreshExpiresIn || "365d");
   const expiresAt = new Date(Date.now() + ttlMs);
 
   await FoodRefreshToken.create({
@@ -512,7 +512,7 @@ export const verifyDeliveryOtpAndLogin = async (phone, otp, fcmToken, platform) 
   };
   const accessToken = signAccessToken(payload);
   const refreshToken = signRefreshToken(payload);
-  const ttlMs = ms(config.jwtRefreshExpiresIn || "7d");
+  const ttlMs = ms(config.jwtRefreshExpiresIn || "365d");
   const expiresAt = new Date(Date.now() + ttlMs);
 
   await FoodRefreshToken.create({
@@ -951,6 +951,11 @@ export const refreshAccessToken = async (token) => {
     userId: payload.userId,
     role: payload.role,
   });
+
+  // Slide expiration window forward so active users/panels never get logged out
+  const ttlMs = ms(config.jwtRefreshExpiresIn || "365d");
+  const expiresAt = new Date(Date.now() + ttlMs);
+  await FoodRefreshToken.updateOne({ token }, { $set: { expiresAt } });
 
   return { accessToken: newAccessToken, refreshToken: token };
 };
