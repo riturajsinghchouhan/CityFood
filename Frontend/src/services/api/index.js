@@ -345,6 +345,12 @@ export const adminAPI = {
   getDeliveryWithdrawalRequests: (params) => adminAPI.getDeliveryWithdrawals(params),
   approveDeliveryWithdrawal: (id) => adminAPI.updateDeliveryWithdrawalStatus(id, { status: "approved" }),
   rejectDeliveryWithdrawal: (id, reason) => adminAPI.updateDeliveryWithdrawalStatus(id, { status: "rejected", rejectionReason: reason }),
+  /** Admin-initiated payout for a delivery partner who never requested a withdrawal. */
+  markDeliveryPayoutAsPaid: (body = {}) =>
+    adminClient.post("/food/admin/delivery/payouts/mark-as-paid", body),
+  /** Admin resets/settles a delivery partner's cash-in-hand (cash limit). */
+  settleDeliveryCashLimit: (deliveryPartnerId, body = {}) =>
+    adminClient.post(`/food/admin/delivery/${deliveryPartnerId}/cash-limit/settle`, body),
   // Aliases for RestaurantWithdraws page
   getWithdrawalRequests: (params) => adminAPI.getWithdrawals(params),
   approveWithdrawalRequest: (id) => adminAPI.updateWithdrawalStatus(id, { status: "approved" }),
@@ -507,6 +513,10 @@ export const adminAPI = {
     adminClient.get(`/food/admin/customers/${String(id)}`),
   updateCustomerStatus: (id, isActive) =>
     adminClient.patch(`/food/admin/customers/${String(id)}/status`, { isActive: isActive !== false }),
+  updateCustomerFlag: (id, flag) =>
+    adminClient.patch(`/food/admin/customers/${String(id)}/flag`, { flag: flag === 'red' ? 'red' : 'green' }),
+  updateCustomerCod: (id, codEnabled) =>
+    adminClient.patch(`/food/admin/customers/${String(id)}/cod`, { codEnabled: codEnabled !== false }),
   topupCustomerWallet: (id, amount, description) =>
     adminClient.post(`/food/admin/customers/${String(id)}/wallet-topup`, { amount: Number(amount), description }),
   /** Orders (admin) â€“ list, get by id, assign delivery partner */

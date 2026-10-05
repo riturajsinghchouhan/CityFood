@@ -1100,7 +1100,7 @@ export default function Cart() {
   const savings = pricing?.savings ?? Math.max(0, totalBeforeDiscount - total)
 
   // Determine if COD should be hidden
-  const isCodHidden = onlinePaymentOnly || (maxCodAmount > 0 && total > maxCodAmount)
+  const isCodHidden = onlinePaymentOnly || (maxCodAmount > 0 && total > maxCodAmount) || userProfile?.codEnabled === false
 
   // Ensure valid payment method is selected
   useEffect(() => {

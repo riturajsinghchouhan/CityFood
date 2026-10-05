@@ -1339,7 +1339,7 @@ export async function getCustomers(query = {}) {
             .sort(sort)
             .skip(skip)
             .limit(limit)
-            .select('name email phone countryCode isVerified isActive createdAt profileImage addresses')
+            .select('name email phone countryCode isVerified isActive flag codEnabled createdAt profileImage addresses')
             .lean(),
         FoodUser.countDocuments(filter)
     ]);
@@ -1410,6 +1410,8 @@ export async function getCustomers(query = {}) {
         status: u.isActive !== false,
         isActive: u.isActive !== false,
         isVerified: u.isVerified === true,
+        flag: u.flag === 'red' ? 'red' : 'green',
+        codEnabled: u.codEnabled !== false,
         totalOrder: stats.totalOrder,
         totalOrderAmount: stats.totalOrderAmount,
         walletBalance: walletMap.get(String(u._id)) || 0,
@@ -1466,6 +1468,8 @@ export async function getCustomerById(id) {
         status: u.isActive !== false,
         isActive: u.isActive !== false,
         isVerified: u.isVerified === true,
+        flag: u.flag === 'red' ? 'red' : 'green',
+        codEnabled: u.codEnabled !== false,
         totalOrders: Number(stats.totalOrders || 0),
         totalOrder: Number(stats.totalOrders || 0),
         totalOrderAmount: Number(stats.totalOrderAmount || 0),
@@ -1491,6 +1495,29 @@ export async function updateCustomerStatus(id, isActive) {
         await FoodRefreshToken.deleteMany({ userId: updated._id });
     }
     return updated;
+}
+
+export async function updateCustomerFlag(id, flag) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) return null;
+    const normalizedFlag = flag === 'red' ? 'red' : 'green';
+    const updatedDoc = await FoodUser.findByIdAndUpdate(
+        id,
+        { $set: { flag: normalizedFlag } },
+        { new: true }
+    );
+    if (!updatedDoc) return null;
+    return updatedDoc.toObject();
+}
+
+export async function updateCustomerCod(id, codEnabled) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) return null;
+    const updatedDoc = await FoodUser.findByIdAndUpdate(
+        id,
+        { $set: { codEnabled: Boolean(codEnabled) } },
+        { new: true }
+    );
+    if (!updatedDoc) return null;
+    return updatedDoc.toObject();
 }
 
 export async function getSupportTickets(query = {}) {
@@ -5419,6 +5446,136 @@ export async function getCashLimitSettlements(query = {}) {
             pages: Math.ceil(total / limit) || 1 
         } 
     };
+}
+
+/**
+ * Admin-initiated payout for a delivery partner who never requested a withdrawal.
+ * Creates a pre-approved FoodDeliveryWithdrawal (mirrors payouts.service.js markPayoutAsPaid
+ * for restaurants) so the delivery partner's own wallet view (pocketBalance) and the admin's
+ * Delivery Boy Wallet list both reflect the payout immediately, since both are computed live
+ * from FoodDeliveryWithdrawal documents with status 'approved' rather than a stored balance.
+ */
+export async function markDeliveryPayoutAsPaid({ deliveryPartnerId, amount, transactionId, adminNote }) {
+    if (!deliveryPartnerId || !mongoose.Types.ObjectId.isValid(deliveryPartnerId)) {
+        throw new ValidationError('Valid delivery partner ID is required');
+    }
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+        throw new ValidationError('Amount must be a positive number');
+    }
+
+    const partner = await FoodDeliveryPartner.findById(deliveryPartnerId).lean();
+    if (!partner) throw new ValidationError('Delivery partner not found');
+
+    const partnerObjectId = new mongoose.Types.ObjectId(deliveryPartnerId);
+    const [earningsAgg, bonusAgg, withdrawalAgg] = await Promise.all([
+        FoodOrder.aggregate([
+            { $match: { 'dispatch.deliveryPartnerId': partnerObjectId, orderStatus: 'delivered' } },
+            { $group: { _id: null, totalEarned: { $sum: { $ifNull: ['$riderEarning', 0] } } } }
+        ]),
+        DeliveryBonusTransaction.aggregate([
+            { $match: { deliveryPartnerId: partnerObjectId } },
+            { $group: { _id: null, total: { $sum: { $ifNull: ['$amount', 0] } } } }
+        ]),
+        FoodDeliveryWithdrawal.aggregate([
+            { $match: { deliveryPartnerId: partnerObjectId } },
+            {
+                $group: {
+                    _id: null,
+                    totalWithdrawn: { $sum: { $cond: [{ $eq: ['$status', 'approved'] }, '$amount', 0] } },
+                    pendingWithdrawals: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, '$amount', 0] } }
+                }
+            }
+        ])
+    ]);
+
+    const totalEarned = Number(earningsAgg?.[0]?.totalEarned) || 0;
+    const totalBonus = Number(bonusAgg?.[0]?.total) || 0;
+    const totalWithdrawn = Number(withdrawalAgg?.[0]?.totalWithdrawn) || 0;
+    const pendingWithdrawals = Number(withdrawalAgg?.[0]?.pendingWithdrawals) || 0;
+    const pocketBalance = Math.max(0, (totalEarned + totalBonus) - totalWithdrawn);
+    const availableToSettle = Math.max(0, pocketBalance - pendingWithdrawals);
+
+    if (numericAmount > availableToSettle) {
+        throw new ValidationError(`Amount exceeds available balance. Delivery partner's available balance is ₹${availableToSettle}`);
+    }
+
+    const withdrawal = new FoodDeliveryWithdrawal({
+        deliveryPartnerId: partnerObjectId,
+        amount: numericAmount,
+        status: 'approved',
+        paymentMethod: 'bank_transfer',
+        bankDetails: {
+            accountNumber: partner.bankAccountNumber || '',
+            ifscCode: partner.bankIfscCode || '',
+            bankName: partner.bankName || '',
+            accountHolderName: partner.bankAccountHolderName || ''
+        },
+        upiId: partner.upiId || '',
+        upiQrCode: partner.upiQrCode || '',
+        transactionId: transactionId || `MANUAL-${Date.now()}`,
+        adminNote: adminNote || 'Manual payout recorded by admin',
+        processedAt: new Date()
+    });
+
+    await withdrawal.save();
+
+    await FoodDeliveryWallet.findOneAndUpdate(
+        { deliveryPartnerId: partnerObjectId },
+        { $inc: { balance: -numericAmount, totalSettled: numericAmount } }
+    );
+
+    return withdrawal;
+}
+
+/**
+ * Admin resets/settles a delivery partner's cash-in-hand (COD cash limit) without waiting
+ * for the partner's own Razorpay self-deposit flow. Creates a completed FoodDeliveryCashDeposit
+ * (the same record type the self-deposit flow creates), which immediately frees up the partner's
+ * cash limit since cashInHand everywhere is computed live from completed deposits, not a stored counter.
+ */
+export async function settleDeliveryCashLimit(deliveryPartnerId, { amount, adminNote } = {}, adminUser) {
+    if (!deliveryPartnerId || !mongoose.Types.ObjectId.isValid(deliveryPartnerId)) {
+        throw new ValidationError('Valid delivery partner ID is required');
+    }
+
+    const partner = await FoodDeliveryPartner.findById(deliveryPartnerId).lean();
+    if (!partner) throw new ValidationError('Delivery partner not found');
+
+    const partnerObjectId = new mongoose.Types.ObjectId(deliveryPartnerId);
+    const [cashCollectedAgg, cashDepositsAgg] = await Promise.all([
+        FoodOrder.aggregate([
+            { $match: { 'dispatch.deliveryPartnerId': partnerObjectId, orderStatus: 'delivered', 'payment.method': 'cash' } },
+            { $group: { _id: null, cashCollected: { $sum: { $ifNull: ['$pricing.total', 0] } } } }
+        ]),
+        FoodDeliveryCashDeposit.aggregate([
+            { $match: { deliveryPartnerId: partnerObjectId, status: 'Completed' } },
+            { $group: { _id: null, depositedCash: { $sum: { $ifNull: ['$amount', 0] } } } }
+        ])
+    ]);
+
+    const grossCashCollected = Number(cashCollectedAgg?.[0]?.cashCollected) || 0;
+    const totalDepositedCash = Number(cashDepositsAgg?.[0]?.depositedCash) || 0;
+    const cashInHand = Math.max(0, grossCashCollected - totalDepositedCash);
+
+    const numericAmount = amount != null ? Number(amount) : cashInHand;
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+        throw new ValidationError('Amount must be a positive number');
+    }
+    if (numericAmount > cashInHand) {
+        throw new ValidationError(`Amount exceeds current cash in hand of ₹${cashInHand}`);
+    }
+
+    const deposit = await FoodDeliveryCashDeposit.create({
+        deliveryPartnerId: partnerObjectId,
+        amount: numericAmount,
+        paymentMethod: 'cash',
+        status: 'Completed',
+        adminId: adminUser?._id,
+        adminNote: adminNote || 'Cash limit settled by admin'
+    });
+
+    return deposit;
 }
 
 export async function getSidebarBadges() {

@@ -153,6 +153,50 @@ export default function Customers() {
     }
   }
 
+  const handleToggleFlag = async (customerId) => {
+    try {
+      const customer = customers.find(c => (c._id || c.id) === customerId)
+      if (!customer) return
+
+      const newFlag = customer.flag === 'red' ? 'green' : 'red'
+
+      setCustomers(customers.map(c =>
+        (c._id || c.id) === customerId ? { ...c, flag: newFlag } : c
+      ))
+
+      await adminAPI.updateCustomerFlag(customerId, newFlag)
+      toast.success(`Customer flagged ${newFlag}`)
+    } catch (error) {
+      debugError('Error updating flag:', error)
+      toast.error('Failed to update flag')
+      setCustomers(customers.map(c =>
+        (c._id || c.id) === customerId ? { ...c, flag: c.flag === 'red' ? 'green' : 'red' } : c
+      ))
+    }
+  }
+
+  const handleToggleCod = async (customerId) => {
+    try {
+      const customer = customers.find(c => (c._id || c.id) === customerId)
+      if (!customer) return
+
+      const newCodEnabled = !customer.codEnabled
+
+      setCustomers(customers.map(c =>
+        (c._id || c.id) === customerId ? { ...c, codEnabled: newCodEnabled } : c
+      ))
+
+      await adminAPI.updateCustomerCod(customerId, newCodEnabled)
+      toast.success(`Cash on Delivery ${newCodEnabled ? 'enabled' : 'disabled'} for this customer`)
+    } catch (error) {
+      debugError('Error updating COD setting:', error)
+      toast.error('Failed to update COD setting')
+      setCustomers(customers.map(c =>
+        (c._id || c.id) === customerId ? { ...c, codEnabled: !c.codEnabled } : c
+      ))
+    }
+  }
+
   const handleViewDetails = async (customerId) => {
     try {
       setLoadingDetails(true)
@@ -412,6 +456,7 @@ export default function Customers() {
                 <tr>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Sl</th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Flag</th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Contact Information</th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Address</th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total Order</th>
@@ -419,19 +464,20 @@ export default function Customers() {
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Wallet Balance</th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Joining Date</th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Active/Inactive</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">COD</th>
                   <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-8 text-center">
+                    <td colSpan={12} className="px-6 py-8 text-center">
                       <div className="text-sm text-slate-500">Loading customers...</div>
                     </td>
                   </tr>
                 ) : customers.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-8 text-center">
+                    <td colSpan={12} className="px-6 py-8 text-center">
                       <div className="text-sm text-slate-500">No customers found</div>
                     </td>
                   </tr>
@@ -467,6 +513,14 @@ export default function Customers() {
                             {customer.name}
                           </span>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => handleToggleFlag(customer._id || customer.id)}
+                          title={customer.flag === 'red' ? 'Marked red — click to mark green' : 'Marked green — click to mark red'}
+                          className={`inline-flex items-center justify-center w-6 h-6 rounded-full border-2 transition-colors ${customer.flag === 'red' ? "bg-red-500 border-red-600" : "bg-emerald-500 border-emerald-600"
+                            }`}
+                        />
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
@@ -506,6 +560,19 @@ export default function Customers() {
                         >
                           <span
                             className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${customer.status ? "translate-x-6" : "translate-x-1"
+                              }`}
+                          />
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => handleToggleCod(customer._id || customer.id)}
+                          title={customer.codEnabled ? "COD enabled — click to disable" : "COD disabled — click to enable"}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${customer.codEnabled ? "bg-blue-600" : "bg-slate-300"
+                            }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${customer.codEnabled ? "translate-x-6" : "translate-x-1"
                               }`}
                           />
                         </button>

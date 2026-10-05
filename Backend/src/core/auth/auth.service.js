@@ -115,7 +115,24 @@ export const verifyUserOtpAndLogin = async (
   name,
 ) => {
   const trimmedName = typeof name === "string" ? name.trim() : "";
-  const existingUser = await FoodUser.findOne({ phone });
+
+  // Legacy customers imported from the old DB had their phone stored with the
+  // country code baked in (e.g. "+919815450007"), while the live app always
+  // looks up/creates users with the bare last-10-digit form (e.g. "9815450007").
+  // An exact match on `phone` alone misses those legacy records and silently
+  // creates a duplicate "new" user on every relogin. Match both forms, same
+  // pattern used for restaurant/delivery login below.
+  const digits = String(phone || "").replace(/\D/g, "");
+  const last10 = digits.slice(-10);
+  const phoneCandidates = Array.from(
+    new Set([phone, digits, last10, last10 ? `+91${last10}` : null, last10 ? `91${last10}` : null].filter(Boolean))
+  );
+  const existingUser = await FoodUser.findOne({
+    $or: [
+      { phone: { $in: phoneCandidates } },
+      ...(last10 ? [{ phone: { $regex: new RegExp(last10 + "$") } }] : []),
+    ],
+  });
   const needsNamePrompt = !existingUser && !trimmedName;
 
   const result = await verifyOtp(phone, otp, { consume: !needsNamePrompt });

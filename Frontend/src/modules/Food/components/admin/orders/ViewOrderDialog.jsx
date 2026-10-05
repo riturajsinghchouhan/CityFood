@@ -254,7 +254,14 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onAssignD
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer Name</p>
-                <p className="text-sm font-medium text-slate-900">{order.customerName || "N/A"}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-slate-900">{order.customerName || "N/A"}</p>
+                  <span
+                    title={order.customerFlag === 'red' ? 'Flagged red' : 'Flagged green'}
+                    className={`inline-block w-2.5 h-2.5 rounded-full shrink-0 ${order.customerFlag === 'red' ? "bg-red-500" : "bg-emerald-500"
+                      }`}
+                  />
+                </div>
               </div>
               {order.customerPhone && (
                 <div className="space-y-1">
@@ -262,7 +269,12 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onAssignD
                     <Phone className="w-4 h-4" />
                     Phone
                   </p>
-                  <p className="text-sm font-medium text-slate-900">{order.customerPhone}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-slate-900">{order.customerPhone}</p>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">
+                      {Number(order.customerOrderCount) || 0} orders
+                    </span>
+                  </div>
                 </div>
               )}
               {order.customerEmail && (

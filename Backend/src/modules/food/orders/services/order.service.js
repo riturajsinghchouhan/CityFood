@@ -191,6 +191,13 @@ export async function createOrder(userId, dto) {
   const isCash = paymentMethod === "cash";
   const isWallet = paymentMethod === "wallet";
 
+  if (isCash) {
+    const customer = await FoodUser.findById(userId).select("codEnabled").lean();
+    if (customer && customer.codEnabled === false) {
+      throw new ValidationError("Cash on Delivery is not available for your account. Please choose another payment method.");
+    }
+  }
+
   // Ensure pricing is present and consistent.
   const computedSubtotal = (dto.items || []).reduce((sum, item) => {
     const price = Number(item?.price);
@@ -598,12 +605,22 @@ export async function getOrderById(
       "restaurantName ownerPhone profileImage area city location rating totalRatings primaryContactNumber",
     )
     .populate("dispatch.deliveryPartnerId", "name fullName phone phoneNumber rating totalRatings profileImage avatar")
-    .populate("userId", "name fullName phone email")
+    .populate("userId", "name fullName phone email flag codEnabled")
     .select("+deliveryOtp +pickupOtp")
     .lean();
   if (!order) throw new NotFoundError("Order not found");
 
-  if (admin) return normalizeOrderForClient(order);
+  if (admin) {
+    const customerId = order.userId?._id;
+    const customerOrderCount = customerId
+      ? await FoodOrder.countDocuments({ userId: customerId })
+      : 0;
+    return normalizeOrderForClient({
+      ...order,
+      customerFlag: order.userId?.flag === 'red' ? 'red' : 'green',
+      customerOrderCount,
+    });
+  }
 
   const orderUserId = order.userId?._id?.toString() || order.userId?.toString();
   const orderRestaurantId = order.restaurantId?._id?.toString() || order.restaurantId?.toString();
@@ -1691,7 +1708,7 @@ export async function listOrdersAdmin(query) {
   const [docs, total] = await Promise.all([
     FoodOrder.find(filter)
       .select("+deliveryOtp")
-      .populate("userId", "name phone email")
+      .populate("userId", "name phone email flag codEnabled")
       .populate("restaurantId", "restaurantName area city ownerPhone")
       .populate("dispatch.deliveryPartnerId", "name phone")
       .sort({ createdAt: -1 })
@@ -1700,7 +1717,23 @@ export async function listOrdersAdmin(query) {
       .lean(),
     FoodOrder.countDocuments(filter),
   ]);
-  const paginated = buildPaginatedResult({ docs: docs.map(d => normalizeOrderForClient(d)), total, page, limit });
+
+  const customerIds = [...new Set(docs.map(d => d.userId?._id?.toString()).filter(Boolean))].map(id => new mongoose.Types.ObjectId(id));
+  const orderCountAgg = customerIds.length > 0
+    ? await FoodOrder.aggregate([
+      { $match: { userId: { $in: customerIds } } },
+      { $group: { _id: "$userId", count: { $sum: 1 } } },
+    ])
+    : [];
+  const orderCountMap = new Map(orderCountAgg.map(x => [String(x._id), x.count]));
+
+  const enrichedDocs = docs.map(d => ({
+    ...d,
+    customerFlag: d.userId?.flag === 'red' ? 'red' : 'green',
+    customerOrderCount: orderCountMap.get(String(d.userId?._id)) || 0,
+  }));
+
+  const paginated = buildPaginatedResult({ docs: enrichedDocs.map(d => normalizeOrderForClient(d)), total, page, limit });
   return { ...paginated, orders: paginated.data };
 }
 

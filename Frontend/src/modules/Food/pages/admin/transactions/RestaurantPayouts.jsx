@@ -1,8 +1,15 @@
 import { useState, useEffect, useCallback } from "react"
-import { Download, DollarSign, Building, FileText, CheckCircle, Loader2, CreditCard, ChevronLeft, ChevronRight } from "lucide-react"
+import { Download, DollarSign, Building, FileText, CheckCircle, Loader2, CreditCard, ChevronLeft, ChevronRight, Banknote } from "lucide-react"
 import { adminAPI } from "@food/api"
 import { toast } from "sonner"
 import { generatePayoutPDF } from "@food/utils/payoutPdfGenerator"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@food/components/ui/dialog"
 
 export default function RestaurantPayouts() {
   // Filter States
@@ -35,6 +42,13 @@ export default function RestaurantPayouts() {
   const [loadingSummary, setLoadingSummary] = useState(true)
   const [loadingOrders, setLoadingOrders] = useState(true)
   const [downloadingPdf, setDownloadingPdf] = useState(false)
+
+  // Settle (admin-initiated payout) States
+  const [showSettleModal, setShowSettleModal] = useState(false)
+  const [settleAmount, setSettleAmount] = useState("")
+  const [settleTransactionId, setSettleTransactionId] = useState("")
+  const [settleNote, setSettleNote] = useState("")
+  const [settling, setSettling] = useState(false)
 
   // Fetch restaurants (Including banned and inactive restaurants)
   useEffect(() => {
@@ -135,6 +149,41 @@ export default function RestaurantPayouts() {
     }
   }
 
+  const handleOpenSettleModal = () => {
+    setSettleAmount(summary.totalRemaining > 0 ? String(summary.totalRemaining) : "")
+    setSettleTransactionId("")
+    setSettleNote("")
+    setShowSettleModal(true)
+  }
+
+  const handleSettleNow = async () => {
+    const amountNum = Number(settleAmount)
+    if (!Number.isFinite(amountNum) || amountNum <= 0) {
+      toast.error("Enter a valid amount")
+      return
+    }
+    try {
+      setSettling(true)
+      const response = await adminAPI.markPayoutAsPaid({
+        restaurantId: selectedRestaurant,
+        amount: amountNum,
+        transactionId: settleTransactionId.trim() || undefined,
+        adminNote: settleNote.trim() || undefined,
+      })
+      if (response?.data?.success) {
+        toast.success("Payout marked as paid successfully")
+        setShowSettleModal(false)
+        fetchSummary()
+      } else {
+        toast.error(response?.data?.message || "Failed to mark payout as paid")
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to mark payout as paid")
+    } finally {
+      setSettling(false)
+    }
+  }
+
   const formatCurrency = (val) => {
     const num = Number(val) || 0
     return `₹${num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -173,6 +222,15 @@ export default function RestaurantPayouts() {
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
+            <button
+              onClick={handleOpenSettleModal}
+              disabled={!selectedRestaurant}
+              title={!selectedRestaurant ? "Select a specific restaurant to settle its payout" : "Record a manual payout for this restaurant"}
+              className="px-4 py-2.5 text-sm font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Banknote className="w-4 h-4" />
+              <span>Settle Now</span>
+            </button>
             <button
               onClick={handleDownloadPDF}
               disabled={downloadingPdf}
@@ -454,6 +512,67 @@ export default function RestaurantPayouts() {
           )}
 
         </div>
+
+        {/* Settle Now Dialog */}
+        <Dialog open={showSettleModal} onOpenChange={setShowSettleModal}>
+          <DialogContent className="max-w-md bg-white p-0">
+            <DialogHeader className="px-6 pt-6 pb-4">
+              <DialogTitle>Settle restaurant payout</DialogTitle>
+            </DialogHeader>
+            <div className="px-6 pb-6 space-y-4">
+              <p className="text-xs text-slate-500">
+                This records a manual payout for this restaurant without waiting for them to raise a withdrawal request. It reduces their remaining balance immediately.
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Amount (₹)</label>
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={settleAmount}
+                  onChange={(e) => setSettleAmount(e.target.value)}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">Remaining balance: {formatCurrency(summary.totalRemaining)}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Transaction ID (optional)</label>
+                <input
+                  type="text"
+                  value={settleTransactionId}
+                  onChange={(e) => setSettleTransactionId(e.target.value)}
+                  placeholder="UTR / bank reference"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Note (optional)</label>
+                <textarea
+                  value={settleNote}
+                  onChange={(e) => setSettleNote(e.target.value)}
+                  rows={3}
+                  placeholder="Manual payout recorded by admin"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                />
+              </div>
+            </div>
+            <DialogFooter className="px-6 pb-6 flex gap-2">
+              <button
+                onClick={() => setShowSettleModal(false)}
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSettleNow}
+                disabled={settling}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {settling ? "Settling…" : "Confirm Settlement"}
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
       </div>
     </div>

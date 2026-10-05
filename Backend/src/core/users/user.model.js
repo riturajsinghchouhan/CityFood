@@ -142,6 +142,17 @@ const userSchema = new mongoose.Schema(
             default: true,
             index: true
         },
+        flag: {
+            type: String,
+            enum: ['red', 'green'],
+            default: 'green',
+            index: true
+        },
+        codEnabled: {
+            type: Boolean,
+            default: true,
+            index: true
+        },
         role: {
             type: String,
             default: 'USER'

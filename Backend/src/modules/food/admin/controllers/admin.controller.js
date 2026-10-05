@@ -84,6 +84,39 @@ export async function updateCustomerStatus(req, res, next) {
     }
 }
 
+export async function updateCustomerFlag(req, res, next) {
+    try {
+        const { id } = req.params;
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid customer id' });
+        }
+        const flag = req.body?.flag;
+        if (flag !== 'red' && flag !== 'green') {
+            return res.status(400).json({ success: false, message: "flag must be 'red' or 'green'" });
+        }
+        const updated = await adminService.updateCustomerFlag(id, flag);
+        if (!updated) return res.status(404).json({ success: false, message: 'Customer not found' });
+        res.status(200).json({ success: true, message: 'Customer flag updated successfully', data: { user: updated, customer: updated } });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function updateCustomerCod(req, res, next) {
+    try {
+        const { id } = req.params;
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid customer id' });
+        }
+        const codEnabled = req.body?.codEnabled;
+        const updated = await adminService.updateCustomerCod(id, codEnabled);
+        if (!updated) return res.status(404).json({ success: false, message: 'Customer not found' });
+        res.status(200).json({ success: true, message: 'Customer COD setting updated successfully', data: { user: updated, customer: updated } });
+    } catch (error) {
+        next(error);
+    }
+}
+
 export async function topupCustomerWallet(req, res, next) {
     try {
         const { id } = req.params;
@@ -1695,6 +1728,25 @@ export async function getCashLimitSettlements(req, res, next) {
     try {
         const data = await adminService.getCashLimitSettlements(req.query || {});
         res.status(200).json({ success: true, message: 'Cash limit settlements fetched successfully', data });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function markDeliveryPayoutAsPaidController(req, res, next) {
+    try {
+        const withdrawal = await adminService.markDeliveryPayoutAsPaid(req.body || {});
+        res.status(201).json({ success: true, message: 'Delivery payout marked as paid successfully', data: { withdrawal } });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function settleDeliveryCashLimitController(req, res, next) {
+    try {
+        const { id } = req.params;
+        const deposit = await adminService.settleDeliveryCashLimit(id, req.body || {}, req.user);
+        res.status(201).json({ success: true, message: 'Cash limit settled successfully', data: { deposit } });
     } catch (error) {
         next(error);
     }
