@@ -337,5 +337,40 @@ export async function markPayoutAsPaid({ restaurantId, amount, transactionId, ad
     });
 
     await withdrawal.save();
+
+    try {
+        const { notifyOwnerSafely } = await import('../../../../core/notifications/firebase.service.js');
+        await notifyOwnerSafely(
+            { ownerType: 'RESTAURANT', ownerId: restaurantId },
+            {
+                title: 'Payout Settled 💰',
+                body: `₹${numericAmount} has been settled to your account by admin.`,
+                image: 'https://i.ibb.co/3m2Yh7r/Tuggo-Brand-Image.png',
+                data: {
+                    type: 'payout_settled',
+                    amount: String(numericAmount),
+                    transactionId: withdrawal.transactionId
+                }
+            }
+        );
+    } catch (e) {
+        console.error('Failed to send restaurant payout push notification:', e);
+    }
+
+    if (restaurant.ownerEmail) {
+        try {
+            const { sendSettlementEmail } = await import('../../../../utils/email.js');
+            await sendSettlementEmail(restaurant.ownerEmail, {
+                recipientName: restaurant.restaurantName || restaurant.ownerName,
+                amount: numericAmount,
+                type: 'restaurant_payout',
+                transactionId: withdrawal.transactionId,
+                adminNote: withdrawal.adminNote
+            });
+        } catch (e) {
+            console.error('Failed to send restaurant payout settlement email:', e);
+        }
+    }
+
     return withdrawal;
 }

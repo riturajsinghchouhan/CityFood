@@ -5525,6 +5525,40 @@ export async function markDeliveryPayoutAsPaid({ deliveryPartnerId, amount, tran
         { $inc: { balance: -numericAmount, totalSettled: numericAmount } }
     );
 
+    try {
+        const { notifyOwnerSafely } = await import('../../../../core/notifications/firebase.service.js');
+        await notifyOwnerSafely(
+            { ownerType: 'DELIVERY_PARTNER', ownerId: partnerObjectId },
+            {
+                title: 'Payout Settled 💰',
+                body: `₹${numericAmount} has been settled to your account by admin.`,
+                image: 'https://i.ibb.co/3m2Yh7r/Tuggo-Brand-Image.png',
+                data: {
+                    type: 'payout_settled',
+                    amount: String(numericAmount),
+                    transactionId: withdrawal.transactionId
+                }
+            }
+        );
+    } catch (e) {
+        console.error('Failed to send delivery payout push notification:', e);
+    }
+
+    if (partner.email) {
+        try {
+            const { sendSettlementEmail } = await import('../../../../utils/email.js');
+            await sendSettlementEmail(partner.email, {
+                recipientName: partner.name,
+                amount: numericAmount,
+                type: 'delivery_payout',
+                transactionId: withdrawal.transactionId,
+                adminNote: withdrawal.adminNote
+            });
+        } catch (e) {
+            console.error('Failed to send delivery payout settlement email:', e);
+        }
+    }
+
     return withdrawal;
 }
 
@@ -5574,6 +5608,38 @@ export async function settleDeliveryCashLimit(deliveryPartnerId, { amount, admin
         adminId: adminUser?._id,
         adminNote: adminNote || 'Cash limit settled by admin'
     });
+
+    try {
+        const { notifyOwnerSafely } = await import('../../../../core/notifications/firebase.service.js');
+        await notifyOwnerSafely(
+            { ownerType: 'DELIVERY_PARTNER', ownerId: partnerObjectId },
+            {
+                title: 'Cash Limit Settled ✅',
+                body: `Admin recorded a cash collection of ₹${numericAmount}, freeing up your cash limit.`,
+                image: 'https://i.ibb.co/3m2Yh7r/Tuggo-Brand-Image.png',
+                data: {
+                    type: 'cash_limit_settled',
+                    amount: String(numericAmount)
+                }
+            }
+        );
+    } catch (e) {
+        console.error('Failed to send cash limit settlement push notification:', e);
+    }
+
+    if (partner.email) {
+        try {
+            const { sendSettlementEmail } = await import('../../../../utils/email.js');
+            await sendSettlementEmail(partner.email, {
+                recipientName: partner.name,
+                amount: numericAmount,
+                type: 'cash_limit',
+                adminNote: deposit.adminNote
+            });
+        } catch (e) {
+            console.error('Failed to send cash limit settlement email:', e);
+        }
+    }
 
     return deposit;
 }
