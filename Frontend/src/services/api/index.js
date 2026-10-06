@@ -1175,6 +1175,19 @@ export const getPublicExploreIcons = (zoneId = null) =>
     params: zoneId ? { zoneId } : {},
   }).then((res) => res?.data?.data ?? res?.data ?? {});
 
+/** Cached gourmet restaurants — shared across Home and Gourmet pages. */
+export const getPublicGourmetRestaurants = (zoneId = null) =>
+  publicGetOnce("/food/hero-banners/gourmet/public", {
+    params: zoneId ? { zoneId } : {},
+  }).then((res) => {
+    const data = res?.data?.data;
+    return Array.isArray(data?.restaurants)
+      ? data.restaurants
+      : Array.isArray(data)
+        ? data
+        : [];
+  });
+
 const getPublicCategoriesOnce = (params = {}, config = {}) => {
   const { noCache, ...axiosConfig } = config || {};
   const keyParams =

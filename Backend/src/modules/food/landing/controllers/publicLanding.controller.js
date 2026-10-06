@@ -86,15 +86,20 @@ export const getPublicGourmetController = async (req, res, next) => {
     try {
         const { zoneId } = req.query;
         const docs = await getPublicGourmetRestaurants();
-        let restaurants = (docs || []).map((d) => ({
-            ...(d.restaurant || {}),
-            _id: d.restaurant?._id || d.restaurantId,
-            zoneId: d.restaurant?.zoneId,
-            priority: d.priority
-        })).filter((r) => r && r._id);
+        let restaurants = (docs || [])
+            .filter((d) => d && d.restaurant && d.restaurant._id)
+            .map((d) => ({
+                ...d.restaurant,
+                _id: d.restaurant._id,
+                mongoId: d.restaurant._id,
+                restaurantId: d.restaurant._id,
+                zoneId: d.restaurant.zoneId,
+                priority: d.priority,
+                restaurant: d.restaurant
+            }));
         
         if (zoneId && mongoose.Types.ObjectId.isValid(zoneId)) {
-            restaurants = restaurants.filter(r => String(r.zoneId || '') === String(zoneId));
+            restaurants = restaurants.filter(r => String(r.zoneId?._id || r.zoneId || '') === String(zoneId));
         }
         
         return sendResponse(res, 200, 'Gourmet restaurants fetched', { restaurants });

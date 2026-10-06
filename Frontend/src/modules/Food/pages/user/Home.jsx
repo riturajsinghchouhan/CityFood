@@ -86,7 +86,7 @@ import {
 } from "@food/components/ui/dropdown-menu";
 import { useAppLocation } from "@food/hooks/useAppLocation";
 import offerImage from "@food/assets/offerimage.png";
-import api, { publicGetOnce, restaurantAPI, getPublicLandingSettings, getPublicExploreIcons, getPublicCategories } from "@food/api";
+import api, { publicGetOnce, restaurantAPI, getPublicLandingSettings, getPublicExploreIcons, getPublicCategories, getPublicGourmetRestaurants } from "@food/api";
 import { API_BASE_URL } from "@food/api/config";
 import OptimizedImage, { ShopPlaceholder } from "@food/components/OptimizedImage";
 import { getRestaurantAvailabilityStatus } from "@food/utils/restaurantAvailability";
@@ -138,6 +138,8 @@ const homePageCache = {
   adsBannerImages: null,
   adsBannersData: null,
   adsBannersFetched: false,
+  gourmetRestaurants: null,
+  showGourmet: true,
 };
 
 const roundCoord = (value) =>
@@ -237,6 +239,8 @@ export default function Home() {
     recommendedRestaurantsFromSettings,
     setRecommendedRestaurantsFromSettings,
   ] = useState(() => homePageCache.recommendedRestaurantsFromSettings || []);
+  const [gourmetRestaurants, setGourmetRestaurants] = useState(() => homePageCache.gourmetRestaurants || []);
+  const [showGourmetSection, setShowGourmetSection] = useState(() => homePageCache.showGourmet ?? true);
   const [loadingLandingConfig, setLoadingLandingConfig] = useState(() => !homePageCache.landingExploreFetched);
   const [restaurantsData, setRestaurantsData] = useState(() => homePageCache.restaurantsData || []);
   const [loadingRestaurants, setLoadingRestaurants] = useState(() => !homePageCache.restaurantsData);
@@ -798,8 +802,9 @@ export default function Home() {
     Promise.all([
       getPublicExploreIcons(effectiveZoneId).catch(() => ({})),
       getPublicLandingSettings(effectiveZoneId).catch(() => ({})),
+      getPublicGourmetRestaurants(effectiveZoneId).catch(() => ([])),
     ])
-      .then(([exploreData, settings]) => {
+      .then(([exploreData, settings, gourmetData]) => {
         if (cancelled) return;
         const items = Array.isArray(exploreData?.items)
           ? exploreData.items
@@ -825,6 +830,10 @@ export default function Home() {
         const images = Array.isArray(settingsData.festBannerImages) ? settingsData.festBannerImages : [];
         setFestBannerImages(images);
 
+        const gourmetList = Array.isArray(gourmetData) ? gourmetData : [];
+        setGourmetRestaurants(gourmetList);
+        setShowGourmetSection(settingsData.showGourmet ?? true);
+
         // Update cache
         homePageCache.landingExploreMore = exploreMoreData;
         homePageCache.exploreMoreHeading = heading;
@@ -832,6 +841,8 @@ export default function Home() {
         homePageCache.under250PriceLimit = Number(settingsData.under250PriceLimit) || 250;
         homePageCache.recommendedRestaurantsFromSettings = recRest;
         homePageCache.festBannerImages = images;
+        homePageCache.gourmetRestaurants = gourmetList;
+        homePageCache.showGourmet = settingsData.showGourmet ?? true;
         homePageCache.landingExploreFetched = true;
         homePageCache.effectiveZoneId = effectiveZoneId;
       })
@@ -841,6 +852,8 @@ export default function Home() {
           setExploreMoreHeading("Explore More");
           setRecommendedRestaurantsFromSettings([]);
           setFestBannerImages([]);
+          setGourmetRestaurants([]);
+          setShowGourmetSection(true);
         }
         homePageCache.landingExploreFetched = true;
         homePageCache.effectiveZoneId = effectiveZoneId;
@@ -1878,6 +1891,51 @@ export default function Home() {
     return [];
   }, [activeFilters, sortBy]);
 
+  const displayGourmetRestaurants = useMemo(() => {
+    if (!showGourmetSection || !Array.isArray(gourmetRestaurants) || gourmetRestaurants.length === 0) {
+      return [];
+    }
+
+    return gourmetRestaurants
+      .slice()
+      .sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0))
+      .map((gItem) => {
+        const gId = String(gItem._id || gItem.mongoId || gItem.id || gItem.restaurantId || "");
+        const matched = (restaurantsData || []).find((r) => {
+          const rId = String(r.mongoId || r.id || r._id || "");
+          return rId && rId === gId;
+        });
+
+        if (matched) {
+          return {
+            ...matched,
+            priority: gItem.priority ?? 0,
+          };
+        }
+
+        const name = gItem.name || gItem.restaurantName || "Restaurant";
+        const slug = gItem.slug || name.toLowerCase().replace(/\s+/g, "-");
+        const coverImages = Array.isArray(gItem.coverImages) ? gItem.coverImages : [];
+        const profileImg = gItem.profileImage?.url || gItem.profileImage;
+        const images = coverImages.length > 0 ? coverImages : (profileImg ? [profileImg] : []);
+
+        return {
+          ...gItem,
+          id: gId,
+          mongoId: gId,
+          name,
+          slug,
+          rating: Number(gItem.rating) || 0,
+          cuisines: Array.isArray(gItem.cuisines) ? gItem.cuisines : [],
+          images,
+          coverImages,
+          image: images[0] || null,
+          priority: gItem.priority ?? 0,
+        };
+      })
+      .filter((r) => !r.isBanned && matchesVegMode(r));
+  }, [showGourmetSection, gourmetRestaurants, restaurantsData, matchesVegMode]);
+
   // Memoize callbacks to prevent unnecessary re-renders
   const handleLocationClick = useCallback(() => {
     openLocationSelector();
@@ -2393,22 +2451,29 @@ export default function Home() {
         >
           {!shouldShowOutOfZoneHome && (
             <>
-              {/* Premium Restaurants Horizontal Scroll */}
-              {filteredRestaurants.filter(r => !r.isBanned && (r.rating || 0) >= 4.5).length > 0 && (
+              {/* Gourmet Restaurants Horizontal Scroll */}
+              {displayGourmetRestaurants.length > 0 && (
                 <div className="mb-6 lg:mb-8">
-                  <div className="px-4 mb-3">
-                    <h2 className="text-lg sm:text-xl lg:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
-                      Gourmet Restaurants
-                    </h2>
-                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">Premium spots just for you</p>
+                  <div className="px-4 mb-3 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg sm:text-xl lg:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
+                        Gourmet Restaurants
+                      </h2>
+                      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">Premium spots just for you</p>
+                    </div>
+                    <Link
+                      to="/food/user/gourmet"
+                      className="text-xs font-semibold text-primary hover:underline"
+                    >
+                      See all
+                    </Link>
                   </div>
                   <div className="flex overflow-x-auto gap-4 px-4 pb-4 scrollbar-hide snap-x snap-mandatory">
-                    {filteredRestaurants
-                      .filter(r => (r.rating || 0) >= 4.5)
+                    {displayGourmetRestaurants
                       .map((restaurant) => {
-                        const restaurantSlug = restaurant.slug || restaurant.name.toLowerCase().replace(/\s+/g, "-");
+                        const restaurantSlug = restaurant.slug || restaurant.name?.toLowerCase().replace(/\s+/g, "-");
                         return (
-                          <div key={restaurant.mongoId || restaurant.id} className="min-w-[240px] max-w-[240px] sm:min-w-[280px] sm:max-w-[280px] snap-start flex-shrink-0">
+                          <div key={restaurant.mongoId || restaurant.id || restaurant._id} className="min-w-[240px] max-w-[240px] sm:min-w-[280px] sm:max-w-[280px] snap-start flex-shrink-0">
                             <Link
                               to={`/user/restaurants/${restaurantSlug}`}
                               className="block rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] shadow-sm hover:shadow-md transition-all active:scale-95"
@@ -2422,7 +2487,7 @@ export default function Home() {
                                 />
                                 <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-md text-white font-bold text-xs shadow-lg border border-white/10 flex items-center gap-1">
                                   <Star className="w-3 h-3 fill-primary text-primary" />
-                                  {Number(restaurant.rating).toFixed(1)}
+                                  {Number(restaurant.rating || 0).toFixed(1)}
                                 </div>
                               </div>
                               <div className="p-3">

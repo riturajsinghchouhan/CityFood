@@ -7,8 +7,12 @@ export const getPublicGourmetRestaurants = async () => {
         .lean();
 
     const restaurantIds = docs.map((d) => d.restaurantId);
-    const restaurants = await FoodRestaurant.find({ _id: { $in: restaurantIds } })
-        .select('restaurantName area city profileImage rating cuisines slug pureVegRestaurant location estimatedDeliveryTime zoneId')
+    const restaurants = await FoodRestaurant.find({
+        _id: { $in: restaurantIds },
+        status: 'approved',
+        isBanned: { $ne: true }
+    })
+        .select('restaurantName area city profileImage coverImages menuImages rating cuisines slug pureVegRestaurant location estimatedDeliveryTime zoneId')
         .lean();
 
     const restaurantMap = new Map(restaurants.map((r) => [r._id.toString(), r]));
@@ -23,6 +27,8 @@ export const getPublicGourmetRestaurants = async () => {
                 restaurantName: r.restaurantName,
                 rating: r.rating || 0,
                 profileImage: r.profileImage ? { url: r.profileImage } : null,
+                coverImages: r.coverImages || [],
+                menuImages: r.menuImages || [],
                 area: r.area,
                 city: r.city,
                 cuisines: r.cuisines || [],
@@ -33,6 +39,6 @@ export const getPublicGourmetRestaurants = async () => {
                 zoneId: r.zoneId
             } : null
         };
-    });
+    }).filter((item) => item.restaurant !== null);
 };
 
