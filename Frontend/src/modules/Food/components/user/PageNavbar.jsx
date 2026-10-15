@@ -759,7 +759,7 @@ export default function PageNavbar({
           partsLength: parts.length
         })
 
-        // For Tuggo Food addresses: city and state are usually before pincode (which is a 6-digit number)
+        // For CityFood addresses: city and state are usually before pincode (which is a 6-digit number)
         // Format: "Mama Loca, G-2, Princess Center 6/3, Opposite Manpasand Garden, New Palasia, Indore, 452001, India"
         if (parts.length >= 4) {
           // Method 1: Find pincode index (6-digit number)
@@ -1023,7 +1023,7 @@ export default function PageNavbar({
               />
             ) : (
               <span className={`text-base font-bold ${textColorClass}`}>
-                {companyName || "Tuggo"}
+                {companyName || "CityFood"}
               </span>
             )}
           </Link>

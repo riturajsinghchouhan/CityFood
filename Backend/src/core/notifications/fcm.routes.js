@@ -294,7 +294,7 @@ router.post('/test-voip', authMiddleware, async (req, res, next) => {
         const ownerId = req.user?.userId;
         const voipToken = String(req.body?.voipToken || '').trim();
         const title = String(req.body?.title || 'Test VoIP Call').trim();
-        const body = String(req.body?.body || 'This is a direct VoIP test from Tuggo.').trim();
+        const body = String(req.body?.body || 'This is a direct VoIP test from CityFood.').trim();
         const link = String(req.body?.link || '/').trim();
 
         console.info('[VoIPTest] request', {

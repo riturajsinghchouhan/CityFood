@@ -151,7 +151,7 @@ const reverseGeocodeDirect = async (latitude, longitude) => {
             `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&addressdetails=1`,
             {
               signal: nomController.signal,
-              headers: { 'Accept-Language': 'en', 'User-Agent': 'Tuggo Food Delivery-App' }
+              headers: { 'Accept-Language': 'en', 'User-Agent': 'CityFood-App' }
             }
           )
           clearTimeout(nomTimeout)
@@ -489,8 +489,8 @@ export function useLocationEngine() {
         result?.address ||
         ""
 
-      // PRIORITY 1: Extract area from formatted_address FIRST (most reliable for Tuggo Food addresses)
-      // Tuggo Food address format: "Area, City, State" e.g., "New Palasia, Indore, Madhya Pradesh"
+      // PRIORITY 1: Extract area from formatted_address FIRST (most reliable for CityFood addresses)
+      // CityFood address format: "Area, City, State" e.g., "New Palasia, Indore, Madhya Pradesh"
       // ALWAYS try formatted_address FIRST - it's the most reliable source and preserves full names like "New Palasia"
       let area = ""
       if (formattedAddress) {

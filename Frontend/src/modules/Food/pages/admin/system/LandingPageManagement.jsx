@@ -87,7 +87,7 @@ export default function LandingPageManagement() {
         { label: 'Sitemap', url: '#' }
       ]
     },
-    copyrightText: '© 2026 Tuggo Food Delivery™ Ltd. All rights reserved.',
+    copyrightText: '© 2026 CityFood™ Ltd. All rights reserved.',
     heroSlides: []
   })
   const [settingsLoading, setSettingsLoading] = useState(true)
@@ -1121,7 +1121,7 @@ export default function LandingPageManagement() {
               { label: 'Sitemap', url: '#' }
             ]
           },
-          copyrightText: nextSettings.copyrightText || '© 2026 Tuggo Food Delivery™ Ltd. All rights reserved.',
+          copyrightText: nextSettings.copyrightText || '© 2026 CityFood™ Ltd. All rights reserved.',
           heroSlides: Array.isArray(nextSettings.heroSlides) ? nextSettings.heroSlides : []
         })
       }
@@ -2104,16 +2104,16 @@ export default function LandingPageManagement() {
                     { id: 'collection', label: 'Collections', link: '/user/profile/favorites' }
                   ].map((item) => {
                     // Find matching item from DB
-                    const dTuggom = exploreMore.find(i => i.label?.toLowerCase() === item.label.toLowerCase())
+                    const dbItem = exploreMore.find(i => i.label?.toLowerCase() === item.label.toLowerCase())
 
                     return (
                       <div key={item.id} className="border border-slate-200 rounded-lg p-4 flex flex-col items-center relative">
                         <span className="text-sm font-semibold text-slate-700 mb-3">{item.label}</span>
 
                         <div className="w-24 h-24 mb-4 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden relative group">
-                          {dTuggom?.imageUrl ? (
+                          {dbItem?.imageUrl ? (
                             <img
-                              src={dTuggom.imageUrl}
+                              src={dbItem.imageUrl}
                               alt={item.label}
                               className="w-full h-full object-contain p-2"
                             />
@@ -2146,7 +2146,7 @@ export default function LandingPageManagement() {
                             className={`w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer ${exploreIconsUploading[item.id] ? 'opacity-50 pointer-events-none' : ''}`}
                           >
                             <Upload className="w-3 h-3" />
-                            {dTuggom ? 'Change Icon' : 'Upload Icon'}
+                            {dbItem ? 'Change Icon' : 'Upload Icon'}
                           </label>
                         </div>
                       </div>
@@ -2420,7 +2420,7 @@ export default function LandingPageManagement() {
 
               <div className="mb-6">
                 <Label>Copyright Text</Label>
-                <Input value={settings.copyrightText || ''} onChange={(e) => setSettings({ ...settings, copyrightText: e.target.value })} placeholder="© 2026 Tuggo Food Delivery™ Ltd." />
+                <Input value={settings.copyrightText || ''} onChange={(e) => setSettings({ ...settings, copyrightText: e.target.value })} placeholder="© 2026 CityFood™ Ltd." />
               </div>
 
               <div className="mb-6 space-y-6 mt-8">

@@ -351,7 +351,7 @@ export default function AdminNavbar({ onMenuClick }) {
                 )}
               </div>
               <span className="hidden max-w-40 truncate text-red-600 font-extrabold text-xl ml-1 tracking-tight sm:block">
-                {businessSettings?.companyName || "Tuggo Food Delivery"}
+                {businessSettings?.companyName || "CityFood"}
               </span>
             </div>
 

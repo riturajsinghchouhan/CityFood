@@ -74,9 +74,9 @@ export const initRazorpayPayment = async (options) => {
       amount: options.amount,
       currency: options.currency || 'INR',
       order_id: options.order_id,
-      name: options.name || 'Tuggo Food',
+      name: options.name || 'CityFood',
       description: options.description || 'Order Payment',
-      image: options.image || 'https://www.tuggo.in/logo.png',
+      image: options.image || `${window.location.origin}/logo.png`,
       prefill: {
         name: options.prefill?.name || '',
         email: options.prefill?.email || '',

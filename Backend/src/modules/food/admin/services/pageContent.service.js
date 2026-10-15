@@ -76,7 +76,7 @@ export const upsertLegalPage = async (key, payload, updatedBy) => {
 };
 
 export const upsertAboutPage = async (payload, updatedBy) => {
-    const appName = decodeHtmlEntities(String(payload?.appName || '')).trim() || 'Tuggo Food';
+    const appName = decodeHtmlEntities(String(payload?.appName || '')).trim() || 'CityFood';
     const version = decodeHtmlEntities(String(payload?.version || '')).trim() || '1.0.0';
     const description = decodeHtmlEntities(String(payload?.description || '')).trim();
     const logo = decodeHtmlEntities(String(payload?.logo || '')).trim();

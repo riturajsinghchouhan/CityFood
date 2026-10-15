@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 /**
  * DeliveryWallet — tracks the financial balance for each delivery partner.
- * Credited when deliveries are completed; deTuggod when settlements are processed.
+ * Credited when deliveries are completed; debited when settlements are processed.
  */
 const deliveryWalletSchema = new mongoose.Schema(
     {

@@ -2076,7 +2076,7 @@ export default function Cart() {
           `2. Backend is accessible at ${backendUrl}\n` +
           `3. Check browser console (F12) for more details\n\n` +
           `If backend is not running, start it with:\n` +
-          `cd tuggofood/backend && npm start`
+          `cd Backend && npm start`
 
         debugError("?? Network Error Details:", {
           code: error.code,

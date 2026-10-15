@@ -31,7 +31,7 @@ export const adminSidebarMenu = [
         type: "expandable",
         label: "Orders",
         icon: "FileText",
-        suTuggoms: [
+        subItems: [
           { label: "All", path: "/admin/food/orders/all" },
           { label: "Scheduled", path: "/admin/food/orders/scheduled" },
           { label: "Pending", path: "/admin/food/orders/pending" },
@@ -68,7 +68,7 @@ export const adminSidebarMenu = [
         type: "expandable",
         label: "Foods",
         icon: "Utensils",
-        suTuggoms: [
+        subItems: [
           { label: "Restaurant Foods List", path: "/admin/food/foods" },
           { label: "Restaurant Addons List", path: "/admin/food/addons" },
         ],
@@ -77,7 +77,7 @@ export const adminSidebarMenu = [
         type: "expandable",
         label: "Categories",
         icon: "FolderTree",
-        suTuggoms: [{ label: "Category", path: "/admin/food/categories" }],
+        subItems: [{ label: "Category", path: "/admin/food/categories" }],
       },
     ],
   },
@@ -101,7 +101,7 @@ export const adminSidebarMenu = [
         type: "expandable",
         label: "Restaurants",
         icon: "UtensilsCrossed",
-        suTuggoms: [
+        subItems: [
           { label: "Restaurants List", path: "/admin/food/restaurants" },
           { label: "Menu Bulk Upload", path: "/admin/food/restaurants/menu-bulk-upload" },
           { label: "New Joining Request", path: "/admin/food/restaurants/joining-request" },
@@ -174,7 +174,7 @@ export const adminSidebarMenu = [
         type: "expandable",
         label: "Deliveryman",
         icon: "Package",
-        suTuggoms: [
+        subItems: [
           { label: "New Join Request", path: "/admin/food/delivery-partners/join-request" },
           { label: "Deliveryman List", path: "/admin/food/delivery-partners" },
           { label: "Deliveryman Reviews", path: "/admin/food/delivery-partners/reviews" },
@@ -206,13 +206,13 @@ export const adminSidebarMenu = [
         type: "expandable",
         label: "Restaurant Report",
         icon: "FileText",
-        suTuggoms: [{ label: "Restaurant Report", path: "/admin/food/restaurant-report" }],
+        subItems: [{ label: "Restaurant Report", path: "/admin/food/restaurant-report" }],
       },
       {
         type: "expandable",
         label: "Customer Report",
         icon: "FileText",
-        suTuggoms: [{ label: "Feedback Experience", path: "/admin/food/customer-report/feedback-experience" }],
+        subItems: [{ label: "Feedback Experience", path: "/admin/food/customer-report/feedback-experience" }],
       },
     ],
   },

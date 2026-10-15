@@ -199,7 +199,7 @@ export default function RestaurantLogin() {
 
           <div className="mt-8 text-center">
             <p className="text-[11px] text-gray-400 font-medium leading-relaxed max-w-[320px] mx-auto">
-              By continuing, you agree to Tuggo Food Delivery's <br />
+              By continuing, you agree to CityFood's <br />
               <Link to="/food/restaurant/profile/terms" className="text-gray-900 dark:text-white font-bold hover:text-primary transition-colors">Terms of Service</Link> & <Link to="/food/restaurant/profile/privacy" className="text-gray-900 dark:text-white font-bold hover:text-primary transition-colors">Privacy Policy</Link>
             </p>
           </div>

@@ -327,7 +327,7 @@ export default function UnifiedOTPFastLogin() {
           >
             <img
               src={logoNew}
-              alt="Tuggo Food Tuggo Logo"
+              alt="CityFood Logo"
               className="w-full h-full object-cover"
               onError={(e) => {
                 e.target.onerror = null;

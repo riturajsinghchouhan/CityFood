@@ -85,7 +85,7 @@ export default function AdminLogin() {
             >
               <img
                 src={logoNew}
-                alt="Tuggo Food Delivery Logo"
+                alt="CityFood Logo"
                 className="w-full h-full object-cover scale-[1.15]"
                 style={{ borderRadius: '50%' }}
               />

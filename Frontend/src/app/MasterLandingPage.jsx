@@ -106,7 +106,7 @@ const SLIDES = [
   {
     id: 1,
     image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070&auto=format&fit=crop",
-    title: "Tuggo Food Delivery",
+    title: "CityFood",
     subtitle: "Giving you the best service and all"
   },
   {
@@ -432,7 +432,7 @@ export default function MasterLandingPage() {
           {/* Right Feature Column */}
           <div className="flex-1 space-y-4 w-full order-3">
             <FeatureRowRight title="Huge Discounts & Offers" desc="Enjoy exciting offers, discounts and coupons exclusively on the app" Icon={Ticket} delay={0.1} />
-            <FeatureRowRight title="Tuggo Food Delivery GOLD" desc="Get free delivery and extra discounts on every order with premium membership" Icon={Award} delay={0.2} />
+            <FeatureRowRight title="CityFood GOLD" desc="Get free delivery and extra discounts on every order with premium membership" Icon={Award} delay={0.2} />
             <FeatureRowRight title="Safety & Hygiene" desc="Best in class safety standards with regular temperature checks" Icon={ShieldCheck} delay={0.3} />
           </div>
 
@@ -452,7 +452,7 @@ export default function MasterLandingPage() {
               Download the app now!
             </h2>
             <p className="text-xl text-gray-500 font-medium mb-10 max-w-md">
-              Experience seamless online ordering only on the Tuggo Food Delivery app
+              Experience seamless online ordering only on the CityFood app
             </p>
             <div className="flex gap-4 justify-center md:justify-start">
               <img
@@ -500,7 +500,7 @@ export default function MasterLandingPage() {
           <div className="flex flex-col lg:flex-row justify-between mb-16 gap-12">
             <div className="lg:w-1/4">
               <h1 className="text-4xl font-black italic tracking-tighter mb-8">
-                Tuggo Food Delivery
+                CityFood
               </h1>
             </div>
 
@@ -595,7 +595,7 @@ export default function MasterLandingPage() {
 
           <div className="text-gray-500 text-sm font-medium mt-10 text-center md:text-left leading-relaxed">
             By continuing past this page, you agree to our Terms of Service, Cookie Policy, Privacy Policy and Content Policies. All trademarks are properties of their respective owners. <br />
-            {landingSettings?.copyrightText || '© 2026 Tuggo Food Delivery™ Ltd. All rights reserved.'}
+            {landingSettings?.copyrightText || '© 2026 CityFood™ Ltd. All rights reserved.'}
           </div>
         </div>
       </footer>

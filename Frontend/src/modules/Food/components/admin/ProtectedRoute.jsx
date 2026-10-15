@@ -11,7 +11,7 @@ const buildPathPermissions = () => {
     if (item.type === "link") {
       map.push({ path: item.path, permissions: [item.label] });
     } else if (item.type === "expandable") {
-      item.suTuggoms?.forEach(sub => {
+      item.subItems?.forEach(sub => {
         map.push({ path: sub.path, permissions: [item.label, sub.label] });
       });
     } else if (item.type === "section") {
@@ -19,7 +19,7 @@ const buildPathPermissions = () => {
         if (secItem.type === "link") {
           map.push({ path: secItem.path, permissions: [secItem.label] });
         } else if (secItem.type === "expandable") {
-          secItem.suTuggoms?.forEach(sub => {
+          secItem.subItems?.forEach(sub => {
             map.push({ path: sub.path, permissions: [secItem.label, sub.label] });
           });
         }

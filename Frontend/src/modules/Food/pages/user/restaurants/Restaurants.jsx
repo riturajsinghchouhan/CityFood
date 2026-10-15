@@ -254,7 +254,7 @@ export default function Restaurants() {
               })}
             </div>
 
-            {/* End of list Tuggo branding */}
+            {/* End of list CityFood branding */}
             <div className="pt-10 pb-6 flex flex-col items-center justify-center select-none">
               <div className="flex items-center gap-4 w-full max-w-xs sm:max-w-sm">
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-200 dark:via-zinc-800 to-gray-300 dark:to-zinc-700" />
@@ -262,7 +262,7 @@ export default function Restaurants() {
                   <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-white dark:bg-zinc-900 border border-gray-200/90 dark:border-zinc-800 shadow-sm flex items-center justify-center p-2.5 overflow-hidden ring-4 ring-gray-100 dark:ring-zinc-800/60 transition-transform duration-300 hover:scale-105">
                     <img
                       src={logoUrl}
-                      alt="Tuggo"
+                      alt="CityFood"
                       className="h-full w-full object-contain"
                       onError={(e) => {
                         e.currentTarget.src = "/logo.png";

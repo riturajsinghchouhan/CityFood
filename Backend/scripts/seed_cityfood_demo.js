@@ -141,7 +141,7 @@ const RESTAURANTS_DATA = [
     },
     {
         city: 'Indore',
-        name: 'Sarafa Street Tuggos',
+        name: 'Sarafa Street Bites',
         cuisines: ['Street Food', 'Desserts', 'Snacks'],
         rating: 4.6,
         coverImages: ['https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80'],
@@ -257,11 +257,11 @@ async function run() {
         console.log('Cleared old placeholder restaurants.');
 
         // Also delete any existing test data to prevent duplicates on multiple runs
-        await Restaurant.deleteMany({ ownerName: 'Tuggo Demo' });
-        await DeliveryPartner.deleteMany({ name: { $regex: 'Tuggo Rider' } });
+        await Restaurant.deleteMany({ ownerName: 'CityFood Demo' });
+        await DeliveryPartner.deleteMany({ name: { $regex: 'CityFood Rider' } });
         await HeroBanner.deleteMany({ publicId: { $regex: 'demo_banner_' } });
 
-        await FoodItem.deleteMany({ name: { $regex: 'Tuggo' } }); // Clear previous demo items if any
+        await FoodItem.deleteMany({ name: { $regex: 'CityFood' } }); // Clear previous demo items if any
 
         // Clear and seed categories
         await FoodCategory.deleteMany({});
@@ -303,7 +303,7 @@ async function run() {
 
             const restaurant = await Restaurant.create({
                 restaurantName: restData.name,
-                ownerName: 'Tuggo Demo',
+                ownerName: 'CityFood Demo',
                 ownerPhone: String(phoneCounter++),
                 city: restData.city,
                 zoneId: zoneMap[restData.city]._id,
@@ -365,7 +365,7 @@ async function run() {
         let dpCounter = 8000000000;
         for (const z of ZONES_DATA) {
             await DeliveryPartner.create({
-                name: `Tuggo Rider ${z.name}`,
+                name: `CityFood Rider ${z.name}`,
                 phone: String(dpCounter++),
                 city: z.name,
                 vehicleType: 'bike',

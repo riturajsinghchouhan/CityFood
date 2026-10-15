@@ -71,7 +71,7 @@ export default function Refund() {
             <h1 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-none">
               {refundData.title || "Refund Policy"}
             </h1>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Tuggo Food Delivery Ecosystem</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">CityFood Ecosystem</p>
           </div>
         </div>
       </div>
@@ -102,7 +102,7 @@ export default function Refund() {
 
         <p className="text-center mt-10 text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] leading-relaxed">
           Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} <br />
-          © {new Date().getFullYear()} Tuggo Food Delivery. All Rights Reserved.
+          © {new Date().getFullYear()} CityFood. All Rights Reserved.
         </p>
       </div>
     </AnimatedPage>

@@ -88,7 +88,7 @@ const foodLandingSettingsSchema = new mongoose.Schema(
         },
         copyrightText: {
             type: String,
-            default: '© 2026 Tuggo Food Delivery™ Ltd. All rights reserved.'
+            default: '© 2026 CityFood™ Ltd. All rights reserved.'
         },
         heroSlides: {
             type: Array,

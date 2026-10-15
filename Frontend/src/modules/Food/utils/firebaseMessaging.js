@@ -979,7 +979,7 @@ export async function registerWebPushForCurrentModule(pathname = window.location
   // This keeps restaurant/delivery FCM alerts working even when Web Push APIs are limited.
   const nativeToken = await registerNativeWebViewFcmToken(moduleName);
   if (!nativeToken && options?.throwOnError === true) {
-    throw new Error("Push notifications are not supported in this browser mode. On iPhone, install Tuggo using Add to Home Screen first.");
+    throw new Error("Push notifications are not supported in this browser mode. On iPhone, install CityFood using Add to Home Screen first.");
   }
   return nativeToken;
 }

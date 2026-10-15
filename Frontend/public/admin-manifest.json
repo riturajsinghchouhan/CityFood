@@ -1,8 +1,8 @@
 {
   "id": "/admin/",
-  "name": "Tuggo Admin",
-  "short_name": "Tuggo Admin",
-  "description": "Tuggo administration panel",
+  "name": "CityFood Admin",
+  "short_name": "CityFood Admin",
+  "description": "CityFood administration panel",
   "start_url": "/admin/food",
   "scope": "/admin/",
   "display": "standalone",

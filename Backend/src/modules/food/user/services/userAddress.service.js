@@ -25,7 +25,7 @@ const resolveAddressLocation = async (address, dto) => {
             const query = [address.street, address.additionalDetails, address.city, address.state, address.zipCode].filter(Boolean).join(', ');
             if (query) {
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`, {
-                    headers: { 'User-Agent': 'Tuggo-Backend/1.0', 'Accept-Language': 'en' }
+                    headers: { 'User-Agent': 'CityFood-Backend/1.0', 'Accept-Language': 'en' }
                 });
                 const data = await res.json();
                 if (Array.isArray(data) && data.length > 0) {

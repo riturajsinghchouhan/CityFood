@@ -1,7 +1,7 @@
 {
-  "name": "Tuggo Food Delivery",
-  "short_name": "Tuggo",
-  "description": "Tuggo Food Delivery Super App",
+  "name": "CityFood",
+  "short_name": "CityFood",
+  "description": "CityFood Super App",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

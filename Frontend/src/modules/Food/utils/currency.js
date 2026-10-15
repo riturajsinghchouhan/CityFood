@@ -1,6 +1,6 @@
 /**
  * Currency Conversion Utility
- * Converts USD to INR (Tuggo Food Rupees)
+ * Converts USD to INR (CityFood Rupees)
  */
 
 // Exchange rate: 1 USD = 83 INR (approximate)

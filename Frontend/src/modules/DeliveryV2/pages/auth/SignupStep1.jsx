@@ -159,7 +159,7 @@ export default function SignupStep1() {
     if (!isBicycle && !formData.vehicleNumber.trim()) {
       newErrors.vehicleNumber = "Vehicle number is required"
     } else if (formData.vehicleNumber.trim() && !/^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$/.test(formData.vehicleNumber)) {
-      newErrors.vehicleNumber = "Invalid Tuggo Food vehicle number format (e.g., MH12AB1234)"
+      newErrors.vehicleNumber = "Invalid CityFood vehicle number format (e.g., MH12AB1234)"
     }
 
     if (!isEVorBicycle && !formData.drivingLicenseNumber.trim()) {

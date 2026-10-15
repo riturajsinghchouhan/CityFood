@@ -1,8 +1,8 @@
 {
-  "name": "tuggo-backend",
+  "name": "cityfood-backend",
   "version": "1.0.0",
   "type": "module",
-  "description": "Tuggo Master Product Backend",
+  "description": "CityFood Master Product Backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -17,6 +17,7 @@
     "migrate:fcm-tokens": "node scripts/migrate-fcm-tokens-to-profile-models.js",
     "migrate:order-payments": "node scripts/migrate-orders-to-transactions.js",
     "db:clone": "node scripts/clone-atlas-to-local.js",
+    "seed:admin": "node scripts/seed-admin.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

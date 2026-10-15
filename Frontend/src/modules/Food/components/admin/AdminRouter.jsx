@@ -146,10 +146,10 @@ export default function AdminRouter() {
     const manifestLink = document.querySelector('link[rel="manifest"]');
     const appTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
     const previousManifest = manifestLink?.getAttribute("href") || "/manifest.json";
-    const previousTitle = appTitle?.getAttribute("content") || "Tuggo";
+    const previousTitle = appTitle?.getAttribute("content") || "CityFood";
 
     manifestLink?.setAttribute("href", "/admin-manifest.json?v=1");
-    appTitle?.setAttribute("content", "Tuggo Admin");
+    appTitle?.setAttribute("content", "CityFood Admin");
 
     return () => {
       manifestLink?.setAttribute("href", previousManifest);

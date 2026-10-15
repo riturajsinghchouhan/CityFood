@@ -221,7 +221,7 @@ export default function DiningRestaurantDetails() {
   const handleShare = async () => {
     const shareData = {
       title: restaurantName,
-      text: `Check out ${restaurantName} on Tuggo Food Delivery!`,
+      text: `Check out ${restaurantName} on CityFood!`,
       url: window.location.href,
     }
 

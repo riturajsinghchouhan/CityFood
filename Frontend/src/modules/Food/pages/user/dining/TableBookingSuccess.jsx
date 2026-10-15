@@ -112,7 +112,7 @@ export default function TableBookingSuccess() {
                             />
                         </div>
                         <div className="min-w-0">
-                            <h2 className="font-black text-lg text-gray-900 dark:text-slate-100 truncate">{booking.restaurant?.name || "The Great Tuggo Food Restaurant"}</h2>
+                            <h2 className="font-black text-lg text-gray-900 dark:text-slate-100 truncate">{booking.restaurant?.name || "The Great CityFood Restaurant"}</h2>
                             <p className="text-xs text-gray-400 dark:text-slate-500 flex items-center gap-1 mt-0.5">
                                 <MapPin className="w-3 h-3" />
                                 <span className="truncate">

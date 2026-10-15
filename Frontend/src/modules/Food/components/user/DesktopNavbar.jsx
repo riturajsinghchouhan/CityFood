@@ -200,7 +200,7 @@ export default function DesktopNavbar({ showLogo = true }) {
                                         />
                                     ) : (
                                         <span className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
-                                            {companyName || "Tuggo"}
+                                            {companyName || "CityFood"}
                                         </span>
                                     )}
                                 </Link>

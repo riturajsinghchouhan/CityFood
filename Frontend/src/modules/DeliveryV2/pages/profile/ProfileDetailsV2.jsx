@@ -810,7 +810,7 @@ export const ProfileDetailsV2 = () => {
               if (!num) return toast.error("Vehicle number is required");
               if (!brand) return toast.error("Vehicle brand is required");
 
-              // Improved validation for Tuggo Food vehicle numbers
+              // Improved validation for CityFood vehicle numbers
               // Accept common formats like MH12AB1234 or MH12A1234
               const numRegex = /^[A-Z]{2}[0-9]{1,2}[A-Z]{0,2}[0-9]{4}$/i;
               if (!numRegex.test(num.replace(/\s+/g, ""))) {

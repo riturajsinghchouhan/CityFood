@@ -37,16 +37,16 @@ export default function SubAdminForm({ subAdmin, onClose }) {
     adminSidebarMenu.forEach((item) => {
       if (item.type === "section") {
         labels.push({ type: "section", label: item.label });
-        item.items?.forEach((suTuggom) => {
-          if (suTuggom.type === "expandable") {
+        item.items?.forEach((subItem) => {
+          if (subItem.type === "expandable") {
             // Include main parent
-            labels.push({ type: "item", label: suTuggom.label });
+            labels.push({ type: "item", label: subItem.label });
             // Include sub items for granular permissions
-            suTuggom.suTuggoms?.forEach((deepSuTuggom) => {
-              labels.push({ type: "sub-item", label: deepSuTuggom.label, parent: suTuggom.label });
+            subItem.subItems?.forEach((deepSubItem) => {
+              labels.push({ type: "sub-item", label: deepSubItem.label, parent: subItem.label });
             });
           } else {
-            labels.push({ type: "item", label: suTuggom.label });
+            labels.push({ type: "item", label: subItem.label });
           }
         });
       } else {
@@ -269,17 +269,17 @@ export default function SubAdminForm({ subAdmin, onClose }) {
                   }
 
                   const isChecked = accessibleModules.includes(item.label);
-                  const isSuTuggom = item.type === "sub-item";
+                  const isSubItem = item.type === "sub-item";
 
                   return (
                     <div
                       key={index}
-                      className={`flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-colors cursor-pointer ${isSuTuggom ? "ml-8 border-l-2 border-l-gray-200 rounded-l-none" : ""
+                      className={`flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-colors cursor-pointer ${isSubItem ? "ml-8 border-l-2 border-l-gray-200 rounded-l-none" : ""
                         }`}
                       onClick={() => handleToggleModule(item.label)}
                     >
-                      <span className={`${isSuTuggom ? "text-gray-600 text-sm" : "text-gray-700 font-medium"}`}>
-                        {isSuTuggom && <span className="text-gray-300 mr-2">↳</span>}
+                      <span className={`${isSubItem ? "text-gray-600 text-sm" : "text-gray-700 font-medium"}`}>
+                        {isSubItem && <span className="text-gray-300 mr-2">↳</span>}
                         {item.label}
                       </span>
                       <div className="relative inline-flex items-center">
@@ -289,7 +289,7 @@ export default function SubAdminForm({ subAdmin, onClose }) {
                           checked={isChecked}
                           readOnly
                         />
-                        <div className={`w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all ${isSuTuggom ? "peer-checked:bg-teal-500 scale-90" : "peer-checked:bg-[#11b5b8]"}`}></div>
+                        <div className={`w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all ${isSubItem ? "peer-checked:bg-teal-500 scale-90" : "peer-checked:bg-[#11b5b8]"}`}></div>
                       </div>
                     </div>
                   );

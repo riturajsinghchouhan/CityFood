@@ -2153,7 +2153,7 @@ export async function autoCancelUnresponsiveOrder(orderMongoId, reason = 'Restau
         refundId: '',
         processedAt: new Date()
       };
-      refundDetailText = ` Your refund of ₹${totalAmount} has been credited back to your Tuggo Wallet.`;
+      refundDetailText = ` Your refund of ₹${totalAmount} has been credited back to your CityFood Wallet.`;
     } catch (err) {
       logger.error(`[AutoCancel] Wallet refund error for order ${orderCode}: ${err.message}`);
       order.payment.refund = { status: 'failed', destination: 'wallet', amount: totalAmount };

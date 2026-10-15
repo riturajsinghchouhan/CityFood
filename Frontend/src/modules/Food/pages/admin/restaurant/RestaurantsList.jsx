@@ -1613,7 +1613,7 @@ export default function RestaurantsList() {
             <div className="flex items-center justify-center gap-3 pt-8 pb-2 text-slate-400 select-none">
               <div className="h-px w-20 bg-slate-200" />
               <span className="text-xs font-semibold tracking-widest uppercase text-slate-400">
-                tuggo
+                cityfood
               </span>
               <div className="h-px w-20 bg-slate-200" />
             </div>

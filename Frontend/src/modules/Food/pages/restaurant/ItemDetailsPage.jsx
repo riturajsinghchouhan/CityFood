@@ -207,12 +207,12 @@ export default function ItemDetailsPage() {
             // Check items in subsections
             if (section.subsections) {
               for (const subsection of section.subsections) {
-                const suTuggom = subsection.items?.find(i => {
+                const subItem = subsection.items?.find(i => {
                   const itemId = String(i.id || i._id || '').trim()
                   return itemId === searchId || itemId === id
                 })
-                if (suTuggom) {
-                  foundItem = suTuggom
+                if (subItem) {
+                  foundItem = subItem
                   break
                 }
               }

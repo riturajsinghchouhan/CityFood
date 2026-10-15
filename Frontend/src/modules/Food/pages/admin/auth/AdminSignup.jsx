@@ -36,7 +36,7 @@ export default function AdminSignup() {
   const [error, setError] = useState("")
   const [resendTimer, setResendTimer] = useState(0)
   const [logoUrl, setLogoUrl] = useState(null)
-  const [companyName, setCompanyName] = useState("Tuggo")
+  const [companyName, setCompanyName] = useState("CityFood")
   const inputRefs = useRef(Array(6).fill(null).map(() => null))
 
   // Fetch business settings logo on mount

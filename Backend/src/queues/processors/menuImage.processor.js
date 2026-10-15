@@ -23,13 +23,13 @@ export function buildImagePrompt(itemName, itemDescription, categoryName, foodTy
     const type = foodType === 'Veg' ? 'vegetarian' : 'non-vegetarian';
     const desc = itemDescription ? itemDescription.trim() : '';
 
-    let prompt = `A professional, highly realistic, appetizing food photography image of the exact Tuggo Food dish: "${dishName}".`;
+    let prompt = `A professional, highly realistic, appetizing food photography image of the exact CityFood dish: "${dishName}".`;
 
     if (desc) prompt += ` The dish is described as: "${desc}".`;
-    if (category) prompt += ` It belongs to the "${category}" category on an Tuggo Food restaurant menu.`;
+    if (category) prompt += ` It belongs to the "${category}" category on a CityFood restaurant menu.`;
 
-    prompt += ` This is a ${type} Tuggo Food dish.`;
-    prompt += ` The photo must show ONLY this specific dish — "${dishName}" — served in a traditional or modern Tuggo Food restaurant style.`;
+    prompt += ` This is a ${type} CityFood dish.`;
+    prompt += ` The photo must show ONLY this specific dish — "${dishName}" — served in a traditional or modern CityFood restaurant style.`;
     prompt += ` Shot from a 45-degree top-down angle, natural lighting, shallow depth of field, macro lens, 85mm, extremely detailed, garnished beautifully.`;
     prompt += ` Background: clean white or dark slate plate. No text, no watermarks, no people, no hands, no other dishes visible.`;
     prompt += ` Ultra-realistic, 8k resolution, cinematic food photography quality.`;
