@@ -79,25 +79,31 @@ export const initializeFirebaseRealtime = () => {
 };
 
 /**
- * Returns the initialized Firebase Realtime Database instance.
- * @returns {admin.database.Database}
- * @throws Error if not initialized
+ * Returns the initialized Firebase Realtime Database instance, or null if not configured.
+ * @returns {admin.database.Database | null}
  */
 export const getFirebaseDB = () => {
-    if (!db) {
-        throw new Error('⚠️ Firebase Realtime Database not initialized. Call initializeFirebaseRealtime() first.');
+    if (!db && admin.apps.length > 0) {
+        try {
+            db = admin.database();
+        } catch {
+            db = null;
+        }
     }
     return db;
 };
 
 /**
- * Returns the initialized Firebase Messaging instance.
- * @returns {admin.messaging.Messaging}
- * @throws Error if not initialized
+ * Returns the initialized Firebase Messaging instance, or null if not configured.
+ * @returns {admin.messaging.Messaging | null}
  */
 export const getFirebaseMessaging = () => {
-    if (!messaging) {
-        throw new Error('⚠️ Firebase Messaging not initialized. Call initializeFirebaseRealtime() first.');
+    if (!messaging && admin.apps.length > 0) {
+        try {
+            messaging = admin.messaging();
+        } catch {
+            messaging = null;
+        }
     }
     return messaging;
 };

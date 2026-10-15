@@ -14,10 +14,10 @@ function stripUndefined(value) {
 }
 
 export async function publishDeliveryOfferToFirebase(partnerId, orderMongoId, payload = {}) {
-  const db = getFirebaseDB();
-  if (!db || !partnerId || !orderMongoId) return false;
-
   try {
+    const db = getFirebaseDB();
+    if (!db || !partnerId || !orderMongoId) return false;
+
     const offeredAt = Number(payload.offeredAt) || Date.now();
     await db.ref(getOfferPath(partnerId, orderMongoId)).set(
       stripUndefined({
@@ -35,10 +35,10 @@ export async function publishDeliveryOfferToFirebase(partnerId, orderMongoId, pa
 }
 
 export async function removeDeliveryOfferFromFirebase(partnerId, orderMongoId) {
-  const db = getFirebaseDB();
-  if (!db || !partnerId || !orderMongoId) return false;
-
   try {
+    const db = getFirebaseDB();
+    if (!db || !partnerId || !orderMongoId) return false;
+
     await db.ref(getOfferPath(partnerId, orderMongoId)).remove();
     return true;
   } catch (err) {
@@ -48,28 +48,37 @@ export async function removeDeliveryOfferFromFirebase(partnerId, orderMongoId) {
 }
 
 export async function removeDeliveryOffersForPartners(partnerIds = [], orderMongoId) {
-  if (!orderMongoId || !Array.isArray(partnerIds) || partnerIds.length === 0) return;
+  try {
+    if (!orderMongoId || !Array.isArray(partnerIds) || partnerIds.length === 0) return;
 
-  await Promise.all(
-    partnerIds
-      .map((partnerId) => String(partnerId || '').trim())
-      .filter(Boolean)
-      .map((partnerId) => removeDeliveryOfferFromFirebase(partnerId, orderMongoId)),
-  );
+    await Promise.all(
+      partnerIds
+        .map((partnerId) => String(partnerId || '').trim())
+        .filter(Boolean)
+        .map((partnerId) => removeDeliveryOfferFromFirebase(partnerId, orderMongoId)),
+    );
+  } catch (err) {
+    logger.warn(`Firebase removeDeliveryOffersForPartners failed: ${err.message}`);
+  }
 }
 
 export async function clearDeliveryOffersForOrder(order, options = {}) {
-  const orderMongoId = String(order?._id || order?.orderMongoId || '').trim();
-  if (!orderMongoId) return;
+  try {
+    const orderMongoId = String(order?._id || order?.orderMongoId || '').trim();
+    if (!orderMongoId) return;
 
-  const partnerIds = new Set();
-  if (options.includeAssignedPartner && order?.dispatch?.deliveryPartnerId) {
-    partnerIds.add(String(order.dispatch.deliveryPartnerId));
+    const partnerIds = new Set();
+    if (options.includeAssignedPartner && order?.dispatch?.deliveryPartnerId) {
+      partnerIds.add(String(order.dispatch.deliveryPartnerId));
+    }
+
+    for (const entry of order?.dispatch?.offeredTo || []) {
+      if (entry?.partnerId) partnerIds.add(String(entry.partnerId));
+    }
+
+    await removeDeliveryOffersForPartners([...partnerIds], orderMongoId);
+  } catch (err) {
+    logger.warn(`Firebase clearDeliveryOffersForOrder failed: ${err.message}`);
   }
-
-  for (const entry of order?.dispatch?.offeredTo || []) {
-    if (entry?.partnerId) partnerIds.add(String(entry.partnerId));
-  }
-
-  await removeDeliveryOffersForPartners([...partnerIds], orderMongoId);
 }
+

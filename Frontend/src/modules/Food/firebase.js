@@ -14,23 +14,38 @@ const firebaseConfig = {
 };
 
 // Internal state
-let app;
+let app = null;
 let firebaseAuth = null;
 let googleProvider = null;
 let firebaseRealtimeDb = null;
 
 /**
- * Ensures Firebase app is initialized but stays silent.
+ * Checks whether Firebase credentials are validly provided in environment variables.
+ */
+export function isFirebaseConfigured() {
+  const apiKey = String(firebaseConfig.apiKey || '').trim();
+  const projectId = String(firebaseConfig.projectId || '').trim();
+  return Boolean(apiKey && apiKey.length > 5 && projectId);
+}
+
+/**
+ * Ensures Firebase app is initialized safely.
  */
 function initializeBaseApp() {
   if (app) return app;
-  const existingApps = getApps();
-  if (existingApps.length > 0) {
-    app = existingApps[0];
-  } else {
-    app = initializeApp(firebaseConfig);
+  if (!isFirebaseConfigured()) return null;
+  try {
+    const existingApps = getApps();
+    if (existingApps.length > 0) {
+      app = existingApps[0];
+    } else {
+      app = initializeApp(firebaseConfig);
+    }
+    return app;
+  } catch (err) {
+    console.warn('[Firebase] App initialization skipped:', err?.message || err);
+    return null;
   }
-  return app;
 }
 
 /**
@@ -38,8 +53,15 @@ function initializeBaseApp() {
  */
 export function getFirebaseAuth() {
   if (!firebaseAuth) {
+    if (!isFirebaseConfigured()) return null;
     const firebaseApp = initializeBaseApp();
-    firebaseAuth = getAuth(firebaseApp);
+    if (!firebaseApp) return null;
+    try {
+      firebaseAuth = getAuth(firebaseApp);
+    } catch (err) {
+      console.warn('[Firebase] Auth initialization skipped:', err?.message || err);
+      firebaseAuth = null;
+    }
   }
   return firebaseAuth;
 }
@@ -49,26 +71,42 @@ export function getFirebaseAuth() {
  */
 export function getGoogleAuthProvider() {
   if (!googleProvider) {
-    googleProvider = new GoogleAuthProvider();
+    if (!isFirebaseConfigured()) return null;
+    try {
+      googleProvider = new GoogleAuthProvider();
+    } catch (err) {
+      console.warn('[Firebase] Google Auth Provider skipped:', err?.message || err);
+      googleProvider = null;
+    }
   }
   return googleProvider;
 }
 
 /**
  * Legacy support: ensuring Firebase is initialized.
- * Now it only initializes the basic App and Realtime DB if requested.
+ * Now it only initializes the basic App and Realtime DB if requested and configured.
  * Auth initialization is skipped by default to avoid stale 'getProjectConfig' calls.
  */
 export function ensureFirebaseInitialized(options = {}) {
   const { enableAuth = false, enableRealtimeDb = true } = options;
+  if (!isFirebaseConfigured()) return null;
+
   const firebaseApp = initializeBaseApp();
+  if (!firebaseApp) return null;
 
   if (enableAuth) {
     getFirebaseAuth();
   }
 
   if (enableRealtimeDb && !firebaseRealtimeDb) {
-    firebaseRealtimeDb = getDatabase(firebaseApp);
+    try {
+      firebaseRealtimeDb = firebaseConfig.databaseURL
+        ? getDatabase(firebaseApp, firebaseConfig.databaseURL)
+        : getDatabase(firebaseApp);
+    } catch (err) {
+      console.warn('[Firebase] Realtime Database initialization skipped:', err?.message || err);
+      firebaseRealtimeDb = null;
+    }
   }
   
   return firebaseApp;
@@ -76,3 +114,4 @@ export function ensureFirebaseInitialized(options = {}) {
 
 // Proxies for export
 export { app as firebaseApp, firebaseAuth, googleProvider, firebaseRealtimeDb };
+

@@ -1520,12 +1520,12 @@ export async function updateOrderStatusRestaurant(
  * Manually re-trigger delivery partner search for a restaurant order.
  * Only allowed if status is preparing/ready and no partner has accepted yet.
  */
-export async function resendDeliveryNotificationRestaurant(orderId, restaurantId) {
-  return dispatchService.resendDeliveryNotificationRestaurant(orderId, restaurantId);
+export async function resendDeliveryNotificationRestaurant(orderId, restaurantId, options = {}) {
+  return dispatchService.resendDeliveryNotificationRestaurant(orderId, restaurantId, options);
 }
 
-export async function resendDeliveryNotificationAdmin(orderId) {
-  return dispatchService.resendDeliveryNotificationAdmin(orderId);
+export async function resendDeliveryNotificationAdmin(orderId, options = {}) {
+  return dispatchService.resendDeliveryNotificationAdmin(orderId, options);
 }
 
 export async function getCurrentTripDelivery(deliveryPartnerId) {

@@ -126,8 +126,8 @@ export default function Logout() {
         const { signOut } = await import("firebase/auth")
         // Firebase Auth is lazy-initialized now; ensure it before accessing firebaseAuth.currentUser
         ensureFirebaseInitialized({ enableAuth: true, enableRealtimeDb: false })
-        const currentUser = firebaseAuth.currentUser
-        if (currentUser) {
+        const currentUser = firebaseAuth?.currentUser
+        if (currentUser && firebaseAuth) {
           await signOut(firebaseAuth)
         }
       } catch (firebaseError) {

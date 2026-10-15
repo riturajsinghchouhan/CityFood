@@ -656,7 +656,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       isOnline,
       status: isOnline ? "online" : "offline",
       activeOrderId: activeOrder?._id || activeOrder?.orderId || null,
-    });
+    }).catch(() => {});
   }, [isOnline, riderLocation, activeOrder?._id, activeOrder?.orderId]);
 
   // 3. Location logic (Smart Frequency Tracking)
@@ -762,7 +762,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
             isOnline: true,
             status: "online",
             activeOrderId: payload.orderId || null,
-          });
+          }).catch(() => {});
         }
       }
 
@@ -909,7 +909,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
             lng: lastCoordRef.current.lng,
             isOnline: true,
             status: "online",
-          });
+          }).catch(() => {});
         }
       }
     }, 45000);

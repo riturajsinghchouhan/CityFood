@@ -2248,7 +2248,7 @@ export default function Home() {
             {activeTab === "food" && (
               <div id="fest-banner-wrapper" className="w-full">
                 {festVideoActive ? (
-                  <div className="w-full h-[45px] sm:h-[55px]" />
+                  <div className="w-full h-3 sm:h-4" />
                 ) : (
                   <div className="pb-4 sm:pb-6">
                     <FestBanner
