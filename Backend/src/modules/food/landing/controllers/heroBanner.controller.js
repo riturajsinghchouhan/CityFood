@@ -32,7 +32,9 @@ export const uploadHeroBannersController = async (req, res, next) => {
         };
 
         const results = await createHeroBannersFromFiles(req.files, meta);
-        return sendResponse(res, 201, 'Hero banners uploaded', { results });
+        const banners = (results || []).filter(r => r.success && r.banner).map(r => r.banner);
+        const errors = (results || []).filter(r => !r.success).map(r => r.error);
+        return sendResponse(res, 201, 'Hero banners uploaded', { banners, results, errors });
     } catch (error) {
         next(error);
     }

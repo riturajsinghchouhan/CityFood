@@ -75,11 +75,19 @@ const OptimizedImage = React.memo(({
   placeholder = 'blur',
   placeholderType = 'food',
   blurDataURL,
+  fallbackSrc,
   onLoad,
   onError,
   ...props
 }) => {
-  const processedSrc = useMemo(() => getMediaUrl(src), [src])
+  const processedSrc = useMemo(() => {
+    const url = getMediaUrl(src);
+    // If url is from disabled Cloudinary account xv4gkshv, use fallbackSrc if available
+    if (typeof url === 'string' && /xv4gkshv/i.test(url) && fallbackSrc) {
+      return fallbackSrc;
+    }
+    return url;
+  }, [src, fallbackSrc])
 
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
@@ -93,6 +101,8 @@ const OptimizedImage = React.memo(({
     if (imageSrc.startsWith('data:') || imageSrc.startsWith('/')) return false
     // Don't proxy localhost
     if (/localhost|127\.0\.0\.1/i.test(imageSrc)) return false;
+    // Don't transform disabled Cloudinary accounts
+    if (/xv4gkshv/i.test(imageSrc)) return false;
     // Native Cloudinary URLs can be optimized natively instead of via proxy
     if (/res\.cloudinary\.com/i.test(imageSrc)) return true;
     // Don't proxy signed URLs (Firebase, AWS, etc) as they break
@@ -207,7 +217,8 @@ const OptimizedImage = React.memo(({
     )
   }
 
-  const imageSrc = hasError ? 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="14" x="50%25" y="50%25" text-anchor="middle"%3EImage not found%3C/text%3E%3C/svg%3E' : processedSrc
+  const defaultErrorPlaceholder = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="14" x="50%25" y="50%25" text-anchor="middle"%3EImage not found%3C/text%3E%3C/svg%3E';
+  const imageSrc = hasError ? (fallbackSrc || defaultErrorPlaceholder) : processedSrc;
 
   // Use optimized version for default src as well
   const optimizedSrc = supportsOptimization(processedSrc) && !hasError 

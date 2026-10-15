@@ -281,15 +281,21 @@ export default function LandingPageManagement() {
       const response = await api.post('/food/hero-banners/multiple', formData, config)
 
       if (response.data.success) {
-        const uploadedBanners = response.data.data?.banners || []
-        const errors = response.data.data?.errors || []
+        const rawBanners = response.data.data?.banners;
+        const rawResults = response.data.data?.results;
+        const uploadedBanners = Array.isArray(rawBanners)
+          ? rawBanners
+          : Array.isArray(rawResults)
+            ? rawResults.filter(r => r?.success && r?.banner).map(r => r.banner)
+            : [];
+        const errors = response.data.data?.errors || (Array.isArray(rawResults) ? rawResults.filter(r => !r?.success).map(r => r?.error).filter(Boolean) : []);
         const successCount = uploadedBanners.length
         const failCount = errors.length
 
         await fetchBanners()
         if (bannersFileInputRef.current) bannersFileInputRef.current.value = ''
 
-        if (failCount === 0) {
+        if (failCount === 0 && successCount > 0) {
           setSuccess(`${successCount} hero banner${successCount > 1 ? 's' : ''} uploaded successfully!`)
           setTimeout(() => setSuccess(null), 5000)
         } else if (successCount > 0) {
@@ -297,7 +303,7 @@ export default function LandingPageManagement() {
           setErrorSafely(errors.join(', '))
           setTimeout(() => { setSuccess(null); setError(null) }, 5000)
         } else {
-          setErrorSafely(`Failed to upload banners. ${errors.join(', ')}`)
+          setErrorSafely(errors.length > 0 ? `Failed to upload banners: ${errors.join(', ')}` : 'No banners could be uploaded.')
         }
       } else {
         setErrorSafely(response.data.message || 'Failed to upload banners')

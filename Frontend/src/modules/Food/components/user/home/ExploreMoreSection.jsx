@@ -54,6 +54,7 @@ export default function ExploreMoreSection({
                         </div>
                         <OptimizedImage
                           src={item.image}
+                          fallbackSrc={item.fallbackImage || item.image}
                           alt={item.label}
                           className="w-full h-full object-cover relative z-10 transition-transform duration-500 group-hover:scale-110"
                           width={200}

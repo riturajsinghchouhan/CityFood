@@ -306,10 +306,14 @@ const RestaurantImageCarousel = React.memo(
         sourceImages = restaurant.coverImages;
       } else if (restaurant?.image) {
         sourceImages = [restaurant.image];
+      } else if (restaurant?.profileImage) {
+        const pUrl = typeof restaurant.profileImage === "string" ? restaurant.profileImage : (restaurant.profileImage?.url || "");
+        if (pUrl) sourceImages = [pUrl];
       }
 
       const validImages = sourceImages
-        .filter((img) => typeof img === "string" && img.trim())
+        .map((img) => (typeof img === "string" ? img : (img?.url || img?.secure_url || "")))
+        .filter((img) => typeof img === "string" && img.trim() && !img.includes("xv4gkshv"))
         .map((img) => img.trim());
 
       validImages.forEach((img) => {
@@ -323,14 +327,21 @@ const RestaurantImageCarousel = React.memo(
       });
 
       if (result.length === 0) {
+        const seedStr = String(restaurant?.id || restaurant?.mongoId || restaurant?._id || restaurant?.name || "food");
+        let hash = 0;
+        for (let i = 0; i < seedStr.length; i++) {
+          hash = (hash << 5) - hash + seedStr.charCodeAt(i);
+          hash |= 0;
+        }
+        const fallbackIdx = Math.abs(hash) % foodImages.length;
         result.push({
-          url: foodImages[0],
+          url: foodImages[fallbackIdx] || foodImages[0],
           isRecommended: false,
         });
       }
 
       return result;
-    }, [restaurant?.recommendedItems, restaurant?.images, restaurant?.coverImages, restaurant?.image, withCacheBuster]);
+    }, [restaurant?.recommendedItems, restaurant?.images, restaurant?.coverImages, restaurant?.image, restaurant?.profileImage, withCacheBuster]);
 
     const images = useMemo(() => slides.map((s) => s.url), [slides]);
     const [currentIndex, setCurrentIndex] = useState(0);

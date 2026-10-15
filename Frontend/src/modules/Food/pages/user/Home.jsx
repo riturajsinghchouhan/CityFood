@@ -460,18 +460,21 @@ export default function Home() {
         id: "offers",
         label: "Offers",
         image: exploreOffers,
+        fallbackImage: exploreOffers,
         href: "/food/user/offers",
       },
       {
         id: "gourmet",
         label: "Gourmet",
         image: exploreGourmet,
+        fallbackImage: exploreGourmet,
         href: "/food/user/gourmet",
       },
       {
         id: "collection",
         label: "Collections",
         image: exploreCollection,
+        fallbackImage: exploreCollection,
         href: "/food/user/profile/favorites",
       },
     ];
@@ -488,11 +491,16 @@ export default function Home() {
             ? apiItem.link
             : `/${apiItem.link}`
           : item.href;
+        const rawImg = apiItem.imageUrl || apiItem.image || "";
+        const isBrokenCloudinary = typeof rawImg === "string" && /xv4gkshv/i.test(rawImg);
+        const resolvedImage = isBrokenCloudinary
+          ? item.image
+          : (normalizeImageUrl(rawImg) || item.image);
+
         return {
           ...item,
-          image:
-            normalizeImageUrl(apiItem.imageUrl || apiItem.image || "") ||
-            item.image,
+          image: resolvedImage,
+          fallbackImage: item.image,
           href,
         };
       }
@@ -1812,37 +1820,65 @@ export default function Home() {
         }
         return true;
       })
-      .map((restaurant) => {
+      .map((restaurant, index) => {
         const restaurantId = restaurant?._id ? String(restaurant._id) : "";
+        const matched = (restaurantsData || []).find((r) => {
+          const rId = String(r.mongoId || r.id || r._id || "");
+          return rId && rId === restaurantId;
+        });
+
         const cuisine =
           Array.isArray(restaurant?.cuisines) && restaurant.cuisines.length > 0
             ? restaurant.cuisines[0]
-            : "Multi-cuisine";
+            : (matched?.cuisine || "Multi-cuisine");
+
         const menuImages = extractImages(
           (Array.isArray(restaurant?.menuImages)
             ? restaurant.menuImages
             : [restaurant?.menuImages]
           ).filter(Boolean),
         );
-        const carouselImages = Array.from(new Set(menuImages)).reverse();
-        const image = carouselImages[0] || foodImages[0];
+        const coverImages = extractImages(
+          (Array.isArray(restaurant?.coverImages)
+            ? restaurant.coverImages
+            : [restaurant?.coverImages]
+          ).filter(Boolean),
+        );
+        const profileImg = restaurant?.profileImage?.url || (typeof restaurant?.profileImage === "string" ? restaurant.profileImage : "");
+
+        const allCandidates = [
+          ...(matched?.images || []),
+          ...(coverImages.length > 0 ? coverImages : []),
+          ...(menuImages.length > 0 ? menuImages : []),
+          ...(profileImg ? [profileImg] : []),
+          ...(matched?.image ? [matched.image] : []),
+        ].filter((img) => img && !img.includes("xv4gkshv"));
+
+        const carouselImages = Array.from(new Set(allCandidates));
+        const finalImage = carouselImages[0] || (matched?.image) || foodImages[index % foodImages.length];
 
         return {
+          ...(matched || {}),
+          ...restaurant,
           id: restaurant?.restaurantId || restaurantId,
           mongoId: restaurantId,
           name: getRestaurantDisplayName(restaurant),
           cuisine,
-          rating: Number(restaurant?.rating) || 0,
-          distance: "",
-          deliveryTime: "",
-          image: normalizeImageUrl(image) || foodImages[0],
-          images: carouselImages.length > 0 ? carouselImages : [foodImages[0]],
-          slug: restaurant?.slug || restaurant?.restaurantId || restaurantId,
-          offer: null,
-          pureVegRestaurant: restaurant?.pureVegRestaurant === true,
+          rating: Number(restaurant?.rating ?? matched?.rating) || 0,
+          distance: matched?.distance || "",
+          deliveryTime: matched?.deliveryTime || "",
+          image: normalizeImageUrl(finalImage) || finalImage,
+          images: carouselImages.length > 0 ? carouselImages : [finalImage],
+          coverImages: coverImages.length > 0 ? coverImages : (matched?.coverImages || []),
+          recommendedItems: (matched?.recommendedItems && matched.recommendedItems.length > 0)
+            ? matched.recommendedItems
+            : (restaurant?.recommendedItems || []),
+          slug: restaurant?.slug || matched?.slug || restaurantId,
+          offer: restaurant?.offer || matched?.offer || null,
+          pureVegRestaurant: restaurant?.pureVegRestaurant === true || matched?.pureVegRestaurant === true,
           isActive: true,
           isAcceptingOrders: true,
-          zoneId: restaurant?.zoneId,
+          zoneId: restaurant?.zoneId || matched?.zoneId,
         };
       });
 
