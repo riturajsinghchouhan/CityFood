@@ -14,7 +14,7 @@ import PageNavbar from "@food/components/user/PageNavbar"
 import offerImage from "@food/assets/offerimage.png"
 import AddToCartAnimation from "@food/components/user/AddToCartAnimation"
 import OptimizedImage from "@food/components/OptimizedImage"
-import api, { restaurantAPI, adminAPI, getPublicLandingSettings } from "@food/api"
+import api, { restaurantAPI, getPublicLandingSettings, getPublicCategories } from "@food/api"
 import { isModuleAuthenticated } from "@food/utils/auth"
 import { flattenMenuItems, getMenuFromResponse } from "@food/utils/menuItems"
 import { calculateDistance, formatDistance } from "@food/utils/common"
@@ -912,8 +912,7 @@ export default function Under250() {
     const fetchCategories = async () => {
       try {
         setLoadingCategories(true)
-        const response = await adminAPI.getPublicCategories(zoneId ? { zoneId } : {})
-        const payload = response?.data?.data || response?.data || response || {}
+        const payload = (await getPublicCategories(zoneId || null)) || {}
         const categoriesRaw = Array.isArray(payload?.categories)
           ? payload.categories
           : (Array.isArray(payload) ? payload : [])
