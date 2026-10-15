@@ -1353,6 +1353,7 @@ export default function Home() {
                 popularItems: Array.isArray(restaurant.popularItems) ? restaurant.popularItems : [],
                 itemDiscounts: Array.isArray(restaurant.itemDiscounts) ? restaurant.itemDiscounts : [],
                 recommendedItems: Array.isArray(restaurant.recommendedItems) ? restaurant.recommendedItems : [],
+                previewItems: Array.isArray(restaurant.previewItems) ? restaurant.previewItems : [],
                 offers: Array.isArray(restaurant.offers) ? restaurant.offers : [],
                 discountRules: Array.isArray(restaurant.discountRules) ? restaurant.discountRules : [],
                 offer: offerText,
@@ -2185,7 +2186,7 @@ export default function Home() {
           {/* Brand Top Section (Dark) */}
           {/* Decoupled Dark Background - Dynamic height based on actual components to prevent clipping sticky elements while covering properly */}
           <div 
-             className="absolute top-0 left-0 right-0 overflow-hidden bg-gradient-to-b from-[#3a142c] to-[#1a0a14] shadow-lg pointer-events-none z-0 transition-all duration-300 [transform:translateZ(0)] [mask-image:-webkit-radial-gradient(white,black)]"
+             className="absolute top-0 left-0 right-0 overflow-hidden rounded-b-[28px] bg-gradient-to-b from-[#3a142c] to-[#1a0a14] shadow-lg pointer-events-none z-0 transition-all duration-300 [transform:translateZ(0)] [mask-image:-webkit-radial-gradient(white,black)]"
              style={{ height: festVideoActive ? '360px' : (headerBgHeight > 0 ? `${headerBgHeight}px` : (activeTab === 'food' ? '300px' : '140px')) }}
           >
             {festVideoActive && (
@@ -2241,12 +2242,13 @@ export default function Home() {
               handleVegModeChange={handleVegModeChange}
               isCategoryStuck={isCategoryStuck}
               handleVoiceSearchClick={handleVoiceSearchClick}
+              pushSearchDown={activeTab === "food" && festVideoActive}
             />
 
             {activeTab === "food" && (
               <div id="fest-banner-wrapper" className="w-full">
                 {festVideoActive ? (
-                  <div className="w-full h-[235px] sm:h-[245px]" />
+                  <div className="w-full h-[45px] sm:h-[55px]" />
                 ) : (
                   <div className="pb-4 sm:pb-6">
                     <FestBanner

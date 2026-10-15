@@ -68,6 +68,10 @@ function resolveSlideOffer(restaurant, slide) {
   return null;
 }
 
+export function resolveItemOffer(restaurant, item) {
+  return resolveSlideOffer(restaurant, { ...item, isRecommended: true });
+}
+
 function OfferBannerContent({ item }) {
   if (!item) return null;
   return (

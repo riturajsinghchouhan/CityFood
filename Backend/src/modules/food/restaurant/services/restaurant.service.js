@@ -286,6 +286,80 @@ const populateRecommendedItems = async (restaurants = []) => {
     return map;
 };
 
+// Dishes shown in the horizontal item row on home restaurant cards:
+// recommended first, then the newest available items, capped per restaurant.
+const PREVIEW_ITEMS_PER_RESTAURANT = 8;
+
+const populatePreviewItems = async (restaurants = []) => {
+    const map = new Map();
+    if (!Array.isArray(restaurants) || restaurants.length === 0) {
+        return map;
+    }
+
+    try {
+        const restaurantIds = restaurants
+            .map((r) => r?._id || r?.id)
+            .filter((id) => id && mongoose.Types.ObjectId.isValid(String(id)))
+            .map((id) => new mongoose.Types.ObjectId(String(id)));
+
+        if (restaurantIds.length === 0) {
+            return map;
+        }
+
+        const { FoodItem } = await import('../../admin/models/food.model.js');
+        const { getFoodDisplayPrice } = await import('../../admin/services/foodVariant.service.js');
+
+        const grouped = await FoodItem.aggregate([
+            {
+                $match: {
+                    restaurantId: { $in: restaurantIds },
+                    isAvailable: { $ne: false },
+                    approvalStatus: 'approved'
+                }
+            },
+            { $sort: { isRecommended: -1, createdAt: -1 } },
+            {
+                $group: {
+                    _id: '$restaurantId',
+                    items: {
+                        $push: {
+                            _id: '$_id',
+                            name: '$name',
+                            price: '$price',
+                            variants: '$variants',
+                            image: '$image',
+                            foodType: '$foodType',
+                            isRecommended: '$isRecommended',
+                            priceOnOtherPlatforms: '$priceOnOtherPlatforms'
+                        }
+                    }
+                }
+            },
+            { $project: { items: { $slice: ['$items', PREVIEW_ITEMS_PER_RESTAURANT] } } }
+        ]);
+
+        for (const group of grouped) {
+            map.set(
+                String(group._id),
+                (group.items || []).map((item) => ({
+                    id: item._id,
+                    _id: item._id,
+                    name: item.name,
+                    price: getFoodDisplayPrice(item),
+                    priceOnOtherPlatforms: Number(item.priceOnOtherPlatforms) || null,
+                    foodType: item.foodType === 'Veg' ? 'Veg' : 'Non-Veg',
+                    image: resolveStoredUploadPath(item.image || ''),
+                    isRecommended: item.isRecommended === true
+                }))
+            );
+        }
+    } catch (err) {
+        console.error('Error in populatePreviewItems:', err);
+    }
+
+    return map;
+};
+
 const notifyAdminsAboutRestaurantProfileReview = async (restaurantId, restaurantName) => {
     try {
         const { notifyAdminsSafely } = await import('../../../../core/notifications/firebase.service.js');
@@ -1591,7 +1665,10 @@ export const listApprovedRestaurants = async (query = {}) => {
             // Silently ignore
         }
 
-        const recommendedMap = await populateRecommendedItems(restaurantsRawGeo);
+        const [recommendedMap, previewMap] = await Promise.all([
+            populateRecommendedItems(restaurantsRawGeo),
+            populatePreviewItems(restaurantsRawGeo)
+        ]);
 
         const origin = { lat, lng };
         const dests = (restaurantsRawGeo || []).map(r => ({
@@ -1624,6 +1701,7 @@ export const listApprovedRestaurants = async (query = {}) => {
                 openDays: Array.isArray(r.openDays) ? r.openDays : [],
                 menuImages: Array.isArray(r.menuImages) ? r.menuImages : [],
                 recommendedItems: recommendedMap.get(String(r._id)) || [],
+                previewItems: previewMap.get(String(r._id)) || [],
                 distanceInfo: drivingInfo || null,
                 distanceText: drivingInfo ? drivingInfo.distanceText : null
             };
@@ -1723,7 +1801,10 @@ export const listApprovedRestaurants = async (query = {}) => {
         // Silently ignore if population fails
     }
 
-    const recommendedMap = await populateRecommendedItems(restaurantsRaw);
+    const [recommendedMap, previewMap] = await Promise.all([
+        populateRecommendedItems(restaurantsRaw),
+        populatePreviewItems(restaurantsRaw)
+    ]);
 
     let drivingDistances = new Map();
     if (lat !== null && lng !== null) {
@@ -1760,6 +1841,7 @@ export const listApprovedRestaurants = async (query = {}) => {
             // Keep menuImages as an array for fallbacks; allow both string and {url} on client.
             menuImages: Array.isArray(r.menuImages) ? r.menuImages : [],
             recommendedItems: recommendedMap.get(String(r._id)) || [],
+            previewItems: previewMap.get(String(r._id)) || [],
             distanceInfo: drivingInfo || null,
             distanceText: drivingInfo ? drivingInfo.distanceText : null
         };

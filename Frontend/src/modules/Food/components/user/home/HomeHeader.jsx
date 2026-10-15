@@ -34,7 +34,8 @@ export default function HomeHeader({
   vegMode = false,
   handleVegModeChange,
   isCategoryStuck = false,
-  handleVoiceSearchClick
+  handleVoiceSearchClick,
+  pushSearchDown = false
 }) {
   const [notifications, setNotifications] = useState(() => {
     const saved = localStorage.getItem('food_user_notifications');
@@ -236,7 +237,7 @@ export default function HomeHeader({
       </div>
 
       {/* Sticky Search Bar and Veg Toggle */}
-      <div id="home-header-search-row" className={`relative sticky z-[60] px-1 pb-2 transition-all duration-300 pointer-events-none mt-2 sm:mt-3 ${isCategoryStuck ? 'top-0 pt-2 bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-2xl' : 'top-2 pt-2 bg-transparent'}`}>
+      <div id="home-header-search-row" className={`relative sticky z-[60] px-1 pb-2 transition-all duration-300 pointer-events-none ${pushSearchDown ? 'mt-[198px] sm:mt-[202px]' : 'mt-2 sm:mt-3'} ${isCategoryStuck ? 'top-0 pt-2 bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-2xl' : 'top-2 pt-2 bg-transparent'}`}>
         <div className="flex items-center gap-2.5 w-[96%] mx-auto pointer-events-auto">
           {/* Search Bar */}
           <div
