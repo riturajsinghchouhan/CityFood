@@ -17,6 +17,7 @@ import * as dailySalesController from '../controllers/dailySales.controller.js';
 import { upload } from '../../../../middleware/upload.js';
 import menuBulkRoutes from './menuBulk.routes.js';
 import { getUploadSettings, updateUploadSettings } from '../../../../controllers/admin/uploadSettingController.js';
+import { operationalCounts, clearOperationalData } from '../../../../controllers/admin/operationalDataController.js';
 
 const router = express.Router();
 
@@ -35,6 +36,10 @@ router.use(requireAdmin);
 // ----- Upload provider (local / cloudinary) -----
 router.get('/upload-settings', getUploadSettings);
 router.put('/upload-settings', updateUploadSettings);
+
+// ----- Operational data reset (super admin only) -----
+router.get('/operational-data', requireSuperAdmin, operationalCounts);
+router.post('/operational-data/clear', requireSuperAdmin, clearOperationalData);
 
 // ----- Sub Admins -----
 router.get('/sub-admins', requireSuperAdmin, adminController.getSubAdmins);

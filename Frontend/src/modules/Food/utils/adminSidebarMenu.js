@@ -273,4 +273,11 @@ export const adminSidebarMenu = [
       { type: "link", label: "Cancellation Policy", path: "/admin/food/pages-social-media/cancellation", icon: "X" },
     ],
   },
+  {
+    type: "section",
+    label: "DEVELOPER",
+    items: [
+      { type: "link", label: "Developer Settings", path: "/admin/food/developer-settings", icon: "Code" },
+    ],
+  },
 ];

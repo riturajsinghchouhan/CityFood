@@ -114,6 +114,7 @@ const CancellationPolicy = lazy(() => import("@food/pages/admin/settings/Cancell
 const ReactRegistration = lazy(() => import("@food/pages/admin/settings/ReactRegistration"));
 const ToggleManagement = lazy(() => import("@food/pages/admin/settings/ToggleManagement"));
 const ImageSetting = lazy(() => import("@food/pages/admin/settings/ImageSetting"));
+const DeveloperSettings = lazy(() => import("@food/pages/admin/settings/DeveloperSettings"));
 // System Settings
 const ThirdParty = lazy(() => import("@food/pages/admin/system/ThirdParty"));
 const FirebaseNotification = lazy(() => import("@food/pages/admin/system/FirebaseNotification"));
@@ -301,6 +302,7 @@ export default function AdminRouter() {
             <Route path="env-managements" element={<EnvManagements />} />
             <Route path="toggle-management" element={<ToggleManagement />} />
             <Route path="image-setting" element={<ImageSetting />} />
+            <Route path="developer-settings" element={<DeveloperSettings />} />
             <Route path="email-template" element={<EmailTemplate />} />
             <Route path="theme-settings" element={<ThemeSettings />} />
             <Route path="gallery" element={<Gallery />} />

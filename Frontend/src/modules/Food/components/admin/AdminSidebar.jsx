@@ -48,6 +48,7 @@ import {
   Lock,
   ListChecks,
   Image as ImageIcon,
+  Code,
 } from "lucide-react"
 import { cn } from "@food/utils/utils"
 import { Input } from "@food/components/ui/input"
@@ -62,6 +63,7 @@ const debugError = (...args) => { }
 // Icon mapping
 const iconMap = {
   ImageIcon,
+  Code,
   LayoutDashboard,
   UtensilsCrossed,
   Building2,

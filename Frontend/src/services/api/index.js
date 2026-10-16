@@ -236,6 +236,8 @@ export const adminAPI = {
 
   getSidebarBadges: () =>
     adminClient.get("/food/admin/sidebar-badges"),
+  getOperationalDataCounts: () => adminClient.get("/food/admin/operational-data"),
+  clearOperationalData: (data) => adminClient.post("/food/admin/operational-data/clear", data),
   getUploadSettings: () => adminClient.get("/food/admin/upload-settings"),
   updateUploadSettings: (data) => adminClient.put("/food/admin/upload-settings", data),
   getEnvSettings: () => adminClient.get("/food/admin/env"),
