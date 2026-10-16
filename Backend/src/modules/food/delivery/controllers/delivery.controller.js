@@ -174,7 +174,10 @@ export const getWalletController = async (req, res, next) => {
 export const createWithdrawalRequestController = async (req, res, next) => {
     try {
         const deliveryPartnerId = req.user?.userId;
-        const result = await requestDeliveryWithdrawal(deliveryPartnerId, req.body || {});
+        const result = await requestDeliveryWithdrawal(deliveryPartnerId, {
+            ...(req.body || {}),
+            idempotencyKey: req.get('Idempotency-Key') || req.body?.requestId
+        });
         return sendResponse(res, 201, 'Withdrawal request submitted successfully', { withdrawal: result });
     } catch (error) {
         next(error);

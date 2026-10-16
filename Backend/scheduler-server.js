@@ -53,6 +53,26 @@ const startScheduler = async () => {
             logger.error(`Call alert poller startup error: ${err.message}`);
         }
         
+        // Payment reconciliation: self-heal every 10 min, full check (incl. Razorpay + wallets) hourly.
+        // Each run is lock-protected, idempotent, and writes a report (payment_reconciliation_reports).
+        try {
+            const { runSelfHealing, runFullReconciliation } = await import('./src/core/payments/reconciliation.job.js');
+            const safely = (name, fn) => async () => {
+                try {
+                    await fn();
+                } catch (err) {
+                    logger.error(`${name} error: ${err.message}`);
+                }
+            };
+            setTimeout(safely('Payment self-heal', runSelfHealing), 2 * 60 * 1000);
+            setInterval(safely('Payment self-heal', runSelfHealing), 10 * 60 * 1000);
+            setTimeout(safely('Payment full reconciliation', () => runFullReconciliation('full')), 5 * 60 * 1000);
+            setInterval(safely('Payment full reconciliation', () => runFullReconciliation('full')), 60 * 60 * 1000);
+            logger.info('Payment reconciliation jobs initialized (self-heal 10 min, full 60 min)');
+        } catch (err) {
+            logger.error(`Payment reconciliation startup error: ${err.message}`);
+        }
+
         // Create a simple HTTP server for health checks
         const http = await import('http');
         const server = http.createServer((req, res) => {

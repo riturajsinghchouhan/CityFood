@@ -85,17 +85,6 @@ module.exports = {
       merge_logs: true,
       log_date_format: "YYYY-MM-DD HH:mm:ss Z",
       env: { NODE_ENV: 'production' },
-    },
-    {
-      name: 'indian-foods-worker-payment',
-      script: './src/queues/workers/payment.worker.js',
-      instances: 1,
-      exec_mode: 'fork',
-      autorestart: true,
-      watch: false,
-      merge_logs: true,
-      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
-      env: { NODE_ENV: 'production' },
     }
   ],
 };

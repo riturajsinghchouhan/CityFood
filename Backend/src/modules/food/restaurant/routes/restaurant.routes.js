@@ -1,4 +1,5 @@
 import express from 'express';
+import { moneyRateLimiter } from '../../../../middleware/rateLimit.js';
 import { upload } from '../../../../middleware/upload.js';
 import {
     registerRestaurantController,
@@ -113,7 +114,7 @@ router.get('/outlet-timings', authMiddleware, requireRestaurant, getCurrentResta
 router.put('/outlet-timings', authMiddleware, requireRestaurant, upsertCurrentRestaurantOutletTimingsController);
 router.get('/finance', authMiddleware, requireRestaurant, getRestaurantFinanceController);
 router.get('/dashboard-stats', authMiddleware, requireRestaurant, getRestaurantDashboardStatsController);
-router.post('/withdraw', authMiddleware, requireRestaurant, createWithdrawalRequestController);
+router.post('/withdraw', authMiddleware, requireRestaurant, moneyRateLimiter, createWithdrawalRequestController);
 router.get('/withdrawals', authMiddleware, requireRestaurant, listMyWithdrawalsController);
 router.post(
     '/profile/profile-image',

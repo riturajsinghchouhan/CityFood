@@ -1,167 +1,84 @@
 import mongoose from 'mongoose';
-import { recordTransaction, ensureWallet, getBalance, getTransactionsByEntity } from './transaction.service.js';
+import { recordTransaction, getBalance, getTransactionsByEntity } from './transaction.service.js';
 import { FoodUserWallet } from '../../modules/food/user/models/userWallet.model.js';
-import { logger } from '../../utils/logger.js';
+import { fromPaise } from '../../utils/money.js';
 
 /**
- * Universal wallet service — facade over transaction.service for
- * common wallet operations (credit, debit, lock, unlock, get balance).
- *
- * Each entity type has its own Mongoose model, but this service
- * provides a unified interface.
+ * Customer wallet facade. Every balance change goes through the ledger
+ * (payment_transactions) — it is the single source of truth for wallet money.
  */
 
-/**
- * Credit an entity's wallet.
- */
-export async function creditWallet({
-    entityType, entityId, amount, description,
-    category = 'other', orderId, paymentId, metadata
-}) {
-    return recordTransaction({
-        entityType,
-        entityId: String(entityId),
-        type: 'credit',
-        amount: Number(amount),
-        description,
-        category,
-        orderId: orderId ? String(orderId) : null,
-        paymentId: paymentId ? String(paymentId) : null,
-        metadata
-    });
+const toPayload = (type, {
+    entityId, amount, description,
+    category = 'other', orderId, metadata,
+    idempotencyKey, gatewayOrderId, gatewayPaymentId, session
+}) => ({
+    entityId: String(entityId),
+    type,
+    amount: Number(amount),
+    description,
+    category,
+    orderId: orderId ? String(orderId) : null,
+    idempotencyKey,
+    gatewayOrderId,
+    gatewayPaymentId,
+    session,
+    metadata
+});
+
+/** Credit a user's wallet. Pass `idempotencyKey` so a retry can never credit twice. */
+export async function creditWallet(params) {
+    return recordTransaction(toPayload('credit', params));
 }
 
-/**
- * Debit an entity's wallet.
- */
-export async function debitWallet({
-    entityType, entityId, amount, description,
-    category = 'other', orderId, paymentId, metadata
-}) {
-    return recordTransaction({
-        entityType,
-        entityId: String(entityId),
-        type: 'debit',
-        amount: Number(amount),
-        description,
-        category,
-        orderId: orderId ? String(orderId) : null,
-        paymentId: paymentId ? String(paymentId) : null,
-        metadata
-    });
+/** Debit a user's wallet. Pass `idempotencyKey` so a retry can never debit twice. */
+export async function debitWallet(params) {
+    return recordTransaction(toPayload('debit', params));
 }
 
-/**
- * Get wallet info for any entity.
- */
-export async function getWalletBalance(entityType, entityId) {
-    return getBalance(entityType, entityId);
+export async function getWalletBalance(userId) {
+    return getBalance(userId);
 }
 
-/**
- * Get wallet + recent transactions for any entity.
- */
-export async function getWalletWithTransactions(entityType, entityId, { page = 1, limit = 20 } = {}) {
-    const [balance, txns] = await Promise.all([
-        getBalance(entityType, entityId),
-        getTransactionsByEntity(entityType, entityId, { page, limit })
-    ]);
-
-    return {
-        ...balance,
-        ...txns
-    };
-}
+const TYPE_FOR_FRONTEND = (t) => {
+    if (t.category === 'order_refund') return 'refund';
+    return t.type === 'credit' ? 'addition' : 'deduction';
+};
 
 /**
- * Lock amount in wallet (for pending settlements).
- * Locked amount cannot be withdrawn but is still part of balances.
+ * Wallet + transactions in the shape the frontend expects.
+ * Balance comes from the wallet; history comes ONLY from the ledger.
  */
-export async function lockWalletAmount(entityType, entityId, amount) {
-    const wallet = await ensureWallet(entityType, entityId);
-    const available = (Number(wallet.balance) || 0) - (Number(wallet.lockedAmount) || 0);
-
-    if (amount > available) {
-        throw new Error(`Cannot lock ${amount}. Available: ${available}`);
-    }
-
-    wallet.lockedAmount = (Number(wallet.lockedAmount) || 0) + amount;
-    await wallet.save();
-
-    logger.info(`Locked ${amount} for ${entityType}:${entityId}. Total locked: ${wallet.lockedAmount}`);
-    return { lockedAmount: wallet.lockedAmount, balance: wallet.balance };
-}
-
-/**
- * Unlock amount in wallet (after settlement is processed/cancelled).
- */
-export async function unlockWalletAmount(entityType, entityId, amount) {
-    const wallet = await ensureWallet(entityType, entityId);
-    wallet.lockedAmount = Math.max(0, (Number(wallet.lockedAmount) || 0) - amount);
-    await wallet.save();
-
-    logger.info(`Unlocked ${amount} for ${entityType}:${entityId}. Total locked: ${wallet.lockedAmount}`);
-    return { lockedAmount: wallet.lockedAmount, balance: wallet.balance };
-}
-
-/**
- * USER WALLET: Get wallet with transactions in the format the existing frontend expects.
- * This maintains backward compatibility with the existing FoodUserWallet embedded transactions.
- */
-export async function getUserWalletForFrontend(userId) {
+export async function getUserWalletForFrontend(userId, { limit = 100 } = {}) {
     const id = String(userId || '');
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
         return { balance: 0, referralEarnings: 0, transactions: [] };
     }
 
-    // Read from the existing FoodUserWallet for backward compat
-    const oid = new mongoose.Types.ObjectId(id);
-    const wallet = await FoodUserWallet.findOne({ userId: oid });
+    const [wallet, ledger] = await Promise.all([
+        FoodUserWallet.findOne({ userId: new mongoose.Types.ObjectId(id) }).lean(),
+        getTransactionsByEntity(id, { page: 1, limit })
+    ]);
 
-    // Also read from new Transaction collection
-    const newTxns = await getTransactionsByEntity('user', id, { page: 1, limit: 50 });
-
-    // Merge: prefer new Transaction data, fallback to embedded
-    const embeddedTx = wallet?.transactions
-        ? [...wallet.transactions].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        : [];
-
-    // Convert new transactions to frontend format
-    const convertedNewTxns = (newTxns.transactions || []).map(t => ({
+    const transactions = (ledger.transactions || []).map((t) => ({
         id: String(t._id),
         _id: t._id,
-        type: t.type === 'credit' ? 'addition' : 'deduction',
+        type: TYPE_FOR_FRONTEND(t),
         amount: Number(t.amount) || 0,
         status: t.status === 'completed' ? 'Completed' : t.status,
         description: t.description || '',
         date: t.createdAt,
         createdAt: t.createdAt,
-        metadata: t.metadata || {},
         category: t.category,
-        balanceAfter: t.balanceAfter
+        balanceAfter: t.balanceAfter,
+        razorpayOrderId: t.gatewayOrderId || null,
+        razorpayPaymentId: t.gatewayPaymentId || null,
+        metadata: { source: t.category, ...(t.metadata || {}) }
     }));
-
-    // Convert embedded txns
-    const convertedEmbedded = embeddedTx.map(t => ({
-        id: String(t._id),
-        _id: t._id,
-        type: t.type,
-        amount: Number(t.amount) || 0,
-        status: t.status || 'Completed',
-        description: t.description || '',
-        date: t.createdAt,
-        createdAt: t.createdAt,
-        metadata: t.metadata || {}
-    }));
-
-    // Deduplicate by checking if an embedded txn has a matching new txn (same amount + order within 5s)
-    const allTxns = [...convertedNewTxns, ...convertedEmbedded];
-    // Sort newest first
-    allTxns.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     return {
-        balance: Number(wallet?.balance) || 0,
-        referralEarnings: Number(wallet?.referralEarnings) || 0,
-        transactions: allTxns
+        balance: fromPaise(wallet?.balancePaise),
+        referralEarnings: fromPaise(wallet?.referralEarningsPaise),
+        transactions
     };
 }

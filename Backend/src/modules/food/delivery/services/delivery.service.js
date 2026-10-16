@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { FoodDeliveryPartner } from '../models/deliveryPartner.model.js';
 import { DeliverySupportTicket } from '../models/supportTicket.model.js';
 import { DeliveryBonusTransaction } from '../../admin/models/deliveryBonusTransaction.model.js';
+import { getRiderBalances } from '../../../../core/payments/payoutBalances.service.js';
 import { FoodEarningAddon } from '../../admin/models/earningAddon.model.js';
 import { FoodOrder } from '../../orders/models/order.model.js';
 import { uploadDeliveryImage } from '../../../../services/upload.service.js';
@@ -380,49 +381,9 @@ export const getDeliveryPartnerWallet = async (deliveryPartnerId) => {
 
     const partnerId = new mongoose.Types.ObjectId(deliveryPartnerId);
 
-    // Earnings paid to rider through completed deliveries
-    const [earningsAgg, cashAgg] = await Promise.all([
-        FoodOrder.aggregate([
-            {
-                $match: {
-                    'dispatch.deliveryPartnerId': partnerId,
-                    orderStatus: 'delivered',
-                }
-            },
-            {
-                $group: {
-                    _id: null,
-                    totalEarned: { $sum: { $ifNull: ['$riderEarning', 0] } }
-                }
-            }
-        ]),
-        FoodOrder.aggregate([
-            {
-                $match: {
-                    'dispatch.deliveryPartnerId': partnerId,
-                    orderStatus: 'delivered',
-                    'payment.method': 'cash',
-                    'payment.status': 'paid'
-                }
-            },
-            {
-                $group: {
-                    _id: null,
-                    cashInHand: { $sum: { $ifNull: ['$riderEarning', 0] } }
-                }
-            }
-        ])
-    ]);
-
-    const totalEarned = Number(earningsAgg?.[0]?.totalEarned) || 0;
-    const cashInHand = Number(cashAgg?.[0]?.cashInHand) || 0;
-
-    // Admin-set delivery bonuses / earning addons
-    const bonusAgg = await DeliveryBonusTransaction.aggregate([
-        { $match: { deliveryPartnerId: partnerId } },
-        { $group: { _id: null, total: { $sum: '$amount' } } }
-    ]);
-    const totalBonus = bonusAgg?.[0] ? Number(bonusAgg[0].total) : 0;
+    // Every balance comes from the shared payout-balance service (one formula for all screens)
+    const balances = await getRiderBalances(partnerId);
+    const { totalEarned, totalBonus, cashInHand, totalWithdrawn } = balances;
 
     // Keep transactions list reasonably small (UI only needs recent data for charts)
     const [paymentTxList, bonusTxList] = await Promise.all([
@@ -469,10 +430,9 @@ export const getDeliveryPartnerWallet = async (deliveryPartnerId) => {
         description: t.reference ? `Bonus - ${t.reference}` : 'Bonus'
     }));
 
-    const totalWithdrawn = 0;
     const totalBalance = totalEarned + totalBonus;
-    const availableCashLimit = Math.max(0, totalCashLimit - cashInHand + totalBalance);
-    const pocketBalance = Math.max(0, totalBalance - cashInHand);
+    const availableCashLimit = Math.max(0, totalCashLimit - cashInHand);
+    const pocketBalance = balances.pocketBalance;
 
     return {
         totalBalance,

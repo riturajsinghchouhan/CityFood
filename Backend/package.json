@@ -12,13 +12,12 @@
     "worker:notification": "node src/queues/workers/notification.worker.js",
     "worker:order": "node src/queues/workers/order.worker.js",
     "worker:tracking": "node src/queues/workers/tracking.worker.js",
-    "worker:payment": "node src/queues/workers/payment.worker.js",
     "worker:menu-image": "node src/queues/workers/menuImage.worker.js",
     "migrate:fcm-tokens": "node scripts/migrate-fcm-tokens-to-profile-models.js",
     "migrate:order-payments": "node scripts/migrate-orders-to-transactions.js",
     "db:clone": "node scripts/clone-atlas-to-local.js",
     "seed:admin": "node scripts/seed-admin.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test \"tests/**/*.test.js\""
   },
   "keywords": [],
   "author": "",
@@ -55,6 +54,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "mongodb-memory-server": "^11.3.0",
     "nodemon": "^3.1.2"
   }
 }

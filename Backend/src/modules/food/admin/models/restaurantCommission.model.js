@@ -20,7 +20,7 @@ const restaurantCommissionSchema = new mongoose.Schema(
         notes: { type: String, trim: true, default: '' },
         status: { type: Boolean, default: true, index: true }
     },
-    { collection: 'food_restaurant_commissions', timestamps: true }
+    { collection: 'payment_restaurant_commissions', timestamps: true }
 );
 
 

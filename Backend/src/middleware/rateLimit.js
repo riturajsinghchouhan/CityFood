@@ -47,3 +47,25 @@ export const authRateLimiter = rateLimit({
     }
 });
 
+
+/**
+ * Strict limit for endpoints that move money (wallet top-up, withdrawal requests, cash deposits,
+ * payment verification). Applied AFTER authentication so it counts per user, in addition to the
+ * global limiter. A normal person never comes near this; a script hammering a payout endpoint does.
+ */
+export const moneyRateLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: config.nodeEnv === 'development' ? 200 : 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+        if (req.user && req.user.userId) return `money:${req.user.userId.toString()}`;
+        const forwarded = req.headers['x-forwarded-for'];
+        const realIp = req.headers['x-real-ip'];
+        return `money:${forwarded ? forwarded.split(',')[0].trim() : realIp || req.ip}`;
+    },
+    message: {
+        success: false,
+        message: 'Too many payment requests. Please wait a few minutes and try again.'
+    }
+});

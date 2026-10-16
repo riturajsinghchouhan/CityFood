@@ -1,13 +1,11 @@
 import mongoose from 'mongoose';
 import { connectDB, disconnectDB } from '../src/config/db.js';
 import { FoodRestaurant } from '../src/modules/food/restaurant/models/restaurant.model.js';
-import { FoodRestaurantWallet } from '../src/modules/food/restaurant/models/restaurantWallet.model.js';
 import { FoodRestaurantOutletTimings } from '../src/modules/food/restaurant/models/outletTimings.model.js';
 import { FoodCategory } from '../src/modules/food/admin/models/category.model.js';
 import { FoodItem } from '../src/modules/food/admin/models/food.model.js';
 import { FoodZone } from '../src/modules/food/admin/models/zone.model.js';
 import { FoodDeliveryPartner } from '../src/modules/food/delivery/models/deliveryPartner.model.js';
-import { FoodDeliveryWallet } from '../src/modules/food/delivery/models/deliveryWallet.model.js';
 
 const CATEGORIES_DATA = [
     { name: 'Biryani', image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400&q=80', foodTypeScope: 'Both' },
@@ -209,21 +207,6 @@ async function seed() {
             console.log(`Created new Restaurant: "${restaurant.restaurantName}" (ID: ${restaurant._id})`);
         }
 
-        // Ensure Restaurant Wallet
-        let rWallet = await FoodRestaurantWallet.findOne({ restaurantId: restaurant._id });
-        if (!rWallet) {
-            rWallet = await FoodRestaurantWallet.create({
-                restaurantId: restaurant._id,
-                balance: 0,
-                lockedAmount: 0,
-                totalEarnings: 0,
-                totalSettled: 0
-            });
-            console.log(`Created Restaurant Wallet: ${rWallet._id}`);
-        } else {
-            console.log(`Restaurant Wallet exists: ${rWallet._id}`);
-        }
-
         // Ensure Outlet Timings (Always open 08:00 - 23:00)
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         const timings = days.map((day) => ({
@@ -309,24 +292,6 @@ async function seed() {
         } else {
             partner = await FoodDeliveryPartner.create(partnerPayload);
             console.log(`Created new Delivery Partner: "${partner.name}" (ID: ${partner._id})`);
-        }
-
-        // Ensure Delivery Wallet
-        let dWallet = await FoodDeliveryWallet.findOne({ deliveryPartnerId: partner._id });
-        if (!dWallet) {
-            dWallet = await FoodDeliveryWallet.create({
-                deliveryPartnerId: partner._id,
-                balance: 0,
-                lockedAmount: 0,
-                cashInHand: 0,
-                totalEarnings: 0,
-                totalBonus: 0,
-                totalSettled: 0,
-                totalDeliveries: 0
-            });
-            console.log(`Created Delivery Partner Wallet: ${dWallet._id}`);
-        } else {
-            console.log(`Delivery Partner Wallet exists: ${dWallet._id}`);
         }
 
         console.log('\n=============================================');

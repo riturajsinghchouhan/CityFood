@@ -13,6 +13,12 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
+  // Smaller admin type: turns on the "admin-compact" text scale (see shared/styles/global.css)
+  useEffect(() => {
+    document.documentElement.classList.add("admin-compact")
+    return () => document.documentElement.classList.remove("admin-compact")
+  }, [])
+
   // Get initial collapsed state from localStorage to set initial margin
   useEffect(() => {
     try {

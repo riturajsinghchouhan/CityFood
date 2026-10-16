@@ -8,7 +8,6 @@ import XLSX from 'xlsx';
 import { connectDB, disconnectDB } from '../src/config/db.js';
 import { logger } from '../src/utils/logger.js';
 import { FoodRestaurant } from '../src/modules/food/restaurant/models/restaurant.model.js';
-import { FoodRestaurantWallet } from '../src/modules/food/restaurant/models/restaurantWallet.model.js';
 import { FoodRestaurantOutletTimings } from '../src/modules/food/restaurant/models/outletTimings.model.js';
 import { FoodZone } from '../src/modules/food/admin/models/zone.model.js';
 
@@ -646,23 +645,6 @@ async function applyRestaurants(prepared) {
         await FoodRestaurant.collection.bulkWrite(restaurantBulkOps, { ordered: false });
     }
 
-    const walletBulkOps = prepared.map((item) => ({
-        updateOne: {
-            filter: { restaurantId: restaurantIdMap.get(item.legacyId) || item.objectId },
-            update: {
-                $set: {
-                    ...item.wallet,
-                    restaurantId: restaurantIdMap.get(item.legacyId) || item.objectId
-                }
-            },
-            upsert: true
-        }
-    }));
-
-    if (walletBulkOps.length > 0) {
-        await FoodRestaurantWallet.collection.bulkWrite(walletBulkOps, { ordered: false });
-    }
-
     const timingDocs = prepared
         .filter((item) => item.outletTimings)
         .map((item) => ({
@@ -684,7 +666,6 @@ async function applyRestaurants(prepared) {
 
     return {
         restaurantsUpserted: restaurantBulkOps.length,
-        walletsUpserted: walletBulkOps.length,
         outletTimingsUpserted: timingBulkOps.length
     };
 }

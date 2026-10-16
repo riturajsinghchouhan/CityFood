@@ -1,11 +1,9 @@
 import mongoose from 'mongoose';
 
 // Importing the model files registers them with mongoose (looked up by name below).
-import '../../core/payments/models/payment.model.js';
-import '../../core/payments/models/refund.model.js';
-import '../../core/payments/models/settlement.model.js';
 import '../../core/payments/models/transaction.model.js';
-import '../../modules/food/admin/models/adminWallet.model.js';
+import '../../core/payments/payoutLock.js';
+import '../../core/payments/models/webhookEvent.model.js';
 import '../../modules/food/admin/models/deliveryBonusTransaction.model.js';
 import '../../modules/food/admin/models/deliveryEmergencyHelp.model.js';
 import '../../modules/food/admin/models/earningAddonHistory.model.js';
@@ -14,7 +12,6 @@ import '../../modules/food/admin/models/offerUsage.model.js';
 import '../../modules/food/admin/models/referralLog.model.js';
 import '../../modules/food/admin/models/safetyEmergencyReport.model.js';
 import '../../modules/food/delivery/models/deliveryLocationLog.model.js';
-import '../../modules/food/delivery/models/deliveryWallet.model.js';
 import '../../modules/food/delivery/models/foodDeliveryCashDeposit.model.js';
 import '../../modules/food/delivery/models/foodDeliveryWithdrawal.model.js';
 import '../../modules/food/delivery/models/supportTicket.model.js';
@@ -23,7 +20,6 @@ import '../../modules/food/dining/models/diningRequest.model.js';
 import '../../modules/food/orders/models/foodTransaction.model.js';
 import '../../modules/food/orders/models/order.model.js';
 import '../../modules/food/restaurant/models/foodRestaurantWithdrawal.model.js';
-import '../../modules/food/restaurant/models/restaurantWallet.model.js';
 import '../../modules/food/user/models/supportTicket.model.js';
 import '../../modules/food/user/models/userWallet.model.js';
 
@@ -33,14 +29,10 @@ import '../../modules/food/user/models/userWallet.model.js';
 const OPERATIONAL = [
     { key: 'orders', label: 'Food orders', model: 'FoodOrder' },
     { key: 'foodTransactions', label: 'Order transactions', model: 'FoodTransaction' },
-    { key: 'payments', label: 'Payments', model: 'Payment' },
     { key: 'transactions', label: 'Wallet / payment transactions', model: 'Transaction' },
-    { key: 'refunds', label: 'Refunds', model: 'Refund' },
-    { key: 'settlements', label: 'Settlements', model: 'Settlement' },
+    { key: 'webhookEvents', label: 'Payment webhook events', model: 'PaymentWebhookEvent' },
     { key: 'userWallets', label: 'User wallets', model: 'FoodUserWallet' },
-    { key: 'restaurantWallets', label: 'Restaurant wallets', model: 'FoodRestaurantWallet' },
-    { key: 'deliveryWallets', label: 'Delivery partner wallets', model: 'FoodDeliveryWallet' },
-    { key: 'adminWallet', label: 'Admin wallet', model: 'FoodAdminWallet' },
+    { key: 'payoutLocks', label: 'Payout lock rows', model: 'PayoutAccount' },
     { key: 'restaurantWithdrawals', label: 'Restaurant withdrawals', model: 'FoodRestaurantWithdrawal' },
     { key: 'deliveryWithdrawals', label: 'Delivery withdrawals', model: 'FoodDeliveryWithdrawal' },
     { key: 'cashDeposits', label: 'Delivery cash deposits', model: 'FoodDeliveryCashDeposit' },

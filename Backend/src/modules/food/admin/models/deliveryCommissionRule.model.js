@@ -9,7 +9,7 @@ const deliveryCommissionRuleSchema = new mongoose.Schema(
         basePayout: { type: Number, required: true, min: 0 },
         status: { type: Boolean, default: true, index: true }
     },
-    { collection: 'food_delivery_commission_rules', timestamps: true }
+    { collection: 'payment_delivery_commission_rules', timestamps: true }
 );
 
 deliveryCommissionRuleSchema.index({ createdAt: -1 });

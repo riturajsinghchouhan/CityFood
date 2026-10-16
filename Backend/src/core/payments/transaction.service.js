@@ -1,206 +1,208 @@
 import mongoose from 'mongoose';
 import { Transaction } from './models/transaction.model.js';
 import { FoodUserWallet } from '../../modules/food/user/models/userWallet.model.js';
-import { FoodRestaurantWallet } from '../../modules/food/restaurant/models/restaurantWallet.model.js';
-import { FoodDeliveryWallet } from '../../modules/food/delivery/models/deliveryWallet.model.js';
-import { FoodAdminWallet } from '../../modules/food/admin/models/adminWallet.model.js';
 import { logger } from '../../utils/logger.js';
+import { toPaise, fromPaise } from '../../utils/money.js';
+import { sessionOpts } from '../../utils/dbTransaction.js';
 
 /**
- * Resolve the wallet model + id-field for a given entity.
- * Returns { Model, filter } so callers can findOne/updateOne generically.
+ * LEDGER — the customer wallet is the only stored-value account in the system, so it is the
+ * only thing with a wallet + ledger. Restaurant and rider money is NOT stored as a balance:
+ * it is always derived from payment_food_transactions / orders / withdrawals (one source of
+ * truth, nothing to drift).
+ *
+ * Wallet and ledger amounts are stored as INTEGER PAISE. Callers and API responses speak rupees;
+ * conversion happens only in this file and the wallet facade.
  */
-function resolveWallet(entityType, entityId) {
-    switch (entityType) {
-        case 'user': {
-            const id = new mongoose.Types.ObjectId(entityId);
-            return { Model: FoodUserWallet, filter: { userId: id }, idField: 'userId' };
-        }
-        case 'restaurant': {
-            const id = new mongoose.Types.ObjectId(entityId);
-            return { Model: FoodRestaurantWallet, filter: { restaurantId: id }, idField: 'restaurantId' };
-        }
-        case 'deliveryBoy': {
-            const id = new mongoose.Types.ObjectId(entityId);
-            return { Model: FoodDeliveryWallet, filter: { deliveryPartnerId: id }, idField: 'deliveryPartnerId' };
-        }
-        case 'admin':
-            return { Model: FoodAdminWallet, filter: { key: 'platform' }, idField: 'key' };
-        default:
-            throw new Error(`Unknown entityType: ${entityType}`);
+
+const toUserFilter = (entityId) => ({ userId: new mongoose.Types.ObjectId(entityId) });
+
+export class InsufficientBalanceError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'InsufficientBalanceError';
     }
 }
 
-/** Fixed ObjectId for admin entity used in Transaction documents (singleton) */
-const ADMIN_ENTITY_OID = new mongoose.Types.ObjectId('000000000000000000000001');
+/** A ledger row in the shape the rest of the app expects (rupees). */
+export const toLedgerView = (row) => ({
+    ...row,
+    amount: fromPaise(row.amountPaise),
+    balanceAfter: fromPaise(row.balanceAfterPaise)
+});
 
 /**
- * Ensure wallet exists, creating it if needed. Returns the wallet document.
+ * Ensure the user's wallet exists (race-safe). Returns the wallet document.
  */
-export async function ensureWallet(entityType, entityId) {
-    const { Model, filter, idField } = resolveWallet(entityType, entityId);
-    let wallet = await Model.findOne(filter);
-    if (!wallet) {
-        const createPayload = { ...filter, balance: 0 };
-        wallet = await Model.create(createPayload);
+export async function ensureWallet(entityId, session = null) {
+    const filter = toUserFilter(entityId);
+    try {
+        await FoodUserWallet.updateOne(filter, { $setOnInsert: { balancePaise: 0, referralEarningsPaise: 0 } }, { upsert: true, ...sessionOpts(session) });
+    } catch (err) {
+        // Without a session another request may have created it first; inside a transaction
+        // a duplicate key aborts the whole transaction, so let that surface.
+        if (err?.code !== 11000 || session) throw err;
     }
-    return wallet;
+    return FoodUserWallet.findOne(filter).session(session || null);
 }
 
-/**
- * Get balance for an entity wallet.
- */
-export async function getBalance(entityType, entityId) {
-    const wallet = await ensureWallet(entityType, entityId);
-    return {
-        balance: Number(wallet.balance) || 0,
-        lockedAmount: Number(wallet.lockedAmount) || 0,
-        availableBalance: (Number(wallet.balance) || 0) - (Number(wallet.lockedAmount) || 0)
-    };
+/** Wallet balance (rupees) for a user. */
+export async function getBalance(entityId) {
+    const wallet = await ensureWallet(entityId);
+    return { balance: fromPaise(wallet.balancePaise) };
 }
 
+/** Find a ledger row by its idempotency key. */
+export async function findTransactionByKey(idempotencyKey, session = null) {
+    if (!idempotencyKey) return null;
+    return Transaction.findOne({ idempotencyKey: String(idempotencyKey) }).session(session || null).lean();
+}
+
+const duplicateResult = (existing) => ({
+    transaction: toLedgerView(existing),
+    wallet: { balance: fromPaise(existing.balanceAfterPaise) },
+    duplicate: true
+});
+
 /**
- * CORE ATOMIC OPERATION: Record a transaction AND update wallet balance
- * in a single MongoDB transaction. This is the ONLY way to change wallet balances.
+ * CORE OPERATION: record a ledger row AND move the customer's wallet balance.
+ * This is the ONLY way the wallet balance may change.
+ *
+ * Guarantees
+ *  - Exact: amounts are whole paise, so there is no floating-point drift.
+ *  - Atomic balance change: one findOneAndUpdate with $inc (no read-modify-write), and a
+ *    debit can never take a wallet below zero (guarded inside the same operation).
+ *  - Idempotent: pass `idempotencyKey` (a deterministic id for the real-world event).
+ *    Replaying the same key returns the original row and moves no money. A unique index
+ *    on the key keeps this safe under concurrent requests as well.
+ *  - If the ledger insert fails after the balance moved, the balance change is reversed.
+ *  - Pass `session` to join a surrounding database transaction (all-or-nothing).
  *
  * @param {Object} payload
- * @param {string} payload.entityType - 'user' | 'restaurant' | 'deliveryBoy' | 'admin'
- * @param {string} payload.entityId - ObjectId of the entity
- * @param {string} payload.type - 'credit' | 'debit'
- * @param {number} payload.amount - positive amount
- * @param {string} payload.description - human readable
- * @param {string} [payload.category] - transaction category
- * @param {string} [payload.orderId] - linked order
- * @param {string} [payload.paymentId] - linked payment
- * @param {Object} [payload.metadata] - extra data
- * @returns {Object} { transaction, wallet }
+ * @param {string} payload.entityId - the user id
+ * @param {'credit'|'debit'} payload.type
+ * @param {number} payload.amount - positive amount in RUPEES (converted to whole paise)
+ * @param {string} [payload.description]
+ * @param {string} [payload.category]
+ * @param {string} [payload.orderId]
+ * @param {string} [payload.idempotencyKey]
+ * @param {string} [payload.gatewayOrderId]
+ * @param {string} [payload.gatewayPaymentId]
+ * @param {import('mongoose').ClientSession} [payload.session]
+ * @param {Object} [payload.metadata]
+ * @returns {Object} { transaction, wallet, duplicate? }  (rupees)
  */
 export async function recordTransaction(payload) {
     const {
-        entityType, entityId, type, amount,
+        entityId, type,
         description = '', category = 'other',
-        orderId = null, paymentId = null,
+        orderId = null,
+        idempotencyKey = undefined,
+        gatewayOrderId = undefined, gatewayPaymentId = undefined,
+        session = null,
         metadata = undefined, module = 'food'
     } = payload;
+    const amountPaise = toPaise(payload.amount);
 
     if (!['credit', 'debit'].includes(type)) throw new Error('type must be credit or debit');
-    if (!Number.isFinite(amount) || amount <= 0) throw new Error('amount must be positive');
+    if (!Number.isInteger(amountPaise) || amountPaise <= 0) throw new Error('amount must be positive');
 
-    const { Model, filter } = resolveWallet(entityType, entityId);
+    const key = idempotencyKey ? String(idempotencyKey) : undefined;
+    if (key) {
+        const existing = await findTransactionByKey(key, session);
+        if (existing) return duplicateResult(existing);
+    }
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    const filter = toUserFilter(entityId);
+    const isCredit = type === 'credit';
 
+    // 1. Make sure the wallet exists
+    await ensureWallet(entityId, session);
+
+    // 2. Build the single atomic balance change (whole paise)
+    const inc = { balancePaise: isCredit ? amountPaise : -amountPaise };
+    if (isCredit && category === 'referral_reward') inc.referralEarningsPaise = amountPaise;
+
+    const guard = { ...filter };
+    if (!isCredit) guard.balancePaise = { $gte: amountPaise };
+
+    const updated = await FoodUserWallet.findOneAndUpdate(guard, { $inc: inc }, { new: true, ...sessionOpts(session) });
+    if (!updated) {
+        // A debit can also "fail" simply because an identical request already succeeded
+        if (key) {
+            const existing = await findTransactionByKey(key, session);
+            if (existing) return duplicateResult(existing);
+        }
+        const current = await FoodUserWallet.findOne(filter).session(session || null).select('balancePaise').lean();
+        throw new InsufficientBalanceError(
+            `Insufficient balance. Current: ${fromPaise(current?.balancePaise)}, Debit: ${fromPaise(amountPaise)}`
+        );
+    }
+
+    // 3. Write the ledger row; undo the balance move if that fails
+    let txn;
     try {
-        // 1. Ensure wallet exists
-        let wallet = await Model.findOne(filter).session(session);
-        if (!wallet) {
-            [wallet] = await Model.create([{ ...filter, balance: 0 }], { session });
-        }
-
-        // 2. Compute new balance
-        const currentBalance = Number(wallet.balance) || 0;
-        const newBalance = type === 'credit'
-            ? currentBalance + amount
-            : currentBalance - amount;
-
-        // Debit guard: prevent negative balance (except admin wallet which can go negative)
-        if (type === 'debit' && entityType !== 'admin' && newBalance < 0) {
-            throw new Error(`Insufficient balance. Current: ${currentBalance}, Debit: ${amount}`);
-        }
-
-        // 3. Create transaction row
-        const entityOid = entityType === 'admin'
-            ? ADMIN_ENTITY_OID
-            : new mongoose.Types.ObjectId(entityId);
-
-        const [txn] = await Transaction.create([{
-            paymentId: paymentId ? new mongoose.Types.ObjectId(paymentId) : null,
+        [txn] = await Transaction.create([{
             orderId: orderId ? new mongoose.Types.ObjectId(orderId) : null,
-            entityType,
-            entityId: entityOid,
+            entityType: 'user',
+            entityId: new mongoose.Types.ObjectId(entityId),
             type,
-            amount,
-            balanceAfter: newBalance,
+            amountPaise,
+            balanceAfterPaise: updated.balancePaise,
             currency: 'INR',
             status: 'completed',
             description,
             category,
             module,
+            idempotencyKey: key,
+            gatewayOrderId: gatewayOrderId || undefined,
+            gatewayPaymentId: gatewayPaymentId || undefined,
             metadata
-        }], { session });
-
-        // 4. Update wallet balance atomically
-        const updateFields = { balance: newBalance };
-
-        // Update lifetime totals based on entity + type
-        if (type === 'credit') {
-            if (entityType === 'restaurant' || entityType === 'deliveryBoy') {
-                await Model.updateOne(filter, {
-                    $set: { balance: newBalance },
-                    $inc: { totalEarnings: amount }
-                }, { session });
-            } else if (entityType === 'admin') {
-                await Model.updateOne(filter, {
-                    $set: { balance: newBalance },
-                    $inc: { totalRevenue: amount }
-                }, { session });
-            } else {
-                await Model.updateOne(filter, { $set: { balance: newBalance } }, { session });
-            }
-        } else {
-            await Model.updateOne(filter, { $set: { balance: newBalance } }, { session });
-        }
-
-        await session.commitTransaction();
-
-        logger.info(`Transaction recorded: ${type} ${amount} INR for ${entityType}:${entityId} → balance ${newBalance}`);
-
-        return {
-            transaction: txn.toObject(),
-            wallet: { balance: newBalance }
-        };
+        }], sessionOpts(session));
     } catch (err) {
-        await session.abortTransaction();
+        // Inside a transaction everything (including the balance move) is rolled back for us
+        if (session) throw err;
+
+        const reverse = Object.fromEntries(Object.entries(inc).map(([k, v]) => [k, -v]));
+        await FoodUserWallet.updateOne(filter, { $inc: reverse });
+
+        if (err?.code === 11000 && key) {
+            const existing = await findTransactionByKey(key);
+            if (existing) return duplicateResult(existing);
+        }
         logger.error(`recordTransaction failed: ${err.message}`);
         throw err;
-    } finally {
-        session.endSession();
     }
+
+    logger.info(`Wallet ${type} ${fromPaise(amountPaise)} INR for user ${entityId} -> balance ${fromPaise(updated.balancePaise)}`);
+
+    return {
+        transaction: toLedgerView(txn.toObject()),
+        wallet: { balance: fromPaise(updated.balancePaise) }
+    };
 }
 
 /**
- * List transactions for an entity with pagination.
+ * List a user's ledger rows with pagination (amounts in rupees).
  */
-export async function getTransactionsByEntity(entityType, entityId, { page = 1, limit = 20 } = {}) {
+export async function getTransactionsByEntity(entityId, { page = 1, limit = 20 } = {}) {
     const skip = (Math.max(1, page) - 1) * limit;
-    const entityOid = entityType === 'admin'
-        ? ADMIN_ENTITY_OID
-        : new mongoose.Types.ObjectId(entityId);
-    const filter = {
-        entityType,
-        entityId: entityOid
-    };
+    const filter = { entityType: 'user', entityId: new mongoose.Types.ObjectId(entityId) };
 
     const [docs, total] = await Promise.all([
         Transaction.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
         Transaction.countDocuments(filter)
     ]);
 
-    return {
-        transactions: docs,
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit)
-    };
+    return { transactions: docs.map(toLedgerView), total, page, limit, totalPages: Math.ceil(total / limit) };
 }
 
 /**
- * Get transactions for a specific order across all entities.
+ * Ledger rows linked to an order (amounts in rupees).
  */
 export async function getTransactionsByOrder(orderId) {
-    return Transaction.find({ orderId: new mongoose.Types.ObjectId(orderId) })
+    const rows = await Transaction.find({ orderId: new mongoose.Types.ObjectId(orderId) })
         .sort({ createdAt: -1 })
         .lean();
+    return rows.map(toLedgerView);
 }

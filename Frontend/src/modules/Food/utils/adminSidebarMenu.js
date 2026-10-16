@@ -252,11 +252,9 @@ export const adminSidebarMenu = [
     type: "section",
     label: "SYSTEM SETTINGS",
     items: [
-      { type: "link", label: "Env Managements", path: "/admin/food/env-managements", icon: "Database" },
       { type: "link", label: "Broadcast Notification", path: "/admin/food/broadcast-notification", icon: "Bell" },
       { type: "link", label: "Restaurant Delay Alerts", path: "/admin/food/restaurant-delay-alerts", icon: "Bell" },
       { type: "link", label: "Toggle Management", path: "/admin/food/toggle-management", icon: "ToggleLeft" },
-      { type: "link", label: "Image Setting", path: "/admin/food/image-setting", icon: "ImageIcon" },
       { type: "link", label: "Business Setup", path: "/admin/food/business-setup", icon: "Settings" },
       { type: "link", label: "Theme Settings", path: "/admin/food/theme-settings", icon: "Palette" },
     ],
@@ -277,7 +275,10 @@ export const adminSidebarMenu = [
     type: "section",
     label: "DEVELOPER",
     items: [
+      { type: "link", label: "Env Managements", path: "/admin/food/env-managements", icon: "Database" },
+      { type: "link", label: "Image Setting", path: "/admin/food/image-setting", icon: "ImageIcon" },
       { type: "link", label: "Developer Settings", path: "/admin/food/developer-settings", icon: "Code" },
+      { type: "link", label: "Payment Reconciliation", path: "/admin/food/payment-reconciliation", icon: "ListChecks" },
     ],
   },
 ];

@@ -32,7 +32,11 @@ import { getOutletTimingsForRestaurant } from '../../restaurant/services/outletT
 import { FoodTransaction } from '../../orders/models/foodTransaction.model.js';
 import { FoodRestaurantWithdrawal } from '../../restaurant/models/foodRestaurantWithdrawal.model.js';
 import { FoodDeliveryWithdrawal } from '../../delivery/models/foodDeliveryWithdrawal.model.js';
-import { FoodDeliveryWallet } from '../../delivery/models/deliveryWallet.model.js';
+import { getRiderBalances } from '../../../../core/payments/payoutBalances.service.js';
+import { withPayoutLock } from '../../../../core/payments/payoutLock.js';
+import { transitionWithdrawal } from '../../../../core/payments/payoutTransitions.js';
+import { withTransaction, sessionOpts } from '../../../../utils/dbTransaction.js';
+import { round2, gtMoney, isPositiveMoney } from '../../../../utils/money.js';
 import { FoodDeliveryCashDeposit } from '../../delivery/models/foodDeliveryCashDeposit.model.js';
 import { getDeliveryMultiOrderSettings, ACTIVE_DELIVERY_ORDER_STATUSES } from '../../delivery/services/deliveryMultiOrderSettings.service.js';
 import {
@@ -1387,10 +1391,10 @@ export async function getCustomers(query = {}) {
         const { FoodUserWallet } = await import('../../user/models/userWallet.model.js');
         if (userIds.length > 0) {
             const wallets = await FoodUserWallet.find({ userId: { $in: userIds } })
-                .select('userId balance')
+                .select('userId balancePaise')
                 .lean();
             walletMap = new Map(
-                wallets.map(w => [String(w.userId), Number(w.balance || 0)])
+                wallets.map(w => [String(w.userId), w.balancePaise ? w.balancePaise / 100 : 0])
             );
         }
     } catch (err) {
@@ -4563,35 +4567,33 @@ export async function creditEarningAddonHistory(historyId, notes) {
     if (!doc) return null;
     if (doc.status !== 'pending') return doc.toObject();
 
-    const amountToCredit = Number(doc.earningAmount || 0);
+    const amountToCredit = round2(doc.earningAmount || 0);
+    const creditedNotes = typeof notes === 'string' ? notes.trim() : '';
 
-    // 1. Update history status
-    doc.status = 'credited';
-    doc.creditedAt = new Date();
-    doc.creditedNotes = typeof notes === 'string' ? notes.trim() : '';
-    await doc.save();
-
-    // 2. Credit the wallet
-    if (amountToCredit > 0) {
-        await FoodDeliveryWallet.findOneAndUpdate(
-            { deliveryPartnerId: doc.deliveryPartnerId },
-            { $inc: { balance: amountToCredit, totalEarnings: amountToCredit } },
-            { upsert: true }
+    // Mark credited AND record the bonus in ONE database transaction: the incentive can never be
+    // marked paid without the money existing (or the other way round). The claim only succeeds
+    // while the history is still 'pending', and the bonus id is deterministic (unique), so
+    // pressing "credit" twice cannot pay twice.
+    const claimed = await withTransaction(async (session) => {
+        const won = await FoodEarningAddonHistory.findOneAndUpdate(
+            { _id: doc._id, status: 'pending' },
+            { $set: { status: 'credited', creditedAt: new Date(), creditedNotes } },
+            { new: true, ...sessionOpts(session) }
         );
-
-        // 3. Create a transaction for ledger
-        try {
-            await DeliveryBonusTransaction.create({
+        if (!won) return null;
+        if (amountToCredit > 0) {
+            await DeliveryBonusTransaction.create([{
                 deliveryPartnerId: doc.deliveryPartnerId,
-                transactionId: `ADDON-${String(doc._id).slice(-8).toUpperCase()}-${Date.now().toString().slice(-4)}`,
+                transactionId: `ADDON-${doc._id}`,
                 amount: amountToCredit,
                 reference: `Earning Addon: ${doc.offerId?.title || 'Offer Reward'}`
-            });
-        } catch (txnError) {
-            console.error('Failed to create bonus transaction:', txnError);
-            // Non-blocking but should be logged.
+            }], sessionOpts(session));
         }
-    }
+        return won;
+    });
+    if (!claimed) return (await FoodEarningAddonHistory.findById(doc._id).lean()) || doc.toObject();
+    doc.status = 'credited';
+    doc.creditedNotes = creditedNotes;
 
     try {
         const { notifyOwnerSafely } = await import('../../../../core/notifications/firebase.service.js');
@@ -5169,23 +5171,11 @@ export async function getWithdrawals(query = {}) {
 
 export async function updateWithdrawalStatus(id, { status, adminNote, rejectionReason, transactionId }) {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) throw new ValidationError('Invalid withdrawal ID');
-    
-    const update = {
-        status: String(status).toLowerCase(),
-        adminNote,
-        rejectionReason,
-        transactionId,
-        processedAt: new Date()
-    };
 
-    const updated = await FoodRestaurantWithdrawal.findByIdAndUpdate(
-        id,
-        { $set: update },
-        { new: true }
-    ).populate('restaurantId', 'restaurantName').lean();
+    // pending -> approved | rejected, exactly once (conditional update)
+    await transitionWithdrawal(FoodRestaurantWithdrawal, id, status, { adminNote, rejectionReason, transactionId });
 
-    if (!updated) throw new ValidationError('Withdrawal request not found');
-    return updated;
+    return FoodRestaurantWithdrawal.findById(id).populate('restaurantId', 'restaurantName').lean();
 }
 
 export async function getDeliveryWithdrawals(query = {}) {
@@ -5229,45 +5219,14 @@ export async function getDeliveryWithdrawals(query = {}) {
 
 export async function updateDeliveryWithdrawalStatus(id, { status, adminNote, rejectionReason, transactionId }) {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) throw new ValidationError('Invalid withdrawal ID');
-    
-    const update = {
-        status: String(status).toLowerCase(),
-        adminNote,
-        rejectionReason,
-        transactionId,
-        processedAt: new Date()
-    };
 
-    const updated = await FoodDeliveryWithdrawal.findByIdAndUpdate(
-        id,
-        { $set: update },
-        { new: true }
-    ).populate('deliveryPartnerId', 'name phone profilePartnerId').lean();
+    // pending -> approved | rejected, exactly once. The rider's balance is derived from approved
+    // withdrawals, so approving here is what reduces it — there is no separate wallet to update.
+    await transitionWithdrawal(FoodDeliveryWithdrawal, id, status, { adminNote, rejectionReason, transactionId });
 
-    if (!updated) throw new ValidationError('Withdrawal request not found');
-
-    // If approved, deduct from wallet balance
-    if (status.toLowerCase() === 'approved' || status.toLowerCase() === 'processed') {
-        const amount = Number(updated.amount || 0);
-        if (amount > 0) {
-            await FoodDeliveryWallet.findOneAndUpdate(
-                { deliveryPartnerId: updated.deliveryPartnerId?._id || updated.deliveryPartnerId },
-                { 
-                    $inc: { 
-                        balance: -amount,
-                        totalSettled: amount 
-                    } 
-                }
-            );
-        }
-    }
-
-    return updated;
+    return FoodDeliveryWithdrawal.findById(id).populate('deliveryPartnerId', 'name phone profilePartnerId').lean();
 }
 
-/**
- * Fetch delivery partner wallets with financial summary
- */
 export async function getDeliveryWallets(query = {}) {
     const limit = parseInt(query.limit, 10) || 20;
     const page = parseInt(query.page, 10) || 1;
@@ -5294,12 +5253,11 @@ export async function getDeliveryWallets(query = {}) {
     const globalLimit = Number(cashLimitSettings?.deliveryCashLimit || 0);
 
     const wallets = await Promise.all(partners.map(async (p) => {
-        const wallet = await FoodDeliveryWallet.findOne({ deliveryPartnerId: p._id }).lean();
         const partnerIdstr = p._id ? `DP-${p._id.toString().slice(-8).toUpperCase()}` : '—';
         
         if (!p._id) {
             return {
-                walletId: wallet?._id,
+                walletId: p._id,
                 deliveryId: p._id,
                 name: p.name,
                 phone: p.phone || '',
@@ -5314,78 +5272,21 @@ export async function getDeliveryWallets(query = {}) {
             };
         }
 
-        const partnerId = new mongoose.Types.ObjectId(p._id);
-
-        const [earningsAgg, cashCollectedAgg, cashDepositsAgg, bonusAgg, withdrawalAgg] = await Promise.all([
-            FoodOrder.aggregate([
-                { $match: { 'dispatch.deliveryPartnerId': partnerId, orderStatus: 'delivered' } },
-                { $group: { _id: null, totalEarned: { $sum: { $ifNull: ['$riderEarning', 0] } } } }
-            ]),
-            FoodOrder.aggregate([
-                {
-                    $match: {
-                        'dispatch.deliveryPartnerId': partnerId,
-                        orderStatus: 'delivered',
-                        'payment.method': 'cash'
-                    }
-                },
-                { $group: { _id: null, cashCollected: { $sum: { $ifNull: ['$pricing.total', 0] } } } }
-            ]),
-            FoodDeliveryCashDeposit.aggregate([
-                {
-                    $match: {
-                        deliveryPartnerId: partnerId,
-                        status: 'Completed'
-                    }
-                },
-                { $group: { _id: null, depositedCash: { $sum: { $ifNull: ['$amount', 0] } } } }
-            ]),
-            DeliveryBonusTransaction.aggregate([
-                { $match: { deliveryPartnerId: partnerId } },
-                { $group: { _id: null, total: { $sum: '$amount' } } }
-            ]),
-            FoodDeliveryWithdrawal.aggregate([
-                { $match: { deliveryPartnerId: partnerId } },
-                {
-                    $group: {
-                        _id: null,
-                        totalWithdrawn: {
-                            $sum: {
-                                $cond: [{ $eq: ['$status', 'approved'] }, { $ifNull: ['$amount', 0] }, 0]
-                            }
-                        },
-                        pendingWithdrawals: {
-                            $sum: {
-                                $cond: [{ $eq: ['$status', 'pending'] }, { $ifNull: ['$amount', 0] }, 0]
-                            }
-                        }
-                    }
-                }
-            ])
-        ]);
-
-        const totalEarned = Number(earningsAgg?.[0]?.totalEarned) || 0;
-        const grossCashCollected = Number(cashCollectedAgg?.[0]?.cashCollected) || 0;
-        const totalDepositedCash = Number(cashDepositsAgg?.[0]?.depositedCash) || 0;
-        const cashInHand = Math.max(0, grossCashCollected - totalDepositedCash);
-        const totalBonus = Number(bonusAgg?.[0]?.total) || 0;
-        const totalWithdrawn = Number(withdrawalAgg?.[0]?.totalWithdrawn) || 0;
-        const pendingWithdrawals = Number(withdrawalAgg?.[0]?.pendingWithdrawals) || 0;
-        const pocketBalance = Math.max(0, (totalEarned + totalBonus) - (totalWithdrawn + pendingWithdrawals) - cashInHand);
+        const balances = await getRiderBalances(p._id);
 
         return {
-            walletId: wallet?._id,
+            walletId: p._id,
             deliveryId: p._id,
             name: p.name,
             phone: p.phone || '',
             deliveryIdString: partnerIdstr,
-            pocketBalance,
-            remainingCashLimit: Math.max(0, globalLimit - cashInHand),
-            cashCollected: grossCashCollected,
-            totalEarning: totalEarned,
-            bonus: totalBonus,
-            totalWithdrawn,
-            cashInHand,
+            pocketBalance: balances.pocketBalanceNetOfCash,
+            remainingCashLimit: Math.max(0, globalLimit - balances.cashInHand),
+            cashCollected: balances.cashCollected,
+            totalEarning: balances.totalEarned,
+            bonus: balances.totalBonus,
+            totalWithdrawn: balances.totalWithdrawn,
+            cashInHand: balances.cashInHand,
         };
     }));
 
@@ -5468,62 +5369,34 @@ export async function markDeliveryPayoutAsPaid({ deliveryPartnerId, amount, tran
     if (!partner) throw new ValidationError('Delivery partner not found');
 
     const partnerObjectId = new mongoose.Types.ObjectId(deliveryPartnerId);
-    const [earningsAgg, bonusAgg, withdrawalAgg] = await Promise.all([
-        FoodOrder.aggregate([
-            { $match: { 'dispatch.deliveryPartnerId': partnerObjectId, orderStatus: 'delivered' } },
-            { $group: { _id: null, totalEarned: { $sum: { $ifNull: ['$riderEarning', 0] } } } }
-        ]),
-        DeliveryBonusTransaction.aggregate([
-            { $match: { deliveryPartnerId: partnerObjectId } },
-            { $group: { _id: null, total: { $sum: { $ifNull: ['$amount', 0] } } } }
-        ]),
-        FoodDeliveryWithdrawal.aggregate([
-            { $match: { deliveryPartnerId: partnerObjectId } },
-            {
-                $group: {
-                    _id: null,
-                    totalWithdrawn: { $sum: { $cond: [{ $eq: ['$status', 'approved'] }, '$amount', 0] } },
-                    pendingWithdrawals: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, '$amount', 0] } }
-                }
-            }
-        ])
-    ]);
+    const numericAmountValue = round2(numericAmount);
 
-    const totalEarned = Number(earningsAgg?.[0]?.totalEarned) || 0;
-    const totalBonus = Number(bonusAgg?.[0]?.total) || 0;
-    const totalWithdrawn = Number(withdrawalAgg?.[0]?.totalWithdrawn) || 0;
-    const pendingWithdrawals = Number(withdrawalAgg?.[0]?.pendingWithdrawals) || 0;
-    const pocketBalance = Math.max(0, (totalEarned + totalBonus) - totalWithdrawn);
-    const availableToSettle = Math.max(0, pocketBalance - pendingWithdrawals);
-
-    if (numericAmount > availableToSettle) {
-        throw new ValidationError(`Amount exceeds available balance. Delivery partner's available balance is ₹${availableToSettle}`);
-    }
-
-    const withdrawal = new FoodDeliveryWithdrawal({
-        deliveryPartnerId: partnerObjectId,
-        amount: numericAmount,
-        status: 'approved',
-        paymentMethod: 'bank_transfer',
-        bankDetails: {
-            accountNumber: partner.bankAccountNumber || '',
-            ifscCode: partner.bankIfscCode || '',
-            bankName: partner.bankName || '',
-            accountHolderName: partner.bankAccountHolderName || ''
-        },
-        upiId: partner.upiId || '',
-        upiQrCode: partner.upiQrCode || '',
-        transactionId: transactionId || `MANUAL-${Date.now()}`,
-        adminNote: adminNote || 'Manual payout recorded by admin',
-        processedAt: new Date()
+    // The balance check and the payout record happen under the rider's payout lock,
+    // so this can never overspend alongside a withdrawal request or another payout.
+    const withdrawal = await withPayoutLock('deliveryBoy', partnerObjectId, async (session) => {
+        const balances = await getRiderBalances(partnerObjectId);
+        if (gtMoney(numericAmountValue, balances.availableToWithdraw)) {
+            throw new ValidationError(`Amount exceeds available balance. Delivery partner's available balance is ₹${balances.availableToWithdraw}`);
+        }
+        const [created] = await FoodDeliveryWithdrawal.create([{
+            deliveryPartnerId: partnerObjectId,
+            amount: numericAmountValue,
+            status: 'approved',
+            paymentMethod: 'bank_transfer',
+            bankDetails: {
+                accountNumber: partner.bankAccountNumber || '',
+                ifscCode: partner.bankIfscCode || '',
+                bankName: partner.bankName || '',
+                accountHolderName: partner.bankAccountHolderName || ''
+            },
+            upiId: partner.upiId || '',
+            upiQrCode: partner.upiQrCode || '',
+            transactionId: transactionId || `MANUAL-${Date.now()}`,
+            adminNote: adminNote || 'Manual payout recorded by admin',
+            processedAt: new Date()
+        }], sessionOpts(session));
+        return created;
     });
-
-    await withdrawal.save();
-
-    await FoodDeliveryWallet.findOneAndUpdate(
-        { deliveryPartnerId: partnerObjectId },
-        { $inc: { balance: -numericAmount, totalSettled: numericAmount } }
-    );
 
     try {
         const { notifyOwnerSafely } = await import('../../../../core/notifications/firebase.service.js');
@@ -5577,37 +5450,29 @@ export async function settleDeliveryCashLimit(deliveryPartnerId, { amount, admin
     if (!partner) throw new ValidationError('Delivery partner not found');
 
     const partnerObjectId = new mongoose.Types.ObjectId(deliveryPartnerId);
-    const [cashCollectedAgg, cashDepositsAgg] = await Promise.all([
-        FoodOrder.aggregate([
-            { $match: { 'dispatch.deliveryPartnerId': partnerObjectId, orderStatus: 'delivered', 'payment.method': 'cash' } },
-            { $group: { _id: null, cashCollected: { $sum: { $ifNull: ['$pricing.total', 0] } } } }
-        ]),
-        FoodDeliveryCashDeposit.aggregate([
-            { $match: { deliveryPartnerId: partnerObjectId, status: 'Completed' } },
-            { $group: { _id: null, depositedCash: { $sum: { $ifNull: ['$amount', 0] } } } }
-        ])
-    ]);
 
-    const grossCashCollected = Number(cashCollectedAgg?.[0]?.cashCollected) || 0;
-    const totalDepositedCash = Number(cashDepositsAgg?.[0]?.depositedCash) || 0;
-    const cashInHand = Math.max(0, grossCashCollected - totalDepositedCash);
+    const deposit = await withPayoutLock('deliveryBoy', partnerObjectId, async (session) => {
+        const { cashInHand } = await getRiderBalances(partnerObjectId);
 
-    const numericAmount = amount != null ? Number(amount) : cashInHand;
-    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-        throw new ValidationError('Amount must be a positive number');
-    }
-    if (numericAmount > cashInHand) {
-        throw new ValidationError(`Amount exceeds current cash in hand of ₹${cashInHand}`);
-    }
+        const value = amount != null ? round2(amount) : cashInHand;
+        if (!Number.isFinite(value) || !isPositiveMoney(value)) {
+            throw new ValidationError('Amount must be a positive number');
+        }
+        if (gtMoney(value, cashInHand)) {
+            throw new ValidationError(`Amount exceeds current cash in hand of ₹${cashInHand}`);
+        }
 
-    const deposit = await FoodDeliveryCashDeposit.create({
-        deliveryPartnerId: partnerObjectId,
-        amount: numericAmount,
-        paymentMethod: 'cash',
-        status: 'Completed',
-        adminId: adminUser?._id,
-        adminNote: adminNote || 'Cash limit settled by admin'
+        const [created] = await FoodDeliveryCashDeposit.create([{
+            deliveryPartnerId: partnerObjectId,
+            amount: value,
+            paymentMethod: 'cash',
+            status: 'Completed',
+            adminId: adminUser?._id,
+            adminNote: adminNote || 'Cash limit settled by admin'
+        }], sessionOpts(session));
+        return created;
     });
+    const numericAmount = deposit.amount;
 
     try {
         const { notifyOwnerSafely } = await import('../../../../core/notifications/firebase.service.js');

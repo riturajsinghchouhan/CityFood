@@ -3,6 +3,7 @@ import { FoodOrder } from '../../orders/models/order.model.js';
 import { FoodTransaction } from '../../orders/models/foodTransaction.model.js';
 import { FoodRestaurant } from '../models/restaurant.model.js';
 import { FoodRestaurantWithdrawal } from '../models/foodRestaurantWithdrawal.model.js';
+import { getRestaurantBalances } from '../../../../core/payments/payoutBalances.service.js';
 
 function toTwoDigitYearString(dateObj) {
     const y = String(dateObj.getFullYear());
@@ -119,36 +120,10 @@ export async function getRestaurantFinance(restaurantId, query = {}) {
         0
     );
 
-    // Calculate global estimated payout (all unsettled transactions)
-    const allUnsettledTransactions = await FoodTransaction.find({
-        restaurantId: rid,
-        status: { $in: ['captured', 'authorized'] },
-        'settlement.isRestaurantSettled': { $ne: true }
-    })
-        .populate('orderId', 'orderStatus')
-        .select('amounts.restaurantShare orderId')
-        .lean();
-
-    const deliveredUnsettledTransactions = allUnsettledTransactions.filter(tx => tx.orderId && tx.orderId.orderStatus === 'delivered');
-
-    const globalEstimatedPayout = deliveredUnsettledTransactions.reduce(
-        (sum, tx) => sum + (Number(tx.amounts?.restaurantShare) || 0),
-        0
-    );
-
-    // Deduct all effective withdrawals from available balance.
-    // Both pending and approved reduce withdrawable amount; rejected should not.
-    const effectiveWithdrawalsAgg = await FoodRestaurantWithdrawal.aggregate([
-        {
-            $match: {
-                restaurantId: rid,
-                status: { $in: ['pending', 'approved', 'processed', 'Pending', 'Approved', 'Processed'] }
-            }
-        },
-        { $group: { _id: null, total: { $sum: '$amount' } } }
-    ]);
-    const totalEffectiveWithdrawals = Number(effectiveWithdrawalsAgg?.[0]?.total || 0);
-    const availableBalance = Math.max(0, globalEstimatedPayout - totalEffectiveWithdrawals);
+    // Balances come from the shared payout-balance service (one formula for every screen and payout check)
+    const balances = await getRestaurantBalances(rid);
+    const totalEffectiveWithdrawals = balances.withdrawn;
+    const availableBalance = balances.available;
 
     const currentCycle = {
         start: { ...nowWindow.startMeta },

@@ -2,6 +2,9 @@ import { FoodTransaction } from '../models/foodTransaction.model.js';
 import { FoodRestaurantCommission } from '../../admin/models/restaurantCommission.model.js';
 import { FoodFeeSettings } from '../../admin/models/feeSettings.model.js';
 import mongoose from 'mongoose';
+import { round2 } from '../../../../utils/money.js';
+import { sessionOpts } from '../../../../utils/dbTransaction.js';
+import * as financeService from './finance.service.js';
 
 const RESTAURANT_COMMISSION_CACHE_MS = 60 * 1000;
 let restaurantCommissionRulesCache = null;
@@ -42,7 +45,7 @@ export function computeRestaurantCommissionAmount(baseAmount, rule) {
     }
 
     // Round to 2 decimals and clamp to [0, base]
-    commissionAmount = Math.round((commissionAmount || 0) * 100) / 100;
+    commissionAmount = round2(commissionAmount || 0);
     commissionAmount = Math.max(0, Math.min(commissionAmount, safeBase));
 
     return { commissionAmount, commissionType, commissionValue, baseAmount: safeBase };
@@ -104,18 +107,23 @@ export async function getRestaurantCommissionSnapshot(orderDoc) {
 
     const totalPaid = Number(orderDoc?.pricing?.total) || 0;
 
-    result.gstOnItem = Math.round(baseAmount * (gstOnItemRate / 100) * 100) / 100;
-    result.gstOnCommission = Math.round(result.commissionAmount * (gstOnCommission / 100) * 100) / 100;
-    result.paymentGatewayFee = Math.round(totalPaid * (pgFee / 100) * 100) / 100;
-    result.tcs = Math.round(baseAmount * (tcs / 100) * 100) / 100;
+    result.gstOnItem = round2(baseAmount * (gstOnItemRate / 100));
+    result.gstOnCommission = round2(result.commissionAmount * (gstOnCommission / 100));
+    result.paymentGatewayFee = round2(totalPaid * (pgFee / 100));
+    result.tcs = round2(baseAmount * (tcs / 100));
 
     return result;
 }
 
 /**
- * Creates an initial 'pending' transaction when an order is created.
+ * Creates the initial transaction when an order is created.
+ * Idempotent per order (unique orderId): calling it twice returns the existing row.
+ * Pass { session } to make it part of the order-creation transaction.
  */
-export async function createInitialTransaction(order) {
+export async function createInitialTransaction(order, { session = null } = {}) {
+    const alreadyThere = await FoodTransaction.findOne({ orderId: order._id }).session(session || null);
+    if (alreadyThere) return alreadyThere;
+
     const commissionSnapshot = await getRestaurantCommissionSnapshot(order);
 
     // Split logic
@@ -205,66 +213,42 @@ export async function createInitialTransaction(order) {
         }]
     });
 
-    await transaction.save();
-
-    // Link back to the order
     try {
-        await mongoose.model('FoodOrder').updateOne(
-            { _id: order._id },
-            { $set: { transactionId: transaction._id } }
-        );
+        await transaction.save(sessionOpts(session));
     } catch (err) {
-        // Log but don't fail transaction if the backlink fails
+        // Concurrent creation lost the race on the unique orderId index
+        if (err?.code === 11000 && !session) {
+            const winner = await FoodTransaction.findOne({ orderId: order._id });
+            if (winner) return winner;
+        }
+        throw err;
     }
+
+    // Link back to the order (same transaction when one is open, so both exist or neither does)
+    await mongoose.model('FoodOrder').updateOne(
+        { _id: order._id },
+        { $set: { transactionId: transaction._id } },
+        sessionOpts(session)
+    );
 
     return transaction;
 }
 
 /**
- * Updates transaction status (captured, settled, etc) and appends to history.
+ * Appends an audit entry to a transaction's history. HISTORY ONLY.
+ *
+ * Payment state (status, payment.status, method, refund) is owned by finance.service.js —
+ * passing `status` or `paymentMethod` here is a programming error and throws.
  */
 export async function updateTransactionStatus(orderId, kind, details = {}) {
-    const query = { orderId };
-    const transaction = await FoodTransaction.findOne(query);
-    if (!transaction) return null;
-
-    if (details.status) transaction.status = details.status;
-    if (details.razorpayPaymentId) transaction.gateway.razorpayPaymentId = details.razorpayPaymentId;
-    if (details.razorpaySignature) transaction.gateway.razorpaySignature = details.razorpaySignature;
-
-    // Sync payment method if provided (e.g. switching from cash to QR)
-    if (details.paymentMethod) {
-        transaction.paymentMethod = details.paymentMethod;
-        transaction.payment.method = details.paymentMethod;
+    if (details.status || details.paymentMethod || details.razorpayPaymentId || details.razorpaySignature) {
+        throw new Error('updateTransactionStatus is history-only. Use finance.service (capturePayment / refundOrder / settleCancellation) to change payment state.');
     }
-
-    transaction.history.push({
-        kind,
-        amount: transaction.amounts.totalCustomerPaid,
-        at: new Date(),
+    const res = await financeService.recordHistory(orderId, kind, {
         note: details.note || `Transaction updated: ${kind}`,
-        recordedBy: { role: details.recordedByRole || 'SYSTEM', id: details.recordedById }
+        actor: { role: details.recordedByRole || 'SYSTEM', id: details.recordedById }
     });
-
-    await transaction.save();
-
-    // Sync back to order as well
-    if (details.paymentMethod || details.status) {
-        try {
-            const updateFields = {};
-            if (details.paymentMethod) updateFields['payment.method'] = details.paymentMethod;
-            if (details.status === 'captured') updateFields['payment.status'] = 'paid';
-
-            await mongoose.model('FoodOrder').updateOne(
-                { _id: orderId },
-                { $set: updateFields }
-            );
-        } catch (err) {
-            console.error('Failed to sync transaction status to order:', err.message);
-        }
-    }
-
-    return transaction;
+    return res.applied ? FoodTransaction.findOne({ orderId }) : null;
 }
 
 /**
@@ -280,13 +264,8 @@ export async function updateTransactionRider(orderId, riderId) {
 }
 
 /**
- * Marks restaurant as settled in the finance record.
+ * Marks restaurant as settled in the finance record (captured payments only, idempotent).
  */
 export async function settleRestaurant(orderId, adminId) {
-    return await updateTransactionStatus(orderId, 'settled', {
-        status: 'captured', // Ensure it's marked as captured if it was pending cash
-        note: 'Restaurant payout settled by admin',
-        recordedByRole: 'ADMIN',
-        recordedById: adminId
-    });
+    return financeService.markRestaurantSettled(orderId, adminId);
 }
