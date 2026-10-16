@@ -16,6 +16,7 @@ import * as payoutsController from '../controllers/payouts.controller.js';
 import * as dailySalesController from '../controllers/dailySales.controller.js';
 import { upload } from '../../../../middleware/upload.js';
 import menuBulkRoutes from './menuBulk.routes.js';
+import { getUploadSettings, updateUploadSettings } from '../../../../controllers/admin/uploadSettingController.js';
 
 const router = express.Router();
 
@@ -30,6 +31,10 @@ router.get('/fee-settings/public', adminController.getFeeSettings);
 import { requireAdmin, requireSuperAdmin } from '../../../../core/auth/auth.middleware.js';
 
 router.use(requireAdmin);
+
+// ----- Upload provider (local / cloudinary) -----
+router.get('/upload-settings', getUploadSettings);
+router.put('/upload-settings', updateUploadSettings);
 
 // ----- Sub Admins -----
 router.get('/sub-admins', requireSuperAdmin, adminController.getSubAdmins);
