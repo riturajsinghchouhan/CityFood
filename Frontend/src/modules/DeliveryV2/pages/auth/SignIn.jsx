@@ -1,8 +1,15 @@
 import { useState, useRef, useEffect } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { ShieldCheck, Truck, Star, Heart, ArrowRight, Loader2, ShieldQuestion } from "lucide-react"
-import { Button } from "@food/components/ui/button"
+import {
+  Smartphone,
+  ChevronDown,
+  ArrowRight,
+  Headphones,
+  Loader2,
+  CheckCircle2,
+  X
+} from "lucide-react"
 import { toast } from "sonner"
 import { deliveryAPI } from "@food/api"
 import { clearModuleAuth } from "@food/utils/auth"
@@ -12,43 +19,53 @@ import logoNew from "@/assets/logo.png"
 const DEFAULT_COUNTRY_CODE = "+91"
 
 export default function DeliverySignIn() {
-  const logoUrl = useAppLogo('delivery_app') || logoNew
+  const logoUrl = useAppLogo("delivery_app") || "/logo.png" || logoNew
   const navigate = useNavigate()
+  const phoneInputRef = useRef(null)
+
   const [phone, setPhone] = useState(() => {
     const draft = localStorage.getItem("delivery_draft_phone")
-    if (draft) return draft;
+    if (draft) return draft
     const stored = localStorage.getItem("deliveryAuthData")
     if (stored) {
       try {
         const data = JSON.parse(stored)
         return data.phone ? data.phone.replace("+91", "").trim() : ""
-      } catch (e) { return "" }
+      } catch (e) {
+        return ""
+      }
     }
     return ""
   })
   const [loading, setLoading] = useState(false)
   const submitting = useRef(false)
 
-  // iOS Safari keyboard float fix
+  // iOS Safari keyboard scroll fix
   useEffect(() => {
     const handleFocus = () => {
-      if (typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+      if (
+        typeof window !== "undefined" &&
+        /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+        !window.MSStream
+      ) {
         setTimeout(() => {
-          window.scrollTo(0, 0);
-        }, 50);
+          window.scrollTo(0, 0)
+        }, 50)
       }
-    };
-    const inputs = document.querySelectorAll('input[type="tel"], input[type="text"]');
-    inputs.forEach(input => input.addEventListener('focus', handleFocus));
+    }
+    const inputs = document.querySelectorAll('input[type="tel"], input[type="text"]')
+    inputs.forEach((input) => input.addEventListener("focus", handleFocus))
     return () => {
-      inputs.forEach(input => input.removeEventListener('focus', handleFocus));
-    };
+      inputs.forEach((input) => input.removeEventListener("focus", handleFocus))
+    }
   }, [])
 
   const validatePhone = (num) => {
     const digits = num.replace(/\D/g, "")
     return digits.length === 10 && ["6", "7", "8", "9"].includes(digits[0])
   }
+
+  const isValidNumber = validatePhone(phone)
 
   const handleSendOTP = async (e) => {
     if (e) e.preventDefault()
@@ -86,8 +103,8 @@ export default function DeliverySignIn() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FFF9F2] dark:bg-[#0a0a0a] flex flex-col relative overflow-hidden font-['Poppins']">
-      {/* iOS Keyboard Push-up Fix */}
+    <div className="min-h-screen bg-[#F6F1EA] text-[#1e293b] flex justify-center items-center relative overflow-x-hidden font-['Poppins'] select-none">
+      {/* iOS Keyboard Fix & Focus Outline Reset */}
       <style>{`
         @supports (-webkit-touch-callout: none) {
           body, html {
@@ -101,135 +118,290 @@ export default function DeliverySignIn() {
             scroll-margin-bottom: 50vh;
           }
         }
+        input, input:focus, input:focus-visible {
+          outline: none !important;
+          box-shadow: none !important;
+          border: none !important;
+          -webkit-appearance: none !important;
+          -moz-appearance: none !important;
+          appearance: none !important;
+        }
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus {
+          -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+        }
       `}</style>
-      {/* Soft Ambient Background Elements */}
-      <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-[#FFE4C4]/40 dark:bg-primary/5 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-[#E0F7FA]/50 dark:bg-blue-900/10 blur-[100px] pointer-events-none" />
-      
-      {/* Floating Decorative Elements (Approximating the reference image's background icons) */}
-      <motion.div animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} className="absolute top-[15%] left-[8%] opacity-30 dark:opacity-10 pointer-events-none">
-        <span className="text-4xl text-orange-500">🍕</span>
-      </motion.div>
-      <motion.div animate={{ y: [0, 20, 0], rotate: [0, -10, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} className="absolute top-[25%] right-[10%] opacity-30 dark:opacity-10 pointer-events-none">
-        <span className="text-4xl">🛵</span>
-      </motion.div>
-      <motion.div animate={{ y: [0, -10, 0], scale: [1, 1.1, 1] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-[20%] left-[12%] opacity-30 dark:opacity-10 pointer-events-none">
-        <span className="text-4xl">⭐</span>
-      </motion.div>
-      <motion.div animate={{ y: [0, 15, 0], rotate: [0, 15, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-[15%] right-[15%] opacity-30 dark:opacity-10 pointer-events-none">
-        <span className="text-5xl">📍</span>
-      </motion.div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10 w-full max-w-md mx-auto">
+      {/* Main Container constrained to mobile app layout on desktop */}
+      <div className="w-full max-w-[430px] min-h-screen bg-gradient-to-b from-[#FFFDF9] via-[#FDF9F2] to-[#FFFBF5] sm:shadow-[0_20px_60px_rgba(0,0,0,0.08)] relative flex flex-col justify-between px-6 pt-7 pb-6 overflow-hidden">
+        
+        {/* --- Decorative Floating Graphics & Dotted Paths --- */}
+        {/* Pizza Slice (Top-Left) with curved dotted trajectory */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="w-full flex flex-col items-center"
+          animate={{ y: [0, -6, 0], rotate: [0, 4, 0] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-10 left-6 pointer-events-none z-10"
         >
-          <div className="relative mb-6 flex justify-center">
-            <div className="absolute inset-0 bg-blue-400/20 rounded-full blur-[40px] scale-150 pointer-events-none" />
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 200, damping: 20 }}
-              className="relative w-36 h-36 sm:w-40 sm:h-40 rounded-full bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden border-4 border-white"
-              style={{ borderRadius: '50%', WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
-            >
-              <img 
-                src={logoUrl} 
-                alt="Delivery Logo" 
-                className="w-full h-full object-contain p-2"
-              />
-            </motion.div>
-          </div>
+          <svg width="44" height="44" viewBox="0 0 48 48" fill="none">
+            {/* Pizza Crust & Cheese */}
+            <path
+              d="M10 12 C18 10, 30 10, 38 14 L24 40 Z"
+              fill="#FDBA74"
+              stroke="#FB923C"
+              strokeWidth="2"
+            />
+            <path
+              d="M12 13 C18 11.5, 28 11.5, 36 15 L24 38 Z"
+              fill="#FDE68A"
+            />
+            {/* Pepperoni & Toppings */}
+            <circle cx="21" cy="20" r="2.5" fill="#EF4444" />
+            <circle cx="27" cy="24" r="2" fill="#EF4444" />
+            <circle cx="23" cy="29" r="2" fill="#EF4444" />
+            <circle cx="17" cy="16" r="1.5" fill="#22C55E" />
+            <circle cx="31" cy="18" r="1.5" fill="#22C55E" />
+          </svg>
+        </motion.div>
 
-          {/* Typography Section */}
-          <div className="text-center mb-8 px-2">
-            <h1 className="text-[28px] md:text-[32px] font-black text-[#3c2a21] dark:text-white leading-tight tracking-tight mb-2 font-['Outfit']">
-              Deliver smiles, <br/> earn on your schedule.
+        {/* Dotted curve connecting Pizza towards Center */}
+        <svg
+          className="absolute top-16 left-12 w-32 h-20 pointer-events-none opacity-40"
+          viewBox="0 0 120 80"
+          fill="none"
+        >
+          <path
+            d="M5 10 Q 50 60 110 50"
+            stroke="#D6C5B3"
+            strokeWidth="1.5"
+            strokeDasharray="4 4"
+          />
+        </svg>
+
+        {/* Orange Location Pin (Top-Right) */}
+        <motion.div
+          animate={{ y: [0, -7, 0] }}
+          transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          className="absolute top-24 right-9 pointer-events-none z-10"
+        >
+          <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
+            <path
+              d="M14 0 C6.268 0 0 6.268 0 14 C0 24.5 14 36 14 36 C14 36 28 24.5 28 14 C28 6.268 21.732 0 14 0 Z"
+              fill="#F97316"
+            />
+            <circle cx="14" cy="14" r="5" fill="#FFFFFF" />
+          </svg>
+        </motion.div>
+
+        {/* Dotted curve connecting Location Pin */}
+        <svg
+          className="absolute top-28 right-16 w-32 h-24 pointer-events-none opacity-40"
+          viewBox="0 0 120 90"
+          fill="none"
+        >
+          <path
+            d="M110 10 Q 60 70 5 60"
+            stroke="#D6C5B3"
+            strokeWidth="1.5"
+            strokeDasharray="4 4"
+          />
+        </svg>
+
+        {/* Golden Cloche Serving Cover (Middle-Right) */}
+        <motion.div
+          animate={{ y: [0, 6, 0] }}
+          transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="absolute top-36 right-16 pointer-events-none opacity-70 z-10"
+        >
+          <svg width="42" height="28" viewBox="0 0 44 32" fill="none">
+            {/* Cloche Handle */}
+            <circle cx="22" cy="5" r="3" fill="#FDBA74" />
+            {/* Cloche Dome */}
+            <path
+              d="M6 24 C6 13, 14 8, 22 8 C30 8, 38 13, 38 24 Z"
+              fill="#FED7AA"
+              stroke="#FDBA74"
+              strokeWidth="1.5"
+            />
+            {/* Plate Base */}
+            <rect x="2" y="24" width="40" height="3" rx="1.5" fill="#FDBA74" />
+          </svg>
+        </motion.div>
+
+        {/* --- Top Section: Circular CityFood Delivery Badge --- */}
+        <div className="relative z-20 flex flex-col items-center pt-1">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, type: "spring", stiffness: 200, damping: 20 }}
+            className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] border-4 border-white overflow-hidden p-1 flex items-center justify-center relative mb-3 group"
+          >
+            <img
+              src={logoUrl}
+              alt="CityFood Delivery Logo"
+              className="w-full h-full object-contain filter drop-shadow select-none pointer-events-none group-hover:scale-105 transition-transform duration-300"
+              onError={(e) => {
+                e.currentTarget.onerror = null
+                e.currentTarget.src = "/logo.png"
+              }}
+            />
+          </motion.div>
+
+          {/* Typography Section (Exact Copy & Styling from Image) */}
+          <div className="text-center px-2">
+            <h1 className="text-[26px] sm:text-[30px] font-black text-[#1e293b] leading-[1.15] tracking-tight font-['Outfit']">
+              Deliver smiles.
             </h1>
-            <h2 className="text-[22px] text-[#5e4b3c] dark:text-gray-300 font-semibold mb-1">
+            <h1 className="text-[26px] sm:text-[30px] font-black text-[#0f766e] leading-[1.15] tracking-tight font-['Outfit']">
+              Earn on your schedule.
+            </h1>
+            <h2 className="text-[19px] sm:text-[21px] font-bold text-[#1e293b] tracking-tight mt-2.5">
               Delivery Partner Login
             </h2>
-            <p className="text-sm text-[#8c7a6b] dark:text-gray-400 font-medium">
-              Login with your mobile number
+            <p className="text-[13px] sm:text-[14px] text-[#64748b] font-medium leading-snug mt-1 max-w-[240px] mx-auto">
+              Login with your mobile number to continue
             </p>
           </div>
+        </div>
 
-          <form onSubmit={handleSendOTP} className="w-full space-y-6">
-            {/* Pill-shaped Glassmorphic Input */}
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-gray-800 dark:to-gray-800 rounded-full blur opacity-50 group-hover:opacity-100 transition duration-500"></div>
-              <div className="relative flex items-center bg-white/70 dark:bg-[#1a1a1a]/80 backdrop-blur-xl border border-white/50 dark:border-gray-800 rounded-[2rem] p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-                
-                {/* Prefix Section */}
-                <div className="flex items-center pl-4 pr-3 border-r border-gray-200 dark:border-gray-700">
-                  <img src="https://flagcdn.com/w20/in.png" alt="India" className="w-5 h-auto mr-2 rounded-sm" />
-                  <span className="text-base font-bold text-gray-800 dark:text-gray-200 mr-2">+91</span>
-                </div>
-                
-                <div className="pl-3 pr-2 text-gray-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-                  </svg>
-                </div>
+        {/* --- Middle Section: Scooter Rider & Scenic Landscape Background (Exact Match to User Reference) --- */}
+        <div className="relative -mx-6 w-[calc(100%+3rem)] flex items-center justify-center my-0 select-none overflow-hidden">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98, y: 4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="w-full flex items-center justify-center relative"
+          >
+            <img
+              src="/delivery-hero-clean.png"
+              alt="CityFood Delivery Partner"
+              className="w-full h-auto object-cover select-none pointer-events-none drop-shadow-sm"
+              onError={(e) => {
+                e.currentTarget.onerror = null
+                e.currentTarget.src = "/delivery-hero-seamless.png"
+              }}
+            />
+          </motion.div>
+        </div>
 
-                {/* Input Field */}
-                <input
-                  type="tel"
-                  required
-                  autoFocus
-                  value={phone}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "").slice(0, 10);
-                    setPhone(val);
-                    localStorage.setItem("delivery_draft_phone", val);
-                  }}
-                  maxLength={10}
-                  className="flex-1 bg-transparent border-0 outline-none focus:border-transparent focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 text-gray-900 dark:text-white font-bold text-lg placeholder:text-gray-400 placeholder:font-medium placeholder:text-sm py-2 px-1"
-                  style={{ boxShadow: "none", border: "none", outline: "none" }}
-                  placeholder="Enter your 10-digit registered..."
+        {/* --- Bottom Section: Form, Action Buttons & Support --- */}
+        <div className="relative z-20 w-full space-y-3.5">
+          <form onSubmit={handleSendOTP} className="space-y-3.5">
+            {/* Pill-shaped Floating White Input Field */}
+            <div className="w-full bg-white rounded-full shadow-[0_4px_22px_rgba(0,0,0,0.06)] border border-gray-100/90 px-4 py-3 sm:py-3.5 flex items-center transition-all focus-within:shadow-[0_6px_28px_rgba(0,180,216,0.18)] focus-within:border-[#00bfa5]/40">
+              
+              {/* Country Code Prefix */}
+              <div className="flex items-center gap-1.5 pl-1 pr-2.5 shrink-0 select-none">
+                <img
+                  src="https://flagcdn.com/w40/in.png"
+                  alt="India Flag"
+                  className="w-5 h-auto rounded-[2px] shadow-xs object-cover"
                 />
+                <span className="text-[15px] font-bold text-[#1e293b] tracking-tight">
+                  +91
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 text-gray-500 stroke-[2.2]" />
               </div>
+
+              {/* Vertical Subtle Divider */}
+              <div className="h-6 w-[1.5px] bg-gray-200 mx-2 shrink-0" />
+
+              {/* Smartphone Outline Icon */}
+              <Smartphone className="w-[18px] h-[18px] text-gray-400 mr-2 shrink-0 stroke-[2]" />
+
+              {/* Input */}
+              <input
+                ref={phoneInputRef}
+                type="tel"
+                required
+                autoComplete="off"
+                spellCheck="false"
+                inputMode="numeric"
+                value={phone}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 10)
+                  setPhone(val)
+                  localStorage.setItem("delivery_draft_phone", val)
+                }}
+                maxLength={10}
+                placeholder="9755633147"
+                style={{ outline: "none", boxShadow: "none", border: "none" }}
+                className="flex-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0 text-[#1e293b] font-bold text-base sm:text-[17px] tracking-wider placeholder:text-gray-300 placeholder:font-medium placeholder:tracking-normal min-w-0"
+              />
+
+              {/* Clear / Valid Status */}
+              {phone.length > 0 && (
+                <div className="pr-1 shrink-0 flex items-center">
+                  {isValidNumber ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 stroke-[2.5]" />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setPhone("")}
+                      className="p-1 rounded-full text-gray-400 hover:text-gray-600 focus:outline-none"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Gradient CTA Button */}
+            {/* Vibrant Cyan-to-Emerald Gradient CTA Button */}
             <button
               type="submit"
-              disabled={loading || phone.length < 10}
-              className="w-full py-4.5 bg-gradient-to-r from-[#4CB8C4] to-[#3CD3AD] hover:from-[#3BA0AB] hover:to-[#2BB896] disabled:from-gray-300 disabled:to-gray-300 dark:disabled:from-gray-800 dark:disabled:to-gray-800 disabled:text-gray-500 text-white rounded-[2rem] font-bold text-[17px] shadow-[0_15px_30px_-10px_rgba(76,184,196,0.5)] transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              disabled={loading || !isValidNumber}
+              className="w-full py-4 rounded-full font-bold text-white text-[16px] sm:text-[17px] tracking-wide bg-gradient-to-r from-[#00A896] via-[#02C39A] to-[#05D59C] hover:brightness-105 active:scale-[0.98] shadow-[0_12px_26px_-6px_rgba(2,195,154,0.45)] disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center relative overflow-hidden group cursor-pointer"
             >
               {loading ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Sending OTP...</span>
+                </div>
               ) : (
-                "Send OTP to Register/Login"
+                <div className="flex items-center justify-center w-full relative">
+                  <span>Send OTP to Register/Login</span>
+                  
+                  {/* Circular Arrow Badge */}
+                  <div className="w-7 h-7 rounded-full bg-white/25 flex items-center justify-center ml-2.5 shrink-0 group-hover:translate-x-1 transition-transform">
+                    <ArrowRight className="w-4 h-4 text-white stroke-[2.8]" />
+                  </div>
+                </div>
               )}
             </button>
           </form>
 
-          {/* Support Link */}
-          <div className="mt-6">
-            <Link 
+          {/* Secondary Pill Button: Need Help? Support */}
+          <div className="flex justify-center pt-1">
+            <Link
               to="/food/delivery/support"
-              className="flex items-center justify-center gap-2 px-6 py-2.5 bg-white/50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm font-bold text-gray-700 dark:text-gray-300 shadow-sm transition-all"
+              className="w-full max-w-[270px] py-2.5 px-6 rounded-full border border-[#0f172a]/20 bg-white/90 hover:bg-white text-[#0f172a] font-bold text-sm shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all flex items-center justify-center gap-2 active:scale-95 group"
             >
-              <ShieldQuestion className="w-4 h-4 text-orange-500" />
-              Need Help? Support
+              <Headphones className="w-4 h-4 text-[#0f172a] stroke-[2.2] group-hover:rotate-6 transition-transform" />
+              <span>Need Help? Support</span>
             </Link>
           </div>
 
-          {/* Footer Terms */}
-          <div className="mt-8 text-center">
-            <p className="text-xs text-gray-500 font-medium">
+          {/* Footer Terms & Privacy Policy */}
+          <div className="text-center pt-2">
+            <p className="text-[11px] sm:text-xs text-gray-500 font-medium leading-relaxed">
               By continuing, you agree to our <br className="sm:hidden" />
-              <Link to="/food/delivery/profile/terms" className="text-gray-800 dark:text-gray-300 font-bold hover:text-[#4CB8C4] underline underline-offset-2 mx-1">Terms</Link>
+              <Link
+                to="/food/delivery/profile/terms"
+                className="text-[#0f766e] font-bold hover:underline mx-1"
+              >
+                Terms
+              </Link>
               &
-              <Link to="/food/delivery/profile/privacy" className="text-gray-800 dark:text-gray-300 font-bold hover:text-[#4CB8C4] underline underline-offset-2 ml-1">Privacy Policy</Link>
+              <Link
+                to="/food/delivery/profile/privacy"
+                className="text-[#0f766e] font-bold hover:underline ml-1"
+              >
+                Privacy Policy
+              </Link>
             </p>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   )
