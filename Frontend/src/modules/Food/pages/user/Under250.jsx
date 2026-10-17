@@ -1419,25 +1419,29 @@ export default function Under250() {
             {/* All Button */}
             <div className="flex-shrink-0 cursor-pointer" onClick={() => handleCategorySwitch(null)}>
               <motion.div
-                className={`flex flex-col items-center justify-center gap-1 w-[76px] h-[76px] sm:w-[88px] sm:h-[88px] md:w-[96px] md:h-[96px] rounded-[1rem] transition-all border ${!activeCategory ? 'bg-primary border-primary text-white shadow-md' : 'bg-white border-gray-100 text-gray-600 dark:bg-[#1a1a1a] dark:border-gray-800 dark:text-gray-300'}`}
+                className="flex flex-col items-center gap-1.5 w-[68px] sm:w-[76px] md:w-[84px] group"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 ${!activeCategory ? 'text-white' : 'text-gray-400'}`}>
-                  <UtensilsCrossed className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9" />
+                <div
+                  className={`w-[62px] h-[62px] sm:w-[70px] sm:h-[70px] md:w-[76px] md:h-[76px] rounded-full flex items-center justify-center transition-all shadow-sm ${
+                    !activeCategory
+                      ? 'bg-primary text-white border-2 border-primary shadow-md ring-2 ring-primary/25'
+                      : 'bg-gray-50 dark:bg-[#1a1a1a] text-gray-500 dark:text-gray-400 border-2 border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
+                  }`}
+                >
+                  <UtensilsCrossed className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
-                <span className={`text-[10px] sm:text-[11px] md:text-xs font-semibold text-center leading-tight ${!activeCategory ? 'text-white' : ''}`}>
+                <span className={`text-[11px] sm:text-xs font-semibold text-center leading-tight truncate w-full px-0.5 ${!activeCategory ? 'text-primary font-bold' : 'text-gray-700 dark:text-gray-300'}`}>
                   All
                 </span>
               </motion.div>
             </div>
             {loadingCategories ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <div key={`skel-cat-${i}`} className="flex-shrink-0">
-                  <div className="flex flex-col items-center justify-center gap-1 w-[76px] h-[76px] sm:w-[88px] sm:h-[88px] md:w-[96px] md:h-[96px] rounded-[1rem] border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a1a1a]">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-                    <div className="h-3 w-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                  </div>
+                <div key={`skel-cat-${i}`} className="flex-shrink-0 flex flex-col items-center gap-1.5 w-[68px] sm:w-[76px] md:w-[84px]">
+                  <div className="w-[62px] h-[62px] sm:w-[70px] sm:h-[70px] md:w-[76px] md:h-[76px] bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse" />
+                  <div className="h-3 w-12 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
                 </div>
               ))
             ) : (
@@ -1445,24 +1449,30 @@ export default function Under250() {
                 const isActive = activeCategory === category.id
                 return (
                   <div key={category.id} className="flex-shrink-0 cursor-pointer" onClick={() => handleCategorySwitch(isActive ? null : category.id)}>
-                      <motion.div
-                        className={`flex flex-col items-center justify-center gap-1 w-[76px] h-[76px] sm:w-[88px] sm:h-[88px] md:w-[96px] md:h-[96px] rounded-[1rem] transition-all border ${isActive ? 'bg-primary border-primary text-white shadow-md' : 'bg-white border-gray-100 text-gray-600 dark:bg-[#1a1a1a] dark:border-gray-800 dark:text-gray-300'}`}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                    <motion.div
+                      className="flex flex-col items-center gap-1.5 w-[68px] sm:w-[76px] md:w-[84px] group"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <div
+                        className={`relative w-[62px] h-[62px] sm:w-[70px] sm:h-[70px] md:w-[76px] md:h-[76px] rounded-full overflow-hidden transition-all shadow-sm bg-white dark:bg-[#1a1a1a] border-2 ${
+                          isActive
+                            ? 'border-primary ring-2 ring-primary/25 shadow-md'
+                            : 'border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
+                        }`}
                       >
-                        <div className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full overflow-hidden mb-0.5 flex-shrink-0 flex items-center justify-center bg-white shadow-sm border border-gray-50">
-                          <OptimizedImage
-                            src={category.image}
-                            alt={category.name}
-                            className="w-full h-full object-cover scale-[1.15]"
-                            sizes="(max-width: 640px) 40px, (max-width: 768px) 44px, 48px"
-                            placeholder="blur"
-                          />
-                        </div>
-                        <span className={`text-[10px] sm:text-[11px] md:text-xs font-semibold text-center leading-tight px-1 ${isActive ? 'text-white' : ''}`}>
-                          {category.name.length > 9 ? `${category.name.slice(0, 9)}..` : category.name}
-                        </span>
-                      </motion.div>
+                        <OptimizedImage
+                          src={category.image}
+                          alt={category.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          sizes="(max-width: 640px) 62px, (max-width: 768px) 70px, 76px"
+                          placeholder="blur"
+                        />
+                      </div>
+                      <span className={`text-[11px] sm:text-xs font-semibold text-center leading-tight truncate w-full px-0.5 ${isActive ? 'text-primary font-bold' : 'text-gray-700 dark:text-gray-300'}`}>
+                        {category.name}
+                      </span>
+                    </motion.div>
                   </div>
                 )
               })
