@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { FoodRestaurant } from '../models/restaurant.model.js';
 import { FoodOrder } from '../../orders/models/order.model.js';
 import { AccountDeletion } from '../../admin/models/accountDeletion.model.js';
+import { getRestaurantBalances } from '../../../../core/payments/payoutBalances.service.js';
 
 /**
  * Permanently delete a RESTAURANT account.
@@ -19,20 +20,19 @@ export async function deleteRestaurantAccount(userId) {
         if (!restaurant) throw new Error('Restaurant not found');
 
         // --- 1. Collect financial snapshot ---
+        // Snapshot of what the restaurant was owed, from the shared balance service
         let walletBalance = 0;
         let totalEarnings = 0;
         try {
-            const walletDoc = await mongoose.connection.db
-                .collection('food_restaurant_wallets')
-                .findOne({ restaurantId: new mongoose.Types.ObjectId(userId) });
-            walletBalance = walletDoc?.balance || 0;
-            totalEarnings = walletDoc?.totalEarnings || 0;
+            const balances = await getRestaurantBalances(userId);
+            walletBalance = balances.available;
+            totalEarnings = balances.earned;
         } catch (_) {}
 
         let pendingWithdrawals = 0;
         try {
             const withdrawalAgg = await mongoose.connection.db
-                .collection('food_restaurant_withdrawals')
+                .collection('payment_restaurant_withdrawals')
                 .aggregate([
                     {
                         $match: {
@@ -49,7 +49,7 @@ export async function deleteRestaurantAccount(userId) {
         let totalCommissionPaid = 0;
         try {
             const commissionAgg = await mongoose.connection.db
-                .collection('food_restaurant_commissions')
+                .collection('payment_restaurant_commissions')
                 .aggregate([
                     { $match: { restaurantId: new mongoose.Types.ObjectId(userId) } },
                     { $group: { _id: null, total: { $sum: '$amount' } } }
@@ -109,23 +109,21 @@ export async function deleteRestaurantAccount(userId) {
 
         // --- 4. Anonymize transactions ---
         try {
-            await mongoose.connection.db.collection('food_transactions').updateMany(
+            await mongoose.connection.db.collection('payment_food_transactions').updateMany(
                 { restaurantId: new mongoose.Types.ObjectId(userId) },
-                { $set: { restaurantId: null, restaurantName: 'Deleted Restaurant' } },
+                { $set: { restaurantName: 'Deleted Restaurant' } }, // keep restaurantId: payout history stays attributable
                 { session }
             );
         } catch (_) {}
 
         // --- 5. Delete restaurant-specific data ---
         const collectionsToClean = [
-            { col: 'food_restaurant_wallets', field: 'restaurantId' },
             { col: 'food_restaurant_support_tickets', field: 'restaurantId' },
-            { col: 'food_restaurant_withdrawals', field: 'restaurantId' },
             { col: 'food_items', field: 'restaurantId' },
             { col: 'food_addons', field: 'restaurantId' },
             { col: 'food_restaurant_menus', field: 'restaurantId' },
             { col: 'food_restaurant_outlet_timings', field: 'restaurantId' },
-            { col: 'food_restaurant_commissions', field: 'restaurantId' },
+            { col: 'payment_restaurant_commissions', field: 'restaurantId' },
             { col: 'food_dining_restaurants', field: 'restaurantId' },
             { col: 'food_dining_requests', field: 'restaurantId' }
         ];

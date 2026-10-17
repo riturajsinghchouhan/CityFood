@@ -33,7 +33,7 @@ const feeSettingsSchema = new mongoose.Schema(
         applyGlobalTaxes: { type: Boolean, default: true },
         isActive: { type: Boolean, default: true, index: true }
     },
-    { collection: 'food_fee_settings', timestamps: true }
+    { collection: 'payment_fee_settings', timestamps: true }
 );
 
 feeSettingsSchema.index({ isActive: 1, createdAt: -1 });

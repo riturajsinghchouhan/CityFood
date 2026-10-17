@@ -4,8 +4,7 @@
 
 import axios from "axios";
 import apiClient, { userClient, restaurantClient, deliveryClient, adminClient } from "./axios.js";
-import { API_ENDPOINTS } from "./config.js";
-import { getUploadApiBaseUrl, getUploadAuthHeaders, joinApiUrl } from "./uploadTarget.js";
+import { API_ENDPOINTS, API_BASE_URL } from "./config.js";
 import { getUploadErrorMessage } from '../../shared/utils/uploadErrors.js';
 import * as authService from "./auth.js";
 import { getModuleFcmToken, getModuleRefreshToken } from "@food/utils/auth";
@@ -227,6 +226,13 @@ export const notificationAPI = {
 };
 
 /** Admin API - new backend only (GET /auth/me, PATCH /auth/admin/profile, POST /auth/admin/change-password) */
+/**
+ * Request id for withdrawal requests. A double click (or an immediate retry) of the same request
+ * inside the same 10-second window sends the SAME id, so the server returns the original withdrawal
+ * instead of creating a second one. A genuinely new request later gets a new id.
+ */
+const withdrawalRequestId = (kind, amount) => `${kind}-${Number(amount) || 0}-${Math.floor(Date.now() / 10000)}`;
+
 export const adminAPI = {
   saveFcmToken: saveAdminFcmTokenOnce,
   // Sub Admins
@@ -237,6 +243,23 @@ export const adminAPI = {
 
   getSidebarBadges: () =>
     adminClient.get("/food/admin/sidebar-badges"),
+  /** Payment reconciliation (super admin) */
+  getReconciliationLatest: (kind) =>
+    adminClient.get("/food/admin/payments/reconciliation/report/latest", { params: kind ? { kind } : {} }),
+  getReconciliationReports: (limit = 20) =>
+    adminClient.get("/food/admin/payments/reconciliation/reports", { params: { limit } }),
+  runReconciliationNow: () =>
+    adminClient.post("/food/admin/payments/reconciliation/run", {}, { timeout: 300000 }),
+  getOrderReconciliation: (params = {}) =>
+    adminClient.get("/food/admin/payments/reconciliation/orders", { params, timeout: 120000 }),
+  getWalletReconciliation: () =>
+    adminClient.get("/food/admin/payments/reconciliation", { timeout: 120000 }),
+  repairOrderPayment: (orderId) =>
+    adminClient.post(`/food/admin/payments/reconciliation/orders/${orderId}/repair`, {}, { timeout: 120000 }),
+  getOperationalDataCounts: () => adminClient.get("/food/admin/operational-data"),
+  clearOperationalData: (data) => adminClient.post("/food/admin/operational-data/clear", data),
+  getUploadSettings: () => adminClient.get("/food/admin/upload-settings"),
+  updateUploadSettings: (data) => adminClient.put("/food/admin/upload-settings", data),
   getEnvSettings: () => adminClient.get("/food/admin/env"),
   updateEnvSettings: (data) => adminClient.put("/food/admin/env", data),
   getBusinessSettings: () => adminClient.get("/food/admin/business-settings"),
@@ -697,7 +720,7 @@ export const restaurantAPI = {
     }),
   /** Submit a real withdrawal request to the backend. */
   createWithdrawalRequest: (amount) =>
-    restaurantClient.post("/food/restaurant/withdraw", { amount: Number(amount) }),
+    restaurantClient.post("/food/restaurant/withdraw", { amount: Number(amount), requestId: withdrawalRequestId("restaurant", amount) }),
   /** List withdrawal history for current restaurant. */
   getWithdrawalHistory: () =>
     restaurantClient.get("/food/restaurant/withdrawals"),
@@ -1707,7 +1730,7 @@ export const deliveryAPI = {
   getCashLimit: () =>
     deliveryClient.get("/food/delivery/cash-limit"),
   createWithdrawalRequest: (body) =>
-    deliveryClient.post("/food/delivery/wallet/withdraw", body ?? {}),
+    deliveryClient.post("/food/delivery/wallet/withdraw", { ...(body ?? {}), requestId: withdrawalRequestId("delivery", body?.amount) }),
   createDepositOrder: (amount) =>
     deliveryClient.post("/food/delivery/wallet/deposit/order", { amount }),
   verifyDepositPayment: (body) =>
@@ -1904,14 +1927,21 @@ export const zoneAPI = {
   getPublicZones: (params = {}, config = {}) =>
     userClient.get("/food/zones/public", { params: params ?? {}, ...config }),
 };
+const getUploadAuthHeaders = () => {
+  if (typeof window === "undefined") return {};
+  const key = ["admin_accessToken", "restaurant_accessToken", "delivery_accessToken", "user_accessToken", "accessToken"]
+    .find((k) => localStorage.getItem(k));
+  return key ? { Authorization: `Bearer ${localStorage.getItem(key)}` } : {};
+};
+
 const uploadRequestWithFallback = async (paths, formData) => {
-  const baseUrl = getUploadApiBaseUrl();
+  const baseUrl = String(API_BASE_URL || "").trim().replace(/\/+$/, "") || "/api/v1";
   const headers = getUploadAuthHeaders();
   let lastError = null;
 
   for (const path of paths) {
     try {
-      return await axios.post(joinApiUrl(baseUrl, path), formData, {
+      return await axios.post(`${baseUrl}${path}`, formData, {
         timeout: 300000,
         headers,
       });

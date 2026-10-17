@@ -22,6 +22,7 @@ import { getIO, rooms } from '../../../../config/socket.js';
 import { getFirebaseDB } from '../../../../config/firebase.js';
 import { fetchPolyline } from '../utils/googleMaps.js';
 import * as foodTransactionService from './foodTransaction.service.js';
+import * as financeService from './finance.service.js';
 import { syncRazorpayQrPayment } from './order-payment.service.js';
 import * as dispatchService from './order-dispatch.service.js';
 import { clearDeliveryOffersForOrder } from './order-dispatch.firebase.js';
@@ -82,7 +83,7 @@ export async function getPartnerCashCapacity(deliveryPartnerId) {
       },
       {
         $lookup: {
-          from: 'food_transactions',
+          from: 'payment_food_transactions',
           localField: '_id',
           foreignField: 'orderId',
           as: 'tx',
@@ -1262,11 +1263,10 @@ export async function completeDelivery(orderId, deliveryPartnerId, body = {}) {
   } else if (finalPayMethod === 'cash') {
     // Record cash first, before changing the order to delivered. The endpoint is
     // authenticated, restricted to the assigned rider, and OTP-gated above.
-    await foodTransactionService.updateTransactionStatus(order._id, 'cod_marked_paid_on_delivery', {
-      status: 'captured',
-      paymentMethod: 'cash',
-      recordedByRole: 'DELIVERY_PARTNER',
-      recordedById: deliveryPartnerId,
+    await financeService.capturePayment(order._id, {
+      method: 'cash',
+      source: 'rider_cod',
+      actor: { role: 'DELIVERY_PARTNER', id: deliveryPartnerId },
       note: 'Rider confirmed cash collection after customer handover OTP verification.',
     });
     verifiedPaymentStatus = 'paid';
@@ -1312,11 +1312,11 @@ export async function completeDelivery(orderId, deliveryPartnerId, body = {}) {
       : (finalPayMethod === 'razorpay_qr' ? 'cod_collect_qr_settled' : 'payment_snapshot_sync');
 
   if (finalPayMethod !== 'cash') {
-    await foodTransactionService.updateTransactionStatus(order._id, ledgerKind, {
-      status: 'captured', // This marks payment as 'paid'
-      paymentMethod: finalPayMethod,
-      recordedByRole: 'DELIVERY_PARTNER',
-      recordedById: deliveryPartnerId,
+    // Already-paid orders are a no-op here (capturePayment is idempotent)
+    await financeService.capturePayment(order._id, {
+      method: finalPayMethod,
+      source: ledgerKind,
+      actor: { role: 'DELIVERY_PARTNER', id: deliveryPartnerId },
       note: `Rider finalized payment as ${finalPayMethod}. Order is now delivered.`,
     });
   }

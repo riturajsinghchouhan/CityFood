@@ -6,7 +6,7 @@ const deliveryCashLimitSchema = new mongoose.Schema(
         deliveryWithdrawalLimit: { type: Number, default: 100, min: 0 },
         isActive: { type: Boolean, default: true, index: true }
     },
-    { collection: 'food_delivery_cash_limits', timestamps: true }
+    { collection: 'payment_delivery_cash_limits', timestamps: true }
 );
 
 deliveryCashLimitSchema.index({ isActive: 1, createdAt: -1 });

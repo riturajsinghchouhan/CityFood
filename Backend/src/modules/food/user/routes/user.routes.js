@@ -1,4 +1,5 @@
 ﻿import express from 'express';
+import { moneyRateLimiter } from '../../../../middleware/rateLimit.js';
 import { upload } from '../../../../middleware/upload.js';
 import {
     listAddressesController,
@@ -43,8 +44,8 @@ router.post('/profile/profile-image', upload.single('file'), uploadCurrentUserPr
 
 // Wallet (Bearer USER)
 router.get('/wallet', getUserWalletController);
-router.post('/wallet/topup/order', createWalletTopupOrderController);
-router.post('/wallet/topup/verify', verifyWalletTopupPaymentController);
+router.post('/wallet/topup/order', moneyRateLimiter, createWalletTopupOrderController);
+router.post('/wallet/topup/verify', moneyRateLimiter, verifyWalletTopupPaymentController);
 
 // Referral stats (Bearer USER)
 router.get('/referrals/stats', getUserReferralStatsController);

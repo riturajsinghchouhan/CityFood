@@ -174,3 +174,30 @@
   z-index: 999999 !important;
   pointer-events: auto !important;
 }
+
+/* ---------------------------------------------------------------------------------------------
+   Admin panel: smaller type.
+   AdminLayout puts the class "admin-compact" on <html> while an admin page is open (so dialogs and
+   dropdowns, which render outside the layout, shrink too). The customer, restaurant and rider apps
+   never get it. Only text size changes — spacing and layout stay as they are.
+
+   One knob: --admin-text-scale. 1 = original size, 0.9 = 10% smaller, 0.85 = 15% smaller.
+   --------------------------------------------------------------------------------------------- */
+html.admin-compact {
+  --admin-text-scale: 0.9;
+
+  --text-xs: calc(0.75rem * var(--admin-text-scale));
+  --text-sm: calc(0.875rem * var(--admin-text-scale));
+  --text-base: calc(1rem * var(--admin-text-scale));
+  --text-lg: calc(1.125rem * var(--admin-text-scale));
+  --text-xl: calc(1.25rem * var(--admin-text-scale));
+  --text-2xl: calc(1.5rem * var(--admin-text-scale));
+  --text-3xl: calc(1.875rem * var(--admin-text-scale));
+  --text-4xl: calc(2.25rem * var(--admin-text-scale));
+  --text-5xl: calc(3rem * var(--admin-text-scale));
+}
+
+/* Text that has no size class (plain paragraphs, table cells, inputs) follows the same scale */
+html.admin-compact body {
+  font-size: calc(1rem * var(--admin-text-scale));
+}

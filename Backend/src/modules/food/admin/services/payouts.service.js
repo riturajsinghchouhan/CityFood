@@ -1,9 +1,31 @@
 import mongoose from 'mongoose';
 import { FoodOrder } from '../../orders/models/order.model.js';
+import { FoodTransaction } from '../../orders/models/foodTransaction.model.js';
 import { FoodRestaurantWithdrawal } from '../../restaurant/models/foodRestaurantWithdrawal.model.js';
 import { FoodRestaurantAdjustment } from '../../restaurant/models/foodRestaurantAdjustment.model.js';
 import { FoodRestaurant } from '../../restaurant/models/restaurant.model.js';
 import { ValidationError } from '../../../../core/auth/errors.js';
+import { getRestaurantBalances } from '../../../../core/payments/payoutBalances.service.js';
+import { withPayoutLock } from '../../../../core/payments/payoutLock.js';
+import { sessionOpts } from '../../../../utils/dbTransaction.js';
+import { round2, gtMoney } from '../../../../utils/money.js';
+
+/**
+ * What the restaurant earns on an order is `amounts.restaurantShare` on its finance record
+ * (item + packaging - commission - GST/gateway fees). Admin payout screens and the restaurant's own
+ * screen must show the same number, so both read it from there. Orders without a finance record
+ * (very old data) fall back to subtotal + packaging - commission.
+ */
+async function getRestaurantShareMap(orderIds) {
+    if (!orderIds.length) return new Map();
+    const rows = await FoodTransaction.find({ orderId: { $in: orderIds } }).select('orderId amounts.restaurantShare').lean();
+    return new Map(rows.map((r) => [String(r.orderId), Number(r.amounts?.restaurantShare)]));
+}
+
+function payoutOf(shareMap, order, subtotal, packagingFee, commission) {
+    const share = shareMap.get(String(order._id));
+    return Number.isFinite(share) ? share : Math.max(0, (subtotal + packagingFee) - commission);
+}
 
 /**
  * Summary card totals for restaurant payouts based on filters.
@@ -71,7 +93,37 @@ export async function getPayoutSummary(query = {}) {
     const totalPackagingFee = stats.totalPackagingFee || 0;
 
     // Earning Formula: totalPayout = (subtotal + packagingFee) - restaurantCommission
-    const totalPayout = Math.max(0, Math.round(((totalSubtotal + totalPackagingFee) - totalCommission) * 100) / 100);
+    const payoutAgg = await FoodOrder.aggregate([
+        { $match: filter },
+        { $lookup: { from: FoodTransaction.collection.name, localField: '_id', foreignField: 'orderId', as: 'tx' } },
+        {
+            $group: {
+                _id: null,
+                total: {
+                    $sum: {
+                        $let: {
+                            vars: { t: { $arrayElemAt: ['$tx', 0] } },
+                            in: {
+                                $cond: [
+                                    { $ne: [{ $type: '$t.amounts.restaurantShare' }, 'missing'] },
+                                    '$t.amounts.restaurantShare',
+                                    {
+                                        $max: [0, {
+                                            $subtract: [
+                                                { $add: [{ $ifNull: ['$pricing.subtotal', 0] }, { $ifNull: ['$pricing.packagingFee', 0] }] },
+                                                { $ifNull: ['$pricing.restaurantCommission', 0] }
+                                            ]
+                                        }]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]);
+    const totalPayout = Math.max(0, Math.round((payoutAgg[0]?.total || 0) * 100) / 100);
 
     // Rule 3: Do NOT filter totalPaid by date!
     // totalPaid = sum of ALL approved withdrawals for that restaurant
@@ -157,6 +209,7 @@ export async function getPayoutOrders(query = {}) {
         FoodOrder.countDocuments(filter)
     ]);
 
+    const shareMap = await getRestaurantShareMap(orders.map((o) => o._id));
     const data = orders.map((o, idx) => {
         const items = Array.isArray(o.items) ? o.items : [];
         const itemName = items.map(it => it.name).filter(Boolean).join(', ') || 'N/A';
@@ -166,7 +219,7 @@ export async function getPayoutOrders(query = {}) {
         const gst = Number(o.pricing?.tax || o.pricing?.gstAmount || 0) + Number(o.pricing?.additionalChargesGst || 0);
         const deliveryFee = Number(o.pricing?.deliveryFee || 0);
         const platformFee = Number(o.pricing?.platformFee || 0);
-        const payoutAmount = Math.max(0, (subtotal + packagingFee) - commission);
+        const payoutAmount = payoutOf(shareMap, o, subtotal, packagingFee, commission);
 
         const deliveredAt = o.deliveryState?.deliveredAt || o.updatedAt || o.createdAt;
 
@@ -240,6 +293,7 @@ export async function getPayoutPdfData(query = {}) {
         .sort({ 'deliveryState.deliveredAt': -1 })
         .lean();
 
+    const shareMap = await getRestaurantShareMap(orders.map((o) => o._id));
     let totalPayout = 0;
     let totalRevenue = 0;
     let totalCommission = 0;
@@ -251,7 +305,7 @@ export async function getPayoutPdfData(query = {}) {
         const packagingFee = Number(o.pricing?.packagingFee || 0);
         const commission = Number(o.pricing?.restaurantCommission || 0);
         const total = Number(o.pricing?.total || 0);
-        const payoutAmount = Math.max(0, (subtotal + packagingFee) - commission);
+        const payoutAmount = payoutOf(shareMap, o, subtotal, packagingFee, commission);
 
         totalPayout += payoutAmount;
         totalRevenue += total;
@@ -306,13 +360,15 @@ export async function getPayoutPdfData(query = {}) {
 }
 
 /**
- * Creates an approved FoodRestaurantWithdrawal entry without directly mutating wallet balance.
+ * Records an approved payout to a restaurant. The balance check and the record are written
+ * under the restaurant's payout lock, so a payout can never exceed what is owed, even next to a
+ * simultaneous withdrawal request.
  */
 export async function markPayoutAsPaid({ restaurantId, amount, transactionId, adminNote }) {
     if (!restaurantId || !mongoose.Types.ObjectId.isValid(restaurantId)) {
         throw new ValidationError('Valid restaurant ID is required');
     }
-    const numericAmount = Number(amount);
+    const numericAmount = round2(amount);
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
         throw new ValidationError('Amount must be a positive number');
     }
@@ -320,23 +376,28 @@ export async function markPayoutAsPaid({ restaurantId, amount, transactionId, ad
     const restaurant = await FoodRestaurant.findById(restaurantId).lean();
     if (!restaurant) throw new ValidationError('Restaurant not found');
 
-    const withdrawal = new FoodRestaurantWithdrawal({
-        restaurantId: new mongoose.Types.ObjectId(restaurantId),
-        amount: numericAmount,
-        status: 'approved',
-        paymentMethod: 'bank_transfer',
-        bankDetails: {
-            accountNumber: restaurant.accountNumber || '',
-            ifscCode: restaurant.ifscCode || '',
-            bankName: restaurant.bankName || '',
-            accountHolderName: restaurant.accountHolderName || ''
-        },
-        transactionId: transactionId || `MANUAL-${Date.now()}`,
-        adminNote: adminNote || 'Manual payout recorded by admin',
-        processedAt: new Date()
+    const withdrawal = await withPayoutLock('restaurant', restaurantId, async (session) => {
+        const { available } = await getRestaurantBalances(restaurantId);
+        if (gtMoney(numericAmount, available)) {
+            throw new ValidationError(`Amount exceeds the restaurant's available balance of ₹${available}`);
+        }
+        const [created] = await FoodRestaurantWithdrawal.create([{
+            restaurantId: new mongoose.Types.ObjectId(restaurantId),
+            amount: numericAmount,
+            status: 'approved',
+            paymentMethod: 'bank_transfer',
+            bankDetails: {
+                accountNumber: restaurant.accountNumber || '',
+                ifscCode: restaurant.ifscCode || '',
+                bankName: restaurant.bankName || '',
+                accountHolderName: restaurant.accountHolderName || ''
+            },
+            transactionId: transactionId || `MANUAL-${Date.now()}`,
+            adminNote: adminNote || 'Manual payout recorded by admin',
+            processedAt: new Date()
+        }], sessionOpts(session));
+        return created;
     });
-
-    await withdrawal.save();
 
     try {
         const { notifyOwnerSafely } = await import('../../../../core/notifications/firebase.service.js');

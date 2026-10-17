@@ -7,7 +7,12 @@ import { FoodDeliveryPartner } from '../models/deliveryPartner.model.js';
 import { DeliveryBonusTransaction } from '../../admin/models/deliveryBonusTransaction.model.js';
 import { getDeliveryCashLimitSettings } from '../../admin/services/admin.service.js';
 import { ValidationError } from '../../../../core/auth/errors.js';
-import { createRazorpayOrder, getRazorpayKeyId, isRazorpayConfigured, verifyPaymentSignature } from '../../orders/helpers/razorpay.helper.js';
+import { getRiderBalances } from '../../../../core/payments/payoutBalances.service.js';
+import { PaymentIntent } from '../../../../core/payments/models/paymentIntent.model.js';
+import { withPayoutLock } from '../../../../core/payments/payoutLock.js';
+import { sessionOpts } from '../../../../utils/dbTransaction.js';
+import { round2, gtMoney, ltMoney, isPositiveMoney } from '../../../../utils/money.js';
+import { createRazorpayOrder, fetchRazorpayPayment, getRazorpayKeyId, isRazorpayConfigured, verifyPaymentSignature } from '../../orders/helpers/razorpay.helper.js';
 
 /**
  * Enhanced wallet fetch for delivery partners.
@@ -26,30 +31,9 @@ export const getDeliveryPartnerWalletEnhanced = async (deliveryPartnerId) => {
     const partner = await FoodDeliveryPartner.findById(partnerId).lean();
     if (!partner) throw new ValidationError('Delivery partner not found');
 
-    const [cashLimitSettings, earningsAgg, bonusAgg, withdrawalAgg, withdrawalsList, depositList] = await Promise.all([
+    const [cashLimitSettings, balances, withdrawalsList, depositList] = await Promise.all([
         getDeliveryCashLimitSettings(),
-        // 1. Total Earnings from Delivered Orders
-        FoodOrder.aggregate([
-            { $match: { 'dispatch.deliveryPartnerId': partnerId, orderStatus: 'delivered' } },
-            { $group: { _id: null, totalEarned: { $sum: { $ifNull: ['$riderEarning', 0] } } } }
-        ]),
-        // 2. Admin Bonuses
-        DeliveryBonusTransaction.aggregate([
-            { $match: { deliveryPartnerId: partnerId } },
-            { $group: { _id: null, total: { $sum: { $ifNull: ['$amount', 0] } } } }
-        ]),
-        // 3. Withdrawal Aggregates (Approved vs Pending)
-        FoodDeliveryWithdrawal.aggregate([
-            { $match: { deliveryPartnerId: partnerId } },
-            { 
-                $group: { 
-                    _id: null, 
-                    totalWithdrawn: { $sum: { $cond: [{ $eq: ['$status', 'approved'] }, '$amount', 0] } },
-                    pendingWithdrawals: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, '$amount', 0] } }
-                } 
-            }
-        ]),
-        // 4. Recent Withdrawals for History
+        getRiderBalances(partnerId),
         FoodDeliveryWithdrawal.find({ deliveryPartnerId: partnerId })
             .sort({ createdAt: -1 })
             .limit(50)
@@ -60,52 +44,9 @@ export const getDeliveryPartnerWalletEnhanced = async (deliveryPartnerId) => {
             .lean()
     ]);
 
-    // ── Cash-in-Hand: COD collected SINCE last deposit ─────────────────────────
-    // Find the most recent completed deposit date (cutoff point)
-    const lastDepositDoc = depositList?.find(d => String(d.status || '').toLowerCase() === 'completed');
-    const lastDepositAt = lastDepositDoc?.createdAt || null;
-
-    // Sum COD orders delivered AFTER the last deposit (or all time if no deposit)
-    const cashInHandMatchStage = {
-        'dispatch.deliveryPartnerId': partnerId,
-        orderStatus: 'delivered',
-        ...(lastDepositAt ? { createdAt: { $gt: new Date(lastDepositAt) } } : {})
-    };
-
-    const cashCollectedAgg = await FoodOrder.aggregate([
-        { $match: cashInHandMatchStage },
-        {
-            $lookup: {
-                from: 'food_transactions',
-                localField: '_id',
-                foreignField: 'orderId',
-                as: 'tx'
-            }
-        },
-        {
-            $match: {
-                $or: [
-                    { 'tx.paymentMethod': 'cash' },
-                    { 'tx': { $size: 0 }, 'payment.method': 'cash' }
-                ]
-            }
-        },
-        { $group: { _id: null, cashCollected: { $sum: { $ifNull: ['$pricing.total', 0] } } } }
-    ]);
-
-    const totalEarned = Number(earningsAgg?.[0]?.totalEarned) || 0;
-    // Cash in hand = COD collected since last deposit (no subtraction needed - already scoped by date)
-    const cashInHand = Math.max(0, Number(cashCollectedAgg?.[0]?.cashCollected) || 0);
-    const totalBonus = Number(bonusAgg?.[0]?.total) || 0;
-    const totalWithdrawn = Number(withdrawalAgg?.[0]?.totalWithdrawn) || 0;
-    const pendingWithdrawals = Number(withdrawalAgg?.[0]?.pendingWithdrawals) || 0;
-
+    const { totalEarned, totalBonus, totalWithdrawn, pendingWithdrawals, cashInHand, pocketBalance } = balances;
     const totalCashLimit = Number(cashLimitSettings.deliveryCashLimit) || 0;
     const deliveryWithdrawalLimit = Number(cashLimitSettings.deliveryWithdrawalLimit) || 100;
-
-    // Pocket Balance = (Earnings + Bonus) - Total Withdrawn (approved)
-    // As requested: Pending withdrawals are NOT deducted from the displayed balance until admin approves them.
-    const pocketBalance = Math.max(0, (totalEarned + totalBonus) - totalWithdrawn);
 
     // Fetch transactions for UI (Orders, Bonuses, Withdrawals)
     const [ordersTx] = await Promise.all([
@@ -168,41 +109,59 @@ export const getDeliveryPartnerWalletEnhanced = async (deliveryPartnerId) => {
  * Submits a new withdrawal request for a delivery partner.
  */
 export const requestDeliveryWithdrawal = async (deliveryPartnerId, payload) => {
-    const { amount, bankDetails, paymentMethod = 'bank_transfer' } = payload;
+    const { bankDetails, paymentMethod = 'bank_transfer', idempotencyKey } = payload;
+    const amount = round2(payload.amount);
 
-    if (!amount || amount < 1) throw new ValidationError('Invalid amount');
-
-    const wallet = await getDeliveryPartnerWalletEnhanced(deliveryPartnerId);
-    
-    // Prevent double-spending by checking balance against already pending withdrawals
-    const availableToWithdraw = Math.max(0, wallet.pocketBalance - wallet.pendingWithdrawals);
-
-    if (amount < wallet.deliveryWithdrawalLimit) {
-        throw new ValidationError(`Minimum withdrawal amount is ₹${wallet.deliveryWithdrawalLimit}`);
-    }
-    if (amount > availableToWithdraw) {
-        throw new ValidationError(`Insufficient balance. You already have ₹${wallet.pendingWithdrawals} in pending requests.`);
-    }
+    if (!isPositiveMoney(amount) || amount < 1) throw new ValidationError('Invalid amount');
 
     const partner = await FoodDeliveryPartner.findById(deliveryPartnerId).lean();
     if (!partner) throw new ValidationError('Delivery partner not found');
 
-    const withdrawal = await FoodDeliveryWithdrawal.create({
-        deliveryPartnerId,
-        amount,
-        paymentMethod,
-        bankDetails: bankDetails || {
-            accountNumber: partner.bankAccountNumber,
-            ifscCode: partner.bankIfscCode,
-            bankName: partner.bankName,
-            accountHolderName: partner.bankAccountHolderName
-        },
-        upiId: partner.upiId,
-        upiQrCode: partner.upiQrCode,
-        status: 'pending'
-    });
+    const key = idempotencyKey ? String(idempotencyKey).slice(0, 100) : undefined;
+    if (key) {
+        const existing = await FoodDeliveryWithdrawal.findOne({ deliveryPartnerId, idempotencyKey: key }).lean();
+        if (existing) return existing;
+    }
 
-    return withdrawal;
+    const settings = await getDeliveryCashLimitSettings();
+    const minimum = Number(settings.deliveryWithdrawalLimit) || 100;
+
+    try {
+        // The balance check and the insert happen under the rider's payout lock, so two
+        // simultaneous requests can never both pass the check and over-withdraw.
+        return await withPayoutLock('deliveryBoy', deliveryPartnerId, async (session) => {
+            const balances = await getRiderBalances(deliveryPartnerId);
+            if (ltMoney(amount, minimum)) {
+                throw new ValidationError(`Minimum withdrawal amount is ₹${minimum}`);
+            }
+            if (gtMoney(amount, balances.availableToWithdraw)) {
+                throw new ValidationError(`Insufficient balance. You already have ₹${balances.pendingWithdrawals} in pending requests.`);
+            }
+
+            const [created] = await FoodDeliveryWithdrawal.create([{
+                deliveryPartnerId,
+                amount,
+                paymentMethod,
+                bankDetails: bankDetails || {
+                    accountNumber: partner.bankAccountNumber,
+                    ifscCode: partner.bankIfscCode,
+                    bankName: partner.bankName,
+                    accountHolderName: partner.bankAccountHolderName
+                },
+                upiId: partner.upiId,
+                upiQrCode: partner.upiQrCode,
+                status: 'pending',
+                idempotencyKey: key
+            }], sessionOpts(session));
+            return created;
+        });
+    } catch (err) {
+        if (err?.code === 11000 && key) {
+            const existing = await FoodDeliveryWithdrawal.findOne({ deliveryPartnerId, idempotencyKey: key }).lean();
+            if (existing) return existing;
+        }
+        throw err;
+    }
 };
 
 export const createDeliveryCashDepositOrder = async (deliveryPartnerId, amountInr) => {
@@ -234,6 +193,15 @@ export const createDeliveryCashDepositOrder = async (deliveryPartnerId, amountIn
     }
 
     const order = await createRazorpayOrder(amountPaise, 'INR', receipt);
+
+    // Remember it: if the app dies after the rider pays, the webhook can still record the deposit
+    await PaymentIntent.create({
+        kind: 'rider_cash_deposit',
+        ownerId: new mongoose.Types.ObjectId(String(deliveryPartnerId)),
+        gatewayOrderId: String(order.id),
+        amountPaise: Number(order.amount) || amountPaise
+    });
+
     return {
         razorpay: {
             key: getRazorpayKeyId(),
@@ -244,67 +212,112 @@ export const createDeliveryCashDepositOrder = async (deliveryPartnerId, amountIn
     };
 };
 
+/**
+ * Record a rider's cash deposit that Razorpay has captured. Shared by the verify endpoint and the
+ * payment.captured webhook. Exactly-once: the unique razorpayPaymentId index.
+ *
+ * `enforceCashLimit` is on for the app's own verify call (deposit cannot exceed cash in hand) and
+ * off for the webhook: the money has already been taken, so it must be recorded regardless.
+ */
+export const recordRiderCashDeposit = async ({ deliveryPartnerId, amount, orderId, paymentId, method = 'razorpay', enforceCashLimit = true, via = 'verify_api' }) => {
+    const markIntent = () =>
+        PaymentIntent.updateOne(
+            { gatewayOrderId: orderId, status: 'created' },
+            { $set: { status: 'completed', gatewayPaymentId: paymentId, completedAt: new Date(), completedVia: via } }
+        );
+
+    try {
+        const deposit = await withPayoutLock('deliveryBoy', deliveryPartnerId, async (session) => {
+            if (enforceCashLimit) {
+                const { cashInHand } = await getRiderBalances(deliveryPartnerId);
+                if (gtMoney(amount, cashInHand)) {
+                    throw new ValidationError('Deposit amount cannot exceed cash in hand');
+                }
+            }
+            const [created] = await FoodDeliveryCashDeposit.create([{
+                deliveryPartnerId,
+                amount,
+                paymentMethod: method,
+                status: 'Completed',
+                razorpayOrderId: orderId,
+                razorpayPaymentId: paymentId
+            }], sessionOpts(session));
+            return created.toObject();
+        });
+        await markIntent();
+        return { deposit, created: true };
+    } catch (err) {
+        if (err?.code === 11000) {
+            const existing = await FoodDeliveryCashDeposit.findOne({ razorpayPaymentId: paymentId }).lean();
+            if (existing) {
+                await markIntent();
+                return { deposit: existing, created: false };
+            }
+        }
+        throw err;
+    }
+};
+
 export const verifyDeliveryCashDepositPayment = async (deliveryPartnerId, payload = {}) => {
     const orderId = String(payload?.razorpayOrderId || '').trim();
     const paymentId = String(payload?.razorpayPaymentId || '').trim();
     const signature = String(payload?.razorpaySignature || '').trim();
-    const amount = Number(payload?.amount);
+    let amount = Number(payload?.amount);
 
     if (!orderId) throw new ValidationError('razorpayOrderId is required');
     if (!paymentId) throw new ValidationError('razorpayPaymentId is required');
     if (!signature) throw new ValidationError('razorpaySignature is required');
     if (!Number.isFinite(amount) || amount < 1) throw new ValidationError('amount is required');
 
-    const existing = await FoodDeliveryCashDeposit.findOne({
+    const walletOf = async () => getDeliveryPartnerWalletEnhanced(deliveryPartnerId);
+
+    // This gateway payment may already be recorded (retry / double submit / webhook got there first)
+    const already = await FoodDeliveryCashDeposit.findOne({ razorpayPaymentId: paymentId }).lean();
+    if (already) {
+        if (String(already.deliveryPartnerId) !== String(deliveryPartnerId)) {
+            throw new ValidationError('This payment belongs to another account');
+        }
+        return { deposit: already, wallet: await walletOf() };
+    }
+
+    const configured = isRazorpayConfigured();
+    if (configured) {
+        if (!verifyPaymentSignature(orderId, paymentId, signature)) {
+            throw new ValidationError('Payment verification failed');
+        }
+        // Never trust the amount sent by the app: read it from the gateway
+        let gatewayPayment;
+        try {
+            gatewayPayment = await fetchRazorpayPayment(paymentId);
+        } catch {
+            throw new ValidationError('Could not verify the payment with the gateway. Please try again.');
+        }
+        if (String(gatewayPayment?.order_id || '') !== orderId) {
+            throw new ValidationError('Payment does not belong to this order');
+        }
+        if (String(gatewayPayment?.status || '').toLowerCase() !== 'captured') {
+            throw new ValidationError('Payment is not captured yet. Please try again in a moment.');
+        }
+
+        // Only deposit orders WE created for THIS rider can be recorded
+        const intent = await PaymentIntent.findOne({ gatewayOrderId: orderId, kind: 'rider_cash_deposit' }).lean();
+        if (!intent || String(intent.ownerId) !== String(deliveryPartnerId)) {
+            throw new ValidationError('Unknown deposit order');
+        }
+        if (Number(gatewayPayment.amount) !== intent.amountPaise) {
+            throw new ValidationError('Payment amount does not match the deposit order');
+        }
+        amount = Number(gatewayPayment.amount) / 100;
+    }
+
+    const { deposit } = await recordRiderCashDeposit({
         deliveryPartnerId,
-        $or: [
-            { razorpayPaymentId: paymentId },
-            { razorpayOrderId: orderId }
-        ]
-    }).lean();
-
-    if (existing?.status === 'Completed') {
-        return { deposit: existing, wallet: await getDeliveryPartnerWalletEnhanced(deliveryPartnerId) };
-    }
-
-    const wallet = await getDeliveryPartnerWalletEnhanced(deliveryPartnerId);
-    if (amount > wallet.cashInHand) {
-        throw new ValidationError('Deposit amount cannot exceed cash in hand');
-    }
-
-    const isValid = isRazorpayConfigured()
-        ? verifyPaymentSignature(orderId, paymentId, signature)
-        : true;
-
-    if (!isValid) {
-        throw new ValidationError('Payment verification failed');
-    }
-
-    const deposit = existing
-        ? await FoodDeliveryCashDeposit.findByIdAndUpdate(
-            existing._id,
-            {
-                $set: {
-                    amount,
-                    paymentMethod: isRazorpayConfigured() ? 'razorpay' : 'cash',
-                    status: 'Completed',
-                    razorpayOrderId: orderId,
-                    razorpayPaymentId: paymentId
-                }
-            },
-            { new: true }
-        )
-        : await FoodDeliveryCashDeposit.create({
-            deliveryPartnerId,
-            amount,
-            paymentMethod: isRazorpayConfigured() ? 'razorpay' : 'cash',
-            status: 'Completed',
-            razorpayOrderId: orderId,
-            razorpayPaymentId: paymentId
-        });
-
-    return {
-        deposit,
-        wallet: await getDeliveryPartnerWalletEnhanced(deliveryPartnerId)
-    };
+        amount: round2(amount),
+        orderId,
+        paymentId,
+        method: configured ? 'razorpay' : 'cash',
+        enforceCashLimit: true,
+        via: 'verify_api'
+    });
+    return { deposit, wallet: await walletOf() };
 };

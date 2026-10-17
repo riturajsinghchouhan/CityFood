@@ -16,6 +16,9 @@ import * as payoutsController from '../controllers/payouts.controller.js';
 import * as dailySalesController from '../controllers/dailySales.controller.js';
 import { upload } from '../../../../middleware/upload.js';
 import menuBulkRoutes from './menuBulk.routes.js';
+import { getUploadSettings, updateUploadSettings } from '../../../../controllers/admin/uploadSettingController.js';
+import { getWalletReconciliation, getOrderReconciliation, repairOrderFinance, getLatestReconciliationReport, listReconciliationReports, runReconciliationNow } from '../../../../controllers/admin/paymentReconciliationController.js';
+import { operationalCounts, clearOperationalData } from '../../../../controllers/admin/operationalDataController.js';
 
 const router = express.Router();
 
@@ -30,6 +33,22 @@ router.get('/fee-settings/public', adminController.getFeeSettings);
 import { requireAdmin, requireSuperAdmin } from '../../../../core/auth/auth.middleware.js';
 
 router.use(requireAdmin);
+
+// ----- Upload provider (local / cloudinary) -----
+router.get('/upload-settings', getUploadSettings);
+router.put('/upload-settings', updateUploadSettings);
+
+// ----- Operational data reset (super admin only) -----
+router.get('/operational-data', requireSuperAdmin, operationalCounts);
+router.post('/operational-data/clear', requireSuperAdmin, clearOperationalData);
+
+// ----- Payments: wallet vs ledger reconciliation (super admin only) -----
+router.get('/payments/reconciliation', requireSuperAdmin, getWalletReconciliation);
+router.get('/payments/reconciliation/orders', requireSuperAdmin, getOrderReconciliation);
+router.post('/payments/reconciliation/orders/:orderId/repair', requireSuperAdmin, repairOrderFinance);
+router.get('/payments/reconciliation/report/latest', requireSuperAdmin, getLatestReconciliationReport);
+router.get('/payments/reconciliation/reports', requireSuperAdmin, listReconciliationReports);
+router.post('/payments/reconciliation/run', requireSuperAdmin, runReconciliationNow);
 
 // ----- Sub Admins -----
 router.get('/sub-admins', requireSuperAdmin, adminController.getSubAdmins);

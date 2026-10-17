@@ -26,11 +26,11 @@ async function main() {
     _id: new mongoose.Types.ObjectId(order.restaurantId)
   });
 
-  const feeSettings = await mongoose.connection.collection('food_fee_settings').find({}).toArray();
+  const feeSettings = await mongoose.connection.collection('payment_fee_settings').find({}).toArray();
   console.log('--- FEE SETTINGS in DB ---');
   console.log(JSON.stringify(feeSettings, null, 2));
 
-  const riderCommissionRules = await mongoose.connection.collection('food_delivery_commission_rules').find({}).toArray();
+  const riderCommissionRules = await mongoose.connection.collection('payment_delivery_commission_rules').find({}).toArray();
   console.log('--- RIDER COMMISSION RULES in DB ---');
   console.log(JSON.stringify(riderCommissionRules, null, 2));
 
@@ -69,7 +69,7 @@ async function main() {
   }
 
   // Check any transaction or logs for this order
-  const transactions = await mongoose.connection.collection('food_transactions').find({
+  const transactions = await mongoose.connection.collection('payment_food_transactions').find({
     orderId: order._id
   }).toArray();
   console.log('--- TRANSACTIONS ---');

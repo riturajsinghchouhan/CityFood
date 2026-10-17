@@ -47,6 +47,8 @@ import {
   PiggyBank,
   Lock,
   ListChecks,
+  Image as ImageIcon,
+  Code,
 } from "lucide-react"
 import { cn } from "@food/utils/utils"
 import { Input } from "@food/components/ui/input"
@@ -60,6 +62,8 @@ const debugError = (...args) => { }
 
 // Icon mapping
 const iconMap = {
+  ImageIcon,
+  Code,
   LayoutDashboard,
   UtensilsCrossed,
   Building2,
@@ -803,7 +807,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
                 autoCorrect="off"
                 autoCapitalize="off"
                 className={cn(
-                  "w-full pl-9 py-2.5 bg-[#404c59] border border-[#394450] rounded-lg text-base font-bold text-white placeholder:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-white/40 transition-all duration-200 text-left",
+                  "w-full pl-9 py-2.5 bg-black border border-neutral-700 rounded-lg text-base font-bold text-white placeholder:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-white/40 transition-all duration-200 text-left",
                   searchQuery ? "pr-9" : "pr-3"
                 )}
               />

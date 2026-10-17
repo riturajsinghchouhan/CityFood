@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { ValidationError } from '../../../../core/auth/errors.js';
 import { FoodUser } from '../../../../core/users/user.model.js';
 import { FoodUserWallet } from '../models/userWallet.model.js';
+import { fromPaise } from '../../../../utils/money.js';
 import { FoodReferralSettings } from '../../admin/models/referralSettings.model.js';
 import { FoodReferralLog } from '../../admin/models/referralLog.model.js';
 
@@ -13,13 +14,13 @@ export const getUserReferralStats = async (userId) => {
     const oid = new mongoose.Types.ObjectId(id);
     const [user, wallet, settingsDoc] = await Promise.all([
         FoodUser.findById(oid).select('_id referralCount referralCode').lean(),
-        FoodUserWallet.findOne({ userId: oid }).select('referralEarnings').lean(),
+        FoodUserWallet.findOne({ userId: oid }).select('referralEarningsPaise').lean(),
         FoodReferralSettings.findOne({ isActive: true }).sort({ createdAt: -1 }).lean()
     ]);
 
     return {
         referralCount: Number(user?.referralCount) || 0,
-        totalReferralEarnings: Number(wallet?.referralEarnings) || 0,
+        totalReferralEarnings: fromPaise(wallet?.referralEarningsPaise),
         rewardAmount: Math.max(0, Number(settingsDoc?.referralRewardUser) || 0)
     };
 };
@@ -33,7 +34,7 @@ export const getUserReferralDetails = async (userId) => {
     const oid = new mongoose.Types.ObjectId(id);
     const [user, wallet, settingsDoc, logs] = await Promise.all([
         FoodUser.findById(oid).select('_id referralCount referralCode').lean(),
-        FoodUserWallet.findOne({ userId: oid }).select('referralEarnings').lean(),
+        FoodUserWallet.findOne({ userId: oid }).select('referralEarningsPaise').lean(),
         FoodReferralSettings.findOne({ isActive: true }).sort({ createdAt: -1 }).lean(),
         FoodReferralLog.find({ referrerId: oid, role: 'USER' })
             .sort({ createdAt: -1 })
@@ -88,7 +89,7 @@ export const getUserReferralDetails = async (userId) => {
     return {
         stats: {
             referralCount: Number(user?.referralCount) || 0,
-            totalReferralEarnings: Number(wallet?.referralEarnings) || 0,
+            totalReferralEarnings: fromPaise(wallet?.referralEarningsPaise),
             rewardAmount: Math.max(0, Number(settingsDoc?.referralRewardUser) || 0),
             totalInvited,
             creditedCount,

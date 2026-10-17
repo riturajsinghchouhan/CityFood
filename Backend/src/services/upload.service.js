@@ -4,6 +4,7 @@ import multer from 'multer';
 import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
 import { config } from '../config/env.js';
+import { useCloudinary, uploadBufferToCloudinary } from '../utils/cloudinary.js';
 
 // Ensure the single upload directory exists.
 const baseUploadDir = config.uploadPath || path.join(process.cwd(), 'uploads');
@@ -89,11 +90,7 @@ export const upload = multer({
  * Processes and saves an image buffer to the single upload directory.
  * Returns the relative public path (e.g., '/uploads/food_123.webp')
  */
-const processAndSaveImage = async ({ buffer, prefix, width, height, quality = 80 }) => {
-    const dir = ensureUploadDirExists();
-    const filename = buildFlatUploadFilename({ prefix, extension: 'webp' });
-    const filepath = path.join(dir, filename);
-
+const processAndSaveImage = async ({ buffer, prefix, folder = 'misc', width, height, quality = 80 }) => {
     let sharpInstance = sharp(buffer);
 
     if (width || height) {
@@ -105,9 +102,17 @@ const processAndSaveImage = async ({ buffer, prefix, width, height, quality = 80
         });
     }
 
+    if (await useCloudinary()) {
+        const processed = await sharpInstance.webp({ quality }).toBuffer();
+        const { url } = await uploadBufferToCloudinary(processed, { subFolder: folder });
+        return url;
+    }
+
+    const dir = ensureUploadDirExists();
+    const filename = buildFlatUploadFilename({ prefix, extension: 'webp' });
     await sharpInstance
         .webp({ quality })
-        .toFile(filepath);
+        .toFile(path.join(dir, filename));
 
     return `/uploads/${filename}`;
 };
@@ -171,15 +176,25 @@ export const uploadDeliveryImage = async (buffer) => {
     });
 };
 
-export const uploadGenericImage = async (buffer, _folder = 'misc') => {
+export const uploadGenericImage = async (buffer, folder = 'misc') => {
     return processAndSaveImage({
         buffer,
+        folder: normalizeUploadToken(folder, 'misc'),
         prefix: 'img',
         quality: 85
     });
 };
 
-export const uploadFileBuffer = async (buffer, _folder = 'misc', options = {}) => {
+export const uploadFileBuffer = async (buffer, folder = 'misc', options = {}) => {
+    if (await useCloudinary()) {
+        const { url } = await uploadBufferToCloudinary(buffer, {
+            subFolder: normalizeUploadToken(folder, 'misc'),
+            resourceType: 'raw',
+            format: options.format
+        });
+        return url;
+    }
+
     const dir = ensureUploadDirExists();
     const prefix = normalizeUploadToken(options.fileName ? options.fileName.split('.')[0] : 'file', 'file');
     const filename = buildFlatUploadFilename({
@@ -192,7 +207,15 @@ export const uploadFileBuffer = async (buffer, _folder = 'misc', options = {}) =
     return `/uploads/${filename}`;
 };
 
-export const uploadVideoBuffer = async (buffer, _folder = 'videos', options = {}) => {
+export const uploadVideoBuffer = async (buffer, folder = 'videos', options = {}) => {
+    if (await useCloudinary()) {
+        const { url } = await uploadBufferToCloudinary(buffer, {
+            subFolder: normalizeUploadToken(folder, 'videos'),
+            resourceType: 'video'
+        });
+        return url;
+    }
+
     const dir = ensureUploadDirExists();
     const filename = buildFlatUploadFilename({
         prefix: 'video',

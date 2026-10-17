@@ -252,7 +252,6 @@ export const adminSidebarMenu = [
     type: "section",
     label: "SYSTEM SETTINGS",
     items: [
-      { type: "link", label: "Env Managements", path: "/admin/food/env-managements", icon: "Database" },
       { type: "link", label: "Broadcast Notification", path: "/admin/food/broadcast-notification", icon: "Bell" },
       { type: "link", label: "Restaurant Delay Alerts", path: "/admin/food/restaurant-delay-alerts", icon: "Bell" },
       { type: "link", label: "Toggle Management", path: "/admin/food/toggle-management", icon: "ToggleLeft" },
@@ -270,6 +269,16 @@ export const adminSidebarMenu = [
       { type: "link", label: "Refund Policy", path: "/admin/food/pages-social-media/refund", icon: "Receipt" },
       { type: "link", label: "Shipping Policy", path: "/admin/food/pages-social-media/shipping", icon: "Truck" },
       { type: "link", label: "Cancellation Policy", path: "/admin/food/pages-social-media/cancellation", icon: "X" },
+    ],
+  },
+  {
+    type: "section",
+    label: "DEVELOPER",
+    items: [
+      { type: "link", label: "Env Managements", path: "/admin/food/env-managements", icon: "Database" },
+      { type: "link", label: "Image Setting", path: "/admin/food/image-setting", icon: "ImageIcon" },
+      { type: "link", label: "Developer Settings", path: "/admin/food/developer-settings", icon: "Code" },
+      { type: "link", label: "Payment Reconciliation", path: "/admin/food/payment-reconciliation", icon: "ListChecks" },
     ],
   },
 ];

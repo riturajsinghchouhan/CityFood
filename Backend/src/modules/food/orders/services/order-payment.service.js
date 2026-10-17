@@ -12,7 +12,7 @@ import {
   fetchRazorpayQrCode,
   isRazorpayConfigured,
 } from '../helpers/razorpay.helper.js';
-import * as foodTransactionService from './foodTransaction.service.js';
+import * as financeService from './finance.service.js';
 import {
   buildOrderIdentityFilter,
   enqueueOrderEvent,
@@ -67,56 +67,24 @@ export async function markCapturedQrPayment(transaction, paymentEntity, source =
   // webhook carries the immutable order note that this server attached.
   if (qrId && paymentQrId && qrId !== paymentQrId && !notesMatchOrder) return false;
 
-  const expectedPaise = Math.round(getExpectedAmount(transaction) * 100);
   const capturedPaise = Number(paymentEntity.amount || 0);
-  if (expectedPaise < 1 || !Number.isFinite(capturedPaise) || capturedPaise < expectedPaise) {
-    logger.warn(
-      `Rejected underpaid Razorpay QR payment ${paymentEntity.id || ''}: ` +
-      `${capturedPaise} < ${expectedPaise} paise`,
-    );
-    return false;
-  }
-
   const paidAt = new Date(
     Number(paymentEntity.created_at) > 0
       ? Number(paymentEntity.created_at) * 1000
       : Date.now(),
   );
-  const update = await FoodTransaction.updateOne(
-    { _id: transaction._id, 'payment.status': { $ne: 'paid' } },
-    {
-      $set: {
-        status: 'captured',
-        paymentMethod: 'razorpay_qr',
-        'payment.method': 'razorpay_qr',
-        'payment.status': 'paid',
-        'payment.qr.status': 'paid',
-        'gateway.razorpayPaymentId': String(paymentEntity.id || ''),
-      },
-      $push: {
-        history: {
-          kind: 'captured',
-          amount: capturedPaise / 100,
-          at: paidAt,
-          note: `Razorpay QR payment verified via ${source}`,
-          recordedBy: { role: 'SYSTEM' },
-        },
-      },
-    },
-  );
 
-  await FoodOrder.updateOne(
-    { _id: transaction.orderId },
-    {
-      $set: {
-        'payment.method': 'razorpay_qr',
-        'payment.status': 'paid',
-        'payment.qr.status': 'paid',
-        'payment.razorpay.paymentId': String(paymentEntity.id || ''),
-      },
-    },
-  );
-  return update.modifiedCount > 0 || transaction.payment?.status === 'paid';
+  // The finance service verifies the amount and applies the capture exactly once
+  const result = await financeService.capturePayment(transaction.orderId, {
+    method: 'razorpay_qr',
+    source,
+    actor: { role: 'SYSTEM' },
+    gatewayPaymentId: String(paymentEntity.id || ''),
+    amountPaise: capturedPaise,
+    paidAt,
+    note: `Razorpay QR payment verified via ${source}`,
+  });
+  return result.applied || result.reason === 'already_captured' || result.reason === 'already_refunded';
 }
 
 export async function syncRazorpayQrPayment(orderDoc) {
@@ -151,16 +119,7 @@ export async function syncRazorpayQrPayment(orderDoc) {
       const terminalStatus = locallyExpired && !TERMINAL_QR_STATUSES.has(remoteStatus)
         ? 'expired'
         : remoteStatus;
-      await Promise.all([
-        FoodTransaction.updateOne(
-          { _id: transaction._id, 'payment.status': { $ne: 'paid' } },
-          { $set: { 'payment.qr.status': terminalStatus, 'payment.status': 'failed' } },
-        ),
-        FoodOrder.updateOne(
-          { _id: orderDoc._id, 'payment.status': { $ne: 'paid' } },
-          { $set: { 'payment.qr.status': terminalStatus, 'payment.status': 'failed' } },
-        ),
-      ]);
+      await financeService.markQrTerminal(orderDoc._id, terminalStatus);
     }
   } catch (err) {
     // Gracefully handle any Razorpay network or endpoint errors
@@ -223,23 +182,8 @@ export async function createCollectQr(orderId, deliveryPartnerId) {
   const previousMethod = String(payment.method || transaction.paymentMethod || 'cash');
 
   // Claim creation atomically so concurrent button taps cannot create duplicate QRs.
-  const lock = await FoodTransaction.updateOne(
-    {
-      _id: transaction._id,
-      'payment.status': { $ne: 'paid' },
-      $or: [
-        { 'payment.qr.status': { $nin: ['active', 'created', 'pending', 'creating'] } },
-        { 'payment.qr.expiresAt': { $lte: now } },
-      ],
-    },
-    {
-      $set: {
-        'payment.qr.status': 'creating',
-        'payment.qr.expiresAt': creationLockUntil,
-      },
-    },
-  );
-  if (lock.modifiedCount === 0) {
+  const claimed = await financeService.claimQrCreation(transaction._id, { now, lockUntil: creationLockUntil });
+  if (!claimed) {
     const latest = await FoodTransaction.findById(transaction._id).lean();
     if (isActiveQr(latest?.payment?.qr, now)) return qrResponse(latest.payment.qr, true);
     throw new ValidationError('A payment QR is already being created. Please try again.');
@@ -263,17 +207,7 @@ export async function createCollectQr(orderId, deliveryPartnerId) {
       },
     });
   } catch (error) {
-    await FoodTransaction.updateOne(
-      { _id: transaction._id, 'payment.qr.status': 'creating' },
-      {
-        $set: {
-          paymentMethod: previousMethod,
-          'payment.method': previousMethod,
-          'payment.qr.status': 'failed',
-          'payment.qr.expiresAt': now,
-        },
-      },
-    );
+    await financeService.releaseQrCreation(transaction._id, { previousMethod, now });
     throw error;
   }
 
@@ -287,28 +221,14 @@ export async function createCollectQr(orderId, deliveryPartnerId) {
     expiresAt,
   };
   if (!qr.qrId || !qr.imageUrl) {
-    await FoodTransaction.updateOne(
-      { _id: transaction._id },
-      { $set: { 'payment.qr.status': 'failed', 'payment.qr.expiresAt': now } },
-    );
+    await financeService.failQrCreation(transaction._id, { now });
     throw new Error('Razorpay returned an invalid QR response');
   }
 
-  const transactionWrite = await FoodTransaction.updateOne(
-    { _id: transaction._id, 'payment.status': { $ne: 'paid' } },
-    {
-      $set: {
-        paymentMethod: 'razorpay_qr',
-        'payment.method': 'razorpay_qr',
-        'payment.status': 'pending_qr',
-        'payment.qr': qr,
-        'gateway.qrUrl': qr.imageUrl,
-        'gateway.qrExpiresAt': expiresAt,
-      },
-    },
-  );
-
-  if (transactionWrite.modifiedCount === 0) {
+  const saved = await financeService.saveCreatedQr(transaction._id, order._id, qr, {
+    actor: { role: 'DELIVERY_PARTNER', id: deliveryPartnerId },
+  });
+  if (!saved.applied) {
     const latest = await FoodTransaction.findById(transaction._id).lean();
     if (latest?.payment?.status === 'paid' || latest?.status === 'captured') {
       throw new ValidationError('Order is already paid');
@@ -316,22 +236,6 @@ export async function createCollectQr(orderId, deliveryPartnerId) {
     throw new Error('Could not save the Razorpay QR against this order');
   }
 
-  await FoodOrder.updateOne(
-    { _id: order._id, 'payment.status': { $ne: 'paid' } },
-    {
-      $set: {
-        'payment.method': 'razorpay_qr',
-        'payment.status': 'pending_qr',
-        'payment.qr': qr,
-      },
-    },
-  );
-
-  await foodTransactionService.updateTransactionStatus(order._id, 'cod_collect_qr_created', {
-    recordedByRole: 'DELIVERY_PARTNER',
-    recordedById: deliveryPartnerId,
-    note: 'Single-use Razorpay UPI QR created for COD collection',
-  });
   enqueueOrderEvent('collect_qr_created', {
     orderMongoId: String(order._id),
     orderId: order.orderId || order.order_id || null,

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { roundMoneyPaths } from '../../../../utils/moneySchema.js';
 
 const foodRestaurantWithdrawalSchema = new mongoose.Schema({
     restaurantId: {
@@ -31,12 +32,20 @@ const foodRestaurantWithdrawalSchema = new mongoose.Schema({
     adminNote: String,
     rejectionReason: String,
     transactionId: String, // Final bank transaction reference from admin
+    /** Client-supplied request id: replaying the same request returns the same withdrawal */
+    idempotencyKey: { type: String, default: undefined, trim: true },
     processedAt: Date
 }, { 
-    collection: 'food_restaurant_withdrawals', 
+    collection: 'payment_restaurant_withdrawals', 
     timestamps: true 
 });
 
 foodRestaurantWithdrawalSchema.index({ createdAt: -1 });
+foodRestaurantWithdrawalSchema.index(
+    { restaurantId: 1, idempotencyKey: 1 },
+    { unique: true, partialFilterExpression: { idempotencyKey: { $type: 'string' } } }
+);
+
+roundMoneyPaths(foodRestaurantWithdrawalSchema, ["amount"]);
 
 export const FoodRestaurantWithdrawal = mongoose.model('FoodRestaurantWithdrawal', foodRestaurantWithdrawalSchema);

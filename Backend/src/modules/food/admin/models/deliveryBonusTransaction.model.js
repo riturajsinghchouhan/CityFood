@@ -13,7 +13,7 @@ const deliveryBonusTransactionSchema = new mongoose.Schema(
         reference: { type: String, trim: true, default: '' },
         createdByAdminId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
     },
-    { collection: 'food_delivery_bonus_transactions', timestamps: true }
+    { collection: 'payment_delivery_bonus_transactions', timestamps: true }
 );
 
 deliveryBonusTransactionSchema.index({ deliveryPartnerId: 1, createdAt: -1 });

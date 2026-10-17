@@ -1,6 +1,5 @@
 import { connectDB, disconnectDB } from '../src/config/db.js';
 import { FoodDeliveryPartner } from '../src/modules/food/delivery/models/deliveryPartner.model.js';
-import { FoodDeliveryWallet } from '../src/modules/food/delivery/models/deliveryWallet.model.js';
 
 async function registerRider() {
     await connectDB();
@@ -57,19 +56,7 @@ async function registerRider() {
         console.log(`Created new delivery partner profile! ID: ${partner._id}`);
     }
 
-    // Ensure wallet exists
-    let wallet = await FoodDeliveryWallet.findOne({ deliveryPartnerId: partner._id });
-    if (!wallet) {
-        wallet = await FoodDeliveryWallet.create({
-            deliveryPartnerId: partner._id,
-            balance: 0,
-            cashInHand: 0,
-            totalEarnings: 0
-        });
-        console.log(`Created delivery wallet for partner: ${wallet._id}`);
-    } else {
-        console.log(`Delivery wallet already exists: ${wallet._id}`);
-    }
+    // No wallet document is needed: rider balances are derived from orders, bonuses and withdrawals.
 
     console.log('\n--- RIDER PROFILE SUMMARY ---');
     console.log({

@@ -6,6 +6,7 @@ const normalizeToUploadsPath = (value) => {
 
     const trimmed = value.trim();
     if (!trimmed) return '';
+    if (/^https:\/\/res\.cloudinary\.com\//i.test(trimmed)) return trimmed;
 
     try {
         const parsed = new URL(trimmed);
