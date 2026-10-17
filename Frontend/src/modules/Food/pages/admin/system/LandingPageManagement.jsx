@@ -64,6 +64,7 @@ export default function LandingPageManagement() {
     exploreMoreHeading: "Explore More",
     recommendedRestaurantIds: [],
     under250PriceLimit: 250,
+    mealsUnder: { enabled: true, title: 'Meals under', priceLimit: 200, maxItems: 20 },
     festBannerImages: [],
     stats: { restaurants: '3,00,000+', cities: '800+', orders: '3 billion+' },
     appLinks: { playStore: 'https://play.google.com/store/apps/details?id=com.indian.Tuggo.user', appStore: '' },
@@ -1098,6 +1099,7 @@ export default function LandingPageManagement() {
           exploreMoreHeading: nextSettings.exploreMoreHeading || "Explore More",
           recommendedRestaurantIds: Array.isArray(nextSettings.recommendedRestaurantIds) ? nextSettings.recommendedRestaurantIds : [],
           under250PriceLimit: Number(nextSettings.under250PriceLimit) || 250,
+          mealsUnder: { enabled: true, title: 'Meals under', priceLimit: 200, maxItems: 20, ...(nextSettings.mealsUnder || {}) },
           festBannerImages: Array.isArray(nextSettings.festBannerImages) ? nextSettings.festBannerImages : [],
           stats: nextSettings.stats || { restaurants: '3,00,000+', cities: '800+', orders: '3 billion+' },
           appLinks: nextSettings.appLinks || { playStore: 'https://play.google.com/store/apps/details?id=com.indian.Tuggo.user', appStore: '' },
@@ -1149,6 +1151,12 @@ export default function LandingPageManagement() {
         exploreMoreHeading: settings.exploreMoreHeading,
         recommendedRestaurantIds: Array.isArray(settings.recommendedRestaurantIds) ? settings.recommendedRestaurantIds : [],
         under250PriceLimit: Number(settings.under250PriceLimit) || 250,
+        mealsUnder: {
+          enabled: settings.mealsUnder?.enabled !== false,
+          title: settings.mealsUnder?.title || 'Meals under',
+          priceLimit: Math.max(1, Number(settings.mealsUnder?.priceLimit) || 200),
+          maxItems: Math.min(100, Math.max(1, Number(settings.mealsUnder?.maxItems) || 20))
+        },
         festBannerImages: settings.festBannerImages || [],
         stats: settings.stats,
         appLinks: settings.appLinks,
@@ -1166,6 +1174,7 @@ export default function LandingPageManagement() {
             ? savedSettings.recommendedRestaurantIds
             : prev.recommendedRestaurantIds,
           under250PriceLimit: Number(savedSettings.under250PriceLimit) || prev.under250PriceLimit,
+          mealsUnder: savedSettings.mealsUnder ? { ...prev.mealsUnder, ...savedSettings.mealsUnder } : prev.mealsUnder,
           festBannerImages: Array.isArray(savedSettings.festBannerImages)
             ? savedSettings.festBannerImages
             : prev.festBannerImages,
@@ -1395,6 +1404,7 @@ export default function LandingPageManagement() {
     { id: 'under-250', label: '250 Banner', icon: Tag },
     { id: 'dining', label: 'Ads Banner', icon: Megaphone },
     { id: 'explore-more', label: 'Explore More', icon: Layout },
+    { id: 'recommended', label: 'Recommended Section', icon: Tag },
     { id: 'brand-landing', label: 'Brand Landing Page', icon: Layout },
   ]
 
@@ -1835,6 +1845,73 @@ export default function LandingPageManagement() {
         )}
 
         {/* Explore More Tab */}
+        {activeTab === 'recommended' && (
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h2 className="text-lg font-bold text-slate-900">Recommended Section (Meals Under)</h2>
+            <p className="text-sm text-slate-600 mt-1 mb-5">
+              User home page par "Explore More" ke neeche us price ke andar ke items dikhenge.
+            </p>
+            {settingsLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+              </div>
+            ) : (
+              <div className="space-y-5 max-w-xl">
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={settings.mealsUnder?.enabled !== false}
+                    onChange={(e) => setSettings((prev) => ({ ...prev, mealsUnder: { ...prev.mealsUnder, enabled: e.target.checked } }))}
+                  />
+                  Show this section on home page
+                </label>
+                <div>
+                  <Label htmlFor="meals-under-title">Section Title</Label>
+                  <Input
+                    id="meals-under-title"
+                    value={settings.mealsUnder?.title || ''}
+                    onChange={(e) => setSettings((prev) => ({ ...prev, mealsUnder: { ...prev.mealsUnder, title: e.target.value } }))}
+                    className="mt-2"
+                    placeholder="Meals under"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="meals-under-price">Price Limit (₹)</Label>
+                  <Input
+                    id="meals-under-price"
+                    type="number"
+                    min="1"
+                    max="10000"
+                    value={settings.mealsUnder?.priceLimit || ''}
+                    onChange={(e) => setSettings((prev) => ({ ...prev, mealsUnder: { ...prev.mealsUnder, priceLimit: Number(e.target.value) } }))}
+                    className="mt-2"
+                    placeholder="200"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Heading dikhegi: "{settings.mealsUnder?.title || 'Meals under'} ₹{settings.mealsUnder?.priceLimit || 200}"
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="meals-under-max">Max Items</Label>
+                  <Input
+                    id="meals-under-max"
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={settings.mealsUnder?.maxItems || ''}
+                    onChange={(e) => setSettings((prev) => ({ ...prev, mealsUnder: { ...prev.mealsUnder, maxItems: Number(e.target.value) } }))}
+                    className="mt-2"
+                    placeholder="20"
+                  />
+                </div>
+                <Button onClick={handleSaveSettings} disabled={settingsSaving}>
+                  {settingsSaving ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === 'explore-more' && (
           <>
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">

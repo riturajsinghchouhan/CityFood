@@ -41,6 +41,12 @@ const foodLandingSettingsSchema = new mongoose.Schema(
             min: 1,
             max: 10000
         },
+        mealsUnder: {
+            enabled: { type: Boolean, default: true },
+            title: { type: String, default: 'Meals under' },
+            priceLimit: { type: Number, default: 200, min: 1, max: 10000 },
+            maxItems: { type: Number, default: 20, min: 1, max: 100 }
+        },
         festBannerImages: {
             type: [String],
             default: []

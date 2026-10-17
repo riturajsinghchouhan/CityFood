@@ -585,14 +585,21 @@ export async function listPublicApprovedFoods(query = {}) {
         filter.restaurantId = { $in: zoneRestaurants };
     }
 
-    const [list, total] = await Promise.all([
+    const maxPrice = Number(query.maxPrice);
+    const hasMaxPrice = Number.isFinite(maxPrice) && maxPrice > 0;
+    if (hasMaxPrice) {
+        filter.$or = [{ price: { $lte: maxPrice } }, { 'variants.price': { $lte: maxPrice } }];
+    }
+
+    const [rawList, total] = await Promise.all([
         FoodItem.find(filter)
-            .sort({ createdAt: -1 })
+            .sort(hasMaxPrice ? { price: 1, createdAt: -1 } : { createdAt: -1 })
             .skip(skip)
             .limit(limit)
             .lean(),
         FoodItem.countDocuments(filter)
     ]);
+    const list = hasMaxPrice ? rawList.filter((f) => getFoodDisplayPrice(f) <= maxPrice) : rawList;
 
     const restaurantIds = Array.from(
         new Set(list.map((f) => String(f.restaurantId)).filter(Boolean))

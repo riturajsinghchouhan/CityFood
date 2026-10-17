@@ -93,6 +93,7 @@ import { getRestaurantAvailabilityStatus } from "@food/utils/restaurantAvailabil
 import HomeHeader from "@food/components/user/home/HomeHeader";
 import HeroBanner from "@food/components/user/home/HeroBanner";
 import RestaurantGrid from "@food/components/user/home/RestaurantGrid";
+import MealsUnderSection from "@food/components/user/home/MealsUnderSection";
 import ExploreMoreSection from "@food/components/user/home/ExploreMoreSection";
 import RestaurantImageCarousel from "@food/components/user/home/RestaurantImageCarousel";
 import QuickSection from "@food/components/user/home/QuickSection";
@@ -130,6 +131,7 @@ const homePageCache = {
   exploreMoreHeading: null,
   recommendedRestaurantIds: null,
   under250PriceLimit: null,
+  mealsUnder: null,
   recommendedRestaurantsFromSettings: null,
   festBannerImages: null,
   heroBannerImages: null,
@@ -230,6 +232,7 @@ export default function Home() {
   const [hasScrolledPastBanner, setHasScrolledPastBanner] = useState(false);
   const [landingCategories, setLandingCategories] = useState([]);
   const [landingExploreMore, setLandingExploreMore] = useState(() => homePageCache.landingExploreMore || []);
+  const [mealsUnderConfig, setMealsUnderConfig] = useState(() => homePageCache.mealsUnder || null);
   const [exploreMoreHeading, setExploreMoreHeading] = useState(() => homePageCache.exploreMoreHeading || "Explore More");
   const [festBannerImages, setFestBannerImages] = useState(() => homePageCache.festBannerImages ?? []);
   const [bgIndex, setBgIndex] = useState(0);
@@ -831,6 +834,8 @@ export default function Home() {
         setExploreMoreHeading(heading);
         setRecommendedRestaurantIds(settingsData.recommendedRestaurantIds || []);
         setUnder250PriceLimit(Number(settingsData.under250PriceLimit) || 250);
+        setMealsUnderConfig(settingsData.mealsUnder || null);
+        homePageCache.mealsUnder = settingsData.mealsUnder || null;
 
         const recRest = settingsData.recommendedRestaurants || [];
         setRecommendedRestaurantsFromSettings(recRest);
@@ -2481,7 +2486,7 @@ export default function Home() {
           showSkeleton={showExploreSkeleton}
         />
 
-        {/* Featured Foods - Horizontal Scroll */}
+        <MealsUnderSection config={mealsUnderConfig} zoneId={effectiveZoneId} />
 
         {/* Restaurants - Enhanced with Animations */}
         <section
