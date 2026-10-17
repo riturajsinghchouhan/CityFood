@@ -241,7 +241,7 @@ export default function HomeHeader({
         <div className="flex items-center gap-2.5 w-[96%] mx-auto pointer-events-auto">
           {/* Search Bar */}
           <div
-            className="relative bg-white/70 dark:bg-[#1a1a1a]/70 backdrop-blur-md rounded-2xl flex items-center px-3 shadow-[0_8px_24px_rgba(0,0,0,0.08)] border border-white/50 dark:border-white/10 cursor-pointer active:scale-[0.98] transition-all duration-300 flex-1 h-11"
+            className="relative bg-white rounded-2xl flex items-center px-3 shadow-[0_8px_24px_rgba(0,0,0,0.12)] border border-white cursor-pointer active:scale-[0.98] transition-all duration-300 flex-1 h-11"
             onClick={handleSearchFocus}
           >
             <Search className="h-[18px] w-[18px] text-primary mr-2 shrink-0" strokeWidth={2.5} />
@@ -254,7 +254,7 @@ export default function HomeHeader({
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: -8, opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute inset-0 text-[13px] font-bold text-gray-400 truncate flex items-center"
+                  className="absolute inset-0 text-[13px] font-bold text-gray-500 truncate flex items-center"
                 >
                   {placeholders?.[placeholderIndex] || 'Search'}
                 </motion.span>
@@ -275,13 +275,13 @@ export default function HomeHeader({
 
           {/* Veg Toggle (Stacked Pill Switch) */}
           <div 
-            className="flex flex-col items-center justify-center cursor-pointer active:scale-95 transition-transform duration-300 shrink-0 px-2 bg-white/70 dark:bg-[#1a1a1a]/70 backdrop-blur-md rounded-2xl py-1 shadow-[0_8px_24px_rgba(0,0,0,0.08)] border border-white/50 dark:border-white/10"
+            className="flex flex-col items-center justify-center cursor-pointer active:scale-95 transition-transform duration-300 shrink-0 px-2 bg-white rounded-2xl py-1 shadow-[0_8px_24px_rgba(0,0,0,0.12)] border border-white"
             onClick={() => handleVegModeChange?.(!vegMode)}
           >
-            <div className="text-[9px] font-black leading-tight text-gray-700 dark:text-gray-200 tracking-wider text-center drop-shadow-sm">
+            <div className="text-[9px] font-black leading-tight text-gray-700 tracking-wider text-center drop-shadow-sm">
               VEG<br/>MODE
             </div>
-            <div className={`mt-0.5 w-[30px] h-[16px] rounded-full relative transition-colors duration-300 border border-white/20 ${vegMode ? 'bg-green-600' : 'bg-[#bcc0c5]/50'}`}>
+            <div className={`mt-0.5 w-[30px] h-[16px] rounded-full relative transition-colors duration-300 border border-gray-100 ${vegMode ? 'bg-green-600' : 'bg-[#bcc0c5]/50'}`}>
               <div className={`absolute top-[1px] w-[12px] h-[12px] rounded-full bg-white shadow-sm transition-transform duration-300 ${vegMode ? 'translate-x-[15px]' : 'translate-x-[1px]'}`} />
             </div>
           </div>
