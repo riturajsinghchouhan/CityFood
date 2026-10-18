@@ -253,6 +253,10 @@ export default function Cart() {
   const [addons, setAddons] = useState([])
   const [loadingAddons, setLoadingAddons] = useState(false)
 
+  // More items from same restaurant state
+  const [moreRestaurantItems, setMoreRestaurantItems] = useState([])
+  const [loadingMoreItems, setLoadingMoreItems] = useState(false)
+
   // Coupons state - fetched from backend
   const [availableCoupons, setAvailableCoupons] = useState([])
   const [loadingCoupons, setLoadingCoupons] = useState(false)
@@ -810,6 +814,105 @@ export default function Cart() {
 
     fetchAddons()
   }, [restaurantData, cart.length, loadingRestaurant])
+
+  // Fetch menu items for "More items for you" from the same restaurant
+  useEffect(() => {
+    let isMounted = true
+    const fetchMoreRestaurantItems = async () => {
+      const idToFetch = restaurantData?._id || restaurantData?.restaurantId || restaurantData?.slug || cart[0]?.restaurantId || restaurantId
+      if (!idToFetch || cart.length === 0) {
+        setMoreRestaurantItems([])
+        return
+      }
+
+      try {
+        setLoadingMoreItems(true)
+        const response = await restaurantAPI.getMenuByRestaurantId(idToFetch)
+        if (response?.data?.success && response?.data?.data?.menu) {
+          const sections = response.data.data.menu.sections || []
+          const allItems = []
+          const seenIds = new Set()
+
+          for (const section of sections) {
+            const items = section.items || []
+            for (const item of items) {
+              const itemId = item.id || item._id
+              if (itemId && !seenIds.has(String(itemId)) && item.isAvailable !== false && item.name && item.price > 0) {
+                seenIds.add(String(itemId))
+                allItems.push({
+                  ...item,
+                  id: itemId,
+                  categoryName: section.name || item.categoryName || item.category || ""
+                })
+              }
+            }
+          }
+
+          if (isMounted) {
+            setMoreRestaurantItems(allItems)
+          }
+        } else if (isMounted) {
+          setMoreRestaurantItems([])
+        }
+      } catch (err) {
+        debugWarn("Failed to fetch more restaurant items for cart:", err)
+        if (isMounted) setMoreRestaurantItems([])
+      } finally {
+        if (isMounted) setLoadingMoreItems(false)
+      }
+    }
+
+    fetchMoreRestaurantItems()
+    return () => {
+      isMounted = false
+    }
+  }, [restaurantData?._id, restaurantData?.restaurantId, restaurantData?.slug, cart[0]?.restaurantId, restaurantId, cart.length === 0])
+
+  const handleAddMoreItemToCart = (item) => {
+    const cartRestaurantId = cart[0]?.restaurantId || restaurantData?.restaurantId || restaurantData?._id || restaurantId
+    const cartRestaurantName = cart[0]?.restaurant || restaurantData?.name || restaurantName
+
+    if (!cartRestaurantId || !cartRestaurantName) {
+      toast.error('Restaurant information is missing. Please refresh the page.')
+      return
+    }
+
+    const itemToAdd = {
+      id: item.id || item._id,
+      itemId: item.id || item._id,
+      name: item.name,
+      price: Number(item.price),
+      image: item.image || "",
+      description: item.description || "",
+      isVeg: item.foodType === 'Veg' || item.isVeg,
+      foodType: item.foodType || (item.isVeg ? 'Veg' : 'Non-Veg'),
+      restaurant: cartRestaurantName,
+      restaurantId: cartRestaurantId,
+      restaurantName: cartRestaurantName,
+    }
+
+    const res = addToCart(itemToAdd)
+    if (res?.ok === false) {
+      toast.error(res.error || "Cannot add item to cart")
+      return
+    }
+    toast.success(`Added ${item.name} to cart`)
+  }
+
+  const handleUpdateMoreItemQuantity = (item, newQuantity) => {
+    const targetId = item.id || item._id
+    const cartItem = cart.find(
+      (ci) => String(ci.id) === String(targetId) || String(ci.itemId) === String(targetId)
+    )
+    if (!cartItem) return
+
+    if (newQuantity <= 0) {
+      updateQuantity(cartItem.id, 0)
+      toast.info(`Removed ${item.name} from cart`)
+    } else {
+      updateQuantity(cartItem.id, newQuantity)
+    }
+  }
 
   // Fetch coupons for items in cart
   useEffect(() => {
@@ -2408,6 +2511,151 @@ export default function Cart() {
                       {restaurantNote.length}/240
                     </span>
                   </div>
+                </div>
+              )}
+
+              {/* More items for you - Same Restaurant Items */}
+              {(loadingMoreItems || moreRestaurantItems.length > 0) && (
+                <div className="bg-white dark:bg-[#1a1a1a] px-4 md:px-6 py-4 md:py-5 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800">
+                  <div className="flex items-center justify-between mb-3 md:mb-4">
+                    <div className="flex items-center gap-2 md:gap-2.5">
+                      <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Sparkles className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm md:text-base font-bold text-gray-900 dark:text-white leading-tight">
+                          More items for you
+                        </h3>
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+                          From {restaurantName}
+                        </p>
+                      </div>
+                    </div>
+                    {(restaurantData?.slug || restaurantData?._id || cart[0]?.restaurantId) && (
+                      <Link
+                        to={`/user/restaurants/${restaurantData?.slug || restaurantData?._id || cart[0]?.restaurantId}`}
+                        className="text-xs font-semibold text-primary hover:underline flex items-center gap-0.5"
+                      >
+                        See menu <ChevronRight className="w-3.5 h-3.5" />
+                      </Link>
+                    )}
+                  </div>
+
+                  {loadingMoreItems ? (
+                    <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 md:-mx-6 px-4 md:px-6 scrollbar-hide">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="flex-shrink-0 w-36 sm:w-40 animate-pulse">
+                          <div className="w-full aspect-square bg-gray-200 dark:bg-gray-800 rounded-xl" />
+                          <div className="h-3.5 bg-gray-200 dark:bg-gray-800 rounded mt-2 w-3/4" />
+                          <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded mt-1.5 w-1/2" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 md:-mx-6 px-4 md:px-6 scrollbar-hide">
+                      {moreRestaurantItems.map((item) => {
+                        const isVeg = item.foodType === 'Veg' || item.isVeg;
+                        const targetId = item.id || item._id;
+                        const cartItem = cart.find(
+                          (ci) => String(ci.id) === String(targetId) || String(ci.itemId) === String(targetId)
+                        );
+                        const inCart = !!cartItem && cartItem.quantity > 0;
+
+                        return (
+                          <div
+                            key={targetId}
+                            className="flex-shrink-0 w-36 sm:w-40 flex flex-col justify-between rounded-xl p-2.5 border border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-[#141414] hover:shadow-md transition-all group"
+                          >
+                            <div>
+                              {/* Image & Veg icon & Add button */}
+                              <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 mb-2">
+                                {item.image ? (
+                                  <img
+                                    src={item.image}
+                                    alt={item.name}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    onError={(e) => {
+                                      e.target.onerror = null;
+                                      e.target.src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=300&fit=crop";
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                                    No image
+                                  </div>
+                                )}
+
+                                {/* Veg / Non-Veg Icon */}
+                                <div className="absolute top-1.5 left-1.5 z-10 bg-white/90 dark:bg-black/80 p-0.5 rounded shadow-xs">
+                                  {isVeg ? (
+                                    <div className="h-3 w-3 rounded-[3px] border border-green-600 flex items-center justify-center">
+                                      <div className="h-1.5 w-1.5 rounded-full bg-green-600" />
+                                    </div>
+                                  ) : (
+                                    <div className="h-3 w-3 rounded-[3px] border border-red-600 flex items-center justify-center">
+                                      <div className="h-1.5 w-1.5 rounded-full bg-red-600" />
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Add button / Quantity controls */}
+                                <div className="absolute bottom-1.5 right-1.5 z-10">
+                                  {inCart ? (
+                                    <div className="flex items-center bg-white dark:bg-[#1a1a1a] border border-primary text-primary rounded-full shadow-md px-1.5 py-0.5 h-7 gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUpdateMoreItemQuantity(item, (cartItem?.quantity || 1) - 1)}
+                                        className="w-4 h-4 flex items-center justify-center text-primary hover:bg-primary/10 rounded-full active:scale-90 transition-transform cursor-pointer"
+                                        aria-label="Decrease quantity"
+                                      >
+                                        <Minus className="w-3 h-3" strokeWidth={2.5} />
+                                      </button>
+                                      <span className="text-xs font-bold min-w-[12px] text-center text-primary">
+                                        {cartItem?.quantity || 1}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUpdateMoreItemQuantity(item, (cartItem?.quantity || 1) + 1)}
+                                        className="w-4 h-4 flex items-center justify-center text-primary hover:bg-primary/10 rounded-full active:scale-90 transition-transform cursor-pointer"
+                                        aria-label="Increase quantity"
+                                      >
+                                        <Plus className="w-3 h-3" strokeWidth={2.5} />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAddMoreItemToCart(item)}
+                                      className="w-7 h-7 bg-white dark:bg-[#1a1a1a] border-2 border-primary rounded-full shadow-md flex items-center justify-center hover:scale-110 active:scale-90 transition-all text-primary cursor-pointer"
+                                      aria-label={`Add ${item.name} to cart`}
+                                      title="Add to cart"
+                                    >
+                                      <Plus className="w-4 h-4 text-primary" strokeWidth={2.8} />
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Name */}
+                              <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white line-clamp-1 leading-tight">
+                                {item.name}
+                              </p>
+                              {item.description && (
+                                <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">
+                                  {item.description}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Price */}
+                            <p className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white mt-1.5">
+                              {RUPEE_SYMBOL}{item.price}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
 
