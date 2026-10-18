@@ -290,8 +290,8 @@ export default function DiningRestaurantDetails() {
 
   return (
     <div className="min-h-screen bg-[#f6f7fb] dark:bg-slate-950 pb-28 transition-colors">
-      <section className="mx-auto max-w-md bg-[#f6f7fb] dark:bg-slate-950 uppercase-fix">
-        <div className="relative h-[392px] overflow-hidden">
+      <section className="mx-auto max-w-md md:max-w-3xl bg-[#f6f7fb] dark:bg-slate-950 uppercase-fix">
+        <div className="relative h-[392px] overflow-hidden md:mt-6 md:rounded-3xl">
           {heroImage ? (
             <img src={heroImage} alt={restaurantName} className="h-full w-full object-cover" />
           ) : (
@@ -369,7 +369,7 @@ export default function DiningRestaurantDetails() {
       </section>
 
       <div className="sticky top-0 z-30 border-b border-[#ececf3] dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl transition-colors">
-        <div className="mx-auto max-w-md px-3 pb-3 pt-3">
+        <div className="mx-auto max-w-md md:max-w-3xl px-3 pb-3 pt-3">
           <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {topTabs.map((tab) => (
               <button
@@ -390,7 +390,7 @@ export default function DiningRestaurantDetails() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-md px-4 pt-4">
+      <div className="mx-auto max-w-md md:max-w-3xl px-4 pt-4">
         <section id="restaurant-prebook">
           <div>
             <h2 className="text-[29px] font-black leading-none text-[#23180f] dark:text-slate-100">Pre-book offers</h2>
@@ -424,7 +424,7 @@ export default function DiningRestaurantDetails() {
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
             {(featuredSections.length > 0
               ? featuredSections
               : [
@@ -521,7 +521,7 @@ export default function DiningRestaurantDetails() {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-[#ebe5da] dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 p-4 backdrop-blur-xl transition-colors">
-        <div className="mx-auto max-w-md">
+        <div className="mx-auto max-w-md md:max-w-3xl">
           <Button
             onClick={() => isDiningEnabled && setIsBookingSheetOpen(true)}
             disabled={!isDiningEnabled}
@@ -543,7 +543,7 @@ export default function DiningRestaurantDetails() {
             onClick={() => setIsBookingSheetOpen(false)}
           />
 
-          <div className="absolute bottom-0 left-0 right-0 rounded-t-[28px] bg-white dark:bg-slate-900 px-4 pb-6 pt-4 shadow-[0_-20px_60px_rgba(15,23,42,0.18)] border-t border-white/5 transition-colors">
+          <div className="absolute bottom-0 left-0 right-0 md:mx-auto md:max-w-xl md:bottom-6 md:rounded-[28px] rounded-t-[28px] bg-white dark:bg-slate-900 px-4 pb-6 pt-4 shadow-[0_-20px_60px_rgba(15,23,42,0.18)] border-t border-white/5 transition-colors">
             <div className="mx-auto mb-4 h-1.5 w-14 rounded-full bg-[#e7e5e4] dark:bg-slate-700" />
 
             <div className="mb-4 flex items-center justify-between gap-3">

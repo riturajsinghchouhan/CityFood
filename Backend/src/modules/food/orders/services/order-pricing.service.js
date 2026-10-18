@@ -9,6 +9,7 @@ import { FoodZone } from '../../admin/models/zone.model.js';
 import { ValidationError } from '../../../../core/auth/errors.js';
 import { haversineKm } from './order.helpers.js';
 import { getDrivingDistances } from '../../../../services/googleMaps.service.js';
+import { resolveFranchiseForZone, applyFranchisePricing } from '../../franchise/services/franchiseResolver.service.js';
 
 function isOfferEndDateValid(endDate, now = new Date()) {
   if (!endDate) return true;
@@ -41,6 +42,11 @@ export async function calculateOrderPricing(userId, dto) {
   if (restaurant.status !== "approved")
     throw new ValidationError("Restaurant not available");
 
+  // The restaurant's zone decides the franchise, and with it the fees and which coupons apply.
+  const franchise = await resolveFranchiseForZone(restaurant.zoneId);
+  if (franchise?.status === "suspended")
+    throw new ValidationError("Ordering is temporarily unavailable in this area. Please try again later.");
+
   const items = Array.isArray(dto.items) ? dto.items : [];
   let itemDiscountTotal = 0;
   let subtotal = 0;
@@ -63,13 +69,14 @@ export async function calculateOrderPricing(userId, dto) {
   });
   itemDiscountTotal = Math.floor(itemDiscountTotal);
 
-  const feeSettings = await FoodFeeSettings.findOne({ isActive: true })
+  const hqFeeSettings = await FoodFeeSettings.findOne({ isActive: true })
     .sort({ createdAt: -1 })
     .lean();
   
-  if (!feeSettings) {
+  if (!hqFeeSettings) {
     throw new ValidationError("Fee settings are not configured by admin.");
   }
+  const feeSettings = applyFranchisePricing(hqFeeSettings, franchise);
 
   const packagingFee = feeSettings.packagingFee != null ? Number(feeSettings.packagingFee) : NaN;
   if (!Number.isFinite(packagingFee)) {
@@ -235,9 +242,13 @@ export async function calculateOrderPricing(userId, dto) {
       const statusOk = offer.status === "active";
       const startOk = !offer.startDate || now >= new Date(offer.startDate);
       const endOk = isOfferEndDateValid(offer.endDate, now);
+      // A franchise coupon works only for restaurants in that franchise's zone; HQ coupons work everywhere.
+      const franchiseOk =
+        !offer.franchiseId || String(offer.franchiseId) === String(franchise?._id || "");
       const scopeOk =
-        offer.restaurantScope !== "selected" ||
-        String(offer.restaurantId || "") === String(dto.restaurantId || "");
+        franchiseOk &&
+        (offer.restaurantScope !== "selected" ||
+          String(offer.restaurantId || "") === String(dto.restaurantId || ""));
       const minOk = subtotal >= (Number(offer.minOrderValue) || 0);
       let usageOk = true;
       if (
@@ -301,7 +312,7 @@ export async function calculateOrderPricing(userId, dto) {
               ),
             );
           }
-          appliedCoupon = { code: codeRaw, discount };
+          appliedCoupon = { code: codeRaw, discount, fundedBy: offer.franchiseId ? "FRANCHISE" : "HQ" };
         }
       } else {
         if (!minOk) {

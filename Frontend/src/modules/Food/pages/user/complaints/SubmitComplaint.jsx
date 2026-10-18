@@ -152,7 +152,7 @@ export default function SubmitComplaint() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] pb-24">
       {/* Header */}
-      <div className="bg-white dark:bg-[#121212] p-4 flex items-center sticky top-0 z-20 shadow-sm border-b dark:border-gray-800">
+      <div className="bg-white dark:bg-[#121212] p-4 md:px-[max(1.5rem,calc((100%-45rem)/2))] flex items-center sticky top-0 z-20 shadow-sm border-b dark:border-gray-800">
         <button
           type="button"
           onClick={goBack}
@@ -171,7 +171,7 @@ export default function SubmitComplaint() {
       </div>
 
       {/* Order Info */}
-      <div className="bg-white dark:bg-[#121212] mx-4 mt-4 p-4 rounded-xl shadow-sm border border-transparent dark:border-gray-800">
+      <div className="bg-white dark:bg-[#121212] mx-4 md:mx-auto md:max-w-3xl md:mt-6 mt-4 p-4 rounded-xl shadow-sm border border-transparent dark:border-gray-800">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
             <FileText className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -202,7 +202,7 @@ export default function SubmitComplaint() {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="mx-4 mt-4 space-y-4">
+      <form onSubmit={handleSubmit} className="mx-4 md:mx-auto md:max-w-3xl mt-4 space-y-4">
         {/* Complaint Type */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -270,7 +270,7 @@ export default function SubmitComplaint() {
         </div>
 
         {/* Submit Button */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#121212] border-t border-gray-200 dark:border-gray-800 p-4 z-20">
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#121212] border-t border-gray-200 dark:border-gray-800 p-4 md:px-[max(1.5rem,calc((100%-45rem)/2))] z-20">
           <button
             type="submit"
             disabled={submitting}

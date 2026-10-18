@@ -25,6 +25,37 @@ export const adminSidebarMenu = [
   },
   {
     type: "section",
+    label: "FRANCHISE MANAGEMENT",
+    // Owner-level: the backend rejects sub-admins on these routes, so they are never offered as sub-admin permissions.
+    superAdminOnly: true,
+    items: [
+      {
+        type: "link",
+        label: "Manage Franchise",
+        path: "/admin/food/franchises",
+        icon: "Building2",
+      },
+      {
+        type: "link",
+        label: "Franchise Withdrawals",
+        path: "/admin/food/franchise-withdrawals",
+        icon: "Wallet",
+      },
+    ],
+  },
+  {
+    type: "section",
+    label: "MY FRANCHISE",
+    // Shown only to franchise owners (who use this same admin panel for their own zone).
+    franchiseOnly: true,
+    items: [
+      { type: "link", label: "Wallet & Withdraw", path: "/admin/food/my-franchise/wallet", icon: "Wallet" },
+      { type: "link", label: "Fees & Commission", path: "/admin/food/my-franchise/fees", icon: "IndianRupee" },
+      { type: "link", label: "Franchise Settings", path: "/admin/food/my-franchise/settings", icon: "Settings" },
+    ],
+  },
+  {
+    type: "section",
     label: "ORDER MANAGEMENT",
     items: [
       {
@@ -282,3 +313,81 @@ export const adminSidebarMenu = [
     ],
   },
 ];
+
+/**
+ * A franchise owner sees the same admin panel for its own zone, without app-wide settings
+ * (the backend refuses those for franchises anyway).
+ */
+const FRANCHISE_HIDDEN_SECTIONS = new Set([
+  "FRANCHISE MANAGEMENT", "REFERRAL & REWARDS", "HELP & SUPPORT", "BANNER SETTINGS", "DINING MANAGEMENT",
+  "EMPLOYEE MANAGEMENT", "SYSTEM SETTINGS", "PAGES & SOCIAL MEDIA", "DEVELOPER",
+])
+const FRANCHISE_HIDDEN_LABELS = new Set([
+  "Categories", "Zone Setup", "Delivery Cash Limit", "Multiple Orders", "Delivery & Platform Fee",
+  "Delivery Boy Commission", "Delivery Emergency Help", "Earning Addon", "Earning Addon History",
+])
+
+export const isFranchiseRole = (role) => String(role || "").toUpperCase() === "FRANCHISE_OWNER"
+
+/** True when the signed-in admin panel user is a franchise owner (reads the stored admin user). */
+export function isFranchiseSession() {
+  try {
+    return isFranchiseRole(JSON.parse(localStorage.getItem("admin_user") || "null")?.role)
+  } catch {
+    return false
+  }
+}
+
+/** Franchise owners open the panel under /franchise, HQ under /admin. Both render the same pages. */
+export const FRANCHISE_BASE = "/franchise"
+export const panelBaseForRole = (role) => (isFranchiseRole(role) ? FRANCHISE_BASE : "/admin")
+
+/** "/admin/food/x" -> "/franchise/food/x" for franchise owners. */
+export function toPanelPath(path, role) {
+  if (!isFranchiseRole(role) || typeof path !== "string") return path
+  return path.replace(/^\/admin(?=\/|$)/, FRANCHISE_BASE)
+}
+
+/** "/franchise/food/x" -> "/admin/food/x", so route checks can use the menu's /admin paths. */
+export const toAdminPath = (pathname = "") => String(pathname).replace(/^\/franchise(?=\/|$)/, "/admin")
+
+const mapMenuPaths = (menu, map) => menu.map((item) => {
+  if (item.type === "section") return { ...item, items: mapMenuPaths(item.items, map) }
+  if (item.type === "expandable") return { ...item, subItems: item.subItems.map((s) => ({ ...s, path: map(s.path) })) }
+  return item.path ? { ...item, path: map(item.path) } : item
+})
+
+/** The sidebar menu for a role, with paths under that role's panel base. */
+export function menuForRole(role) {
+  const menu = filterMenuForRole(role)
+  return isFranchiseRole(role) ? mapMenuPaths(menu, (p) => toPanelPath(p, role)) : menu
+}
+
+/** Franchise owners lose HQ-only areas, everyone else loses MY FRANCHISE. Paths stay /admin. */
+function filterMenuForRole(role) {
+  const franchise = isFranchiseRole(role)
+  return adminSidebarMenu
+    .filter((item) => (franchise ? !item.superAdminOnly && !FRANCHISE_HIDDEN_SECTIONS.has(item.label) : !item.franchiseOnly))
+    .map((item) => {
+      if (!franchise) return item
+      if (item.type === "section") {
+        return { ...item, items: item.items.filter((it) => !FRANCHISE_HIDDEN_LABELS.has(it.label)).map((it) => (
+          it.type === "expandable" ? { ...it, subItems: it.subItems.filter((sub) => !FRANCHISE_HIDDEN_LABELS.has(sub.label)) } : it
+        )) }
+      }
+      return item
+    })
+    .filter((item) => item.type !== "section" || item.items.length > 0)
+}
+
+const collectPaths = (menu) => menu.flatMap((item) => {
+  if (item.type === "section") return collectPaths(item.items)
+  if (item.type === "expandable") return item.subItems.map((s) => s.path)
+  return item.path ? [item.path] : []
+})
+
+/** Paths a role must not open (used by the route guard). */
+export function blockedPathsForRole(role) {
+  const allowed = new Set(collectPaths(filterMenuForRole(role)))
+  return collectPaths(adminSidebarMenu).filter((p) => !allowed.has(p))
+}

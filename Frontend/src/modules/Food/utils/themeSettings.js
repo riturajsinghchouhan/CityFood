@@ -14,7 +14,8 @@ export const applyDynamicTheme = async () => {
     
     const path = window.location.pathname;
     let currentAppType = 'user_app';
-    if (path.includes('/restaurant')) currentAppType = 'restaurant_app';
+    if (path.includes('/admin') || path.startsWith('/franchise')) currentAppType = 'admin_app';
+    else if (path.includes('/restaurant')) currentAppType = 'restaurant_app';
     else if (path.includes('/delivery')) currentAppType = 'delivery_app';
     else if (path.includes('/admin')) currentAppType = 'admin_app';
     

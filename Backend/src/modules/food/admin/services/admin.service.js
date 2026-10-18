@@ -1,3 +1,6 @@
+import { recordHqPaidWithdrawal } from '../../franchise/services/franchiseFinance.service.js';
+import { getFranchiseScope } from '../../../../core/franchiseScope/franchiseScope.js';
+import { HQ_SHARE_EXPR } from '../../franchise/services/franchise.service.js';
 import mongoose from 'mongoose';
 import { ValidationError } from '../../../../core/auth/errors.js';
 import { FoodRestaurant } from '../../restaurant/models/restaurant.model.js';
@@ -441,9 +444,16 @@ export async function getDashboardStats(query = {}) {
     if (periodRange) {
         orderMatch.createdAt = { $gte: periodRange.start, $lte: periodRange.end };
     }
-    if (zoneId) {
+    // Inside a franchise scope the orders are already limited to the franchise (by franchiseId);
+    // order.zoneId is the customer's zone, so filtering on it would drop cross-zone deliveries.
+    const franchiseView = Boolean(getFranchiseScope());
+    if (zoneId && !franchiseView) {
         orderMatch.zoneId = zoneId;
     }
+    // HQ earns only its commission on franchise orders; the fees and restaurant commission are the
+    // franchise's. A franchise looking at its own dashboard sees its full numbers.
+    const IS_FRANCHISE_ORDER = { $ne: [{ $ifNull: ['$franchiseId', null] }, null] };
+    const hqView = (fullValue, hqValue) => (franchiseView ? fullValue : { $cond: [IS_FRANCHISE_ORDER, hqValue, fullValue] });
 
     const restaurantMatch = {};
     if (zoneId) {
@@ -501,35 +511,43 @@ export async function getDashboardStats(query = {}) {
                             $cond: [{ $in: ['$orderStatus', DASHBOARD_PROCESSING_ORDER_STATUSES] }, 1, 0]
                         }
                     },
-                    revenueTotal: { 
-                        $sum: { 
-                            $cond: [DELIVERED_ORDER_STATUS_EXPR, { $ifNull: ['$pricing.total', 0] }, 0] 
-                        } 
+                    revenueTotal: {
+                        $sum: {
+                            $cond: [DELIVERED_ORDER_STATUS_EXPR, hqView({ $ifNull: ['$pricing.total', 0] }, HQ_SHARE_EXPR), 0]
+                        }
                     },
-                    commissionTotal: { 
-                        $sum: { 
-                            $cond: [DELIVERED_ORDER_STATUS_EXPR, { $ifNull: ['$pricing.restaurantCommission', 0] }, 0] 
-                        } 
+                    commissionTotal: {
+                        $sum: {
+                            $cond: [DELIVERED_ORDER_STATUS_EXPR, hqView({ $ifNull: ['$pricing.restaurantCommission', 0] }, 0), 0]
+                        }
                     },
-                    platformFeeTotal: { 
-                        $sum: { 
-                            $cond: [DELIVERED_ORDER_STATUS_EXPR, DASHBOARD_PLATFORM_FEE_EXPR, 0] 
-                        } 
+                    platformFeeTotal: {
+                        $sum: {
+                            $cond: [DELIVERED_ORDER_STATUS_EXPR, hqView(DASHBOARD_PLATFORM_FEE_EXPR, 0), 0]
+                        }
                     },
-                    deliveryFeeTotal: { 
-                        $sum: { 
-                            $cond: [DELIVERED_ORDER_STATUS_EXPR, DASHBOARD_DELIVERY_FEE_EXPR, 0] 
-                        } 
+                    deliveryFeeTotal: {
+                        $sum: {
+                            $cond: [DELIVERED_ORDER_STATUS_EXPR, hqView(DASHBOARD_DELIVERY_FEE_EXPR, 0), 0]
+                        }
+                    },
+                    franchiseOrderHqShare: {
+                        $sum: {
+                            $cond: [{ $and: [DELIVERED_ORDER_STATUS_EXPR, IS_FRANCHISE_ORDER] }, HQ_SHARE_EXPR, 0]
+                        }
+                    },
+                    franchiseOrdersDelivered: {
+                        $sum: { $cond: [{ $and: [DELIVERED_ORDER_STATUS_EXPR, IS_FRANCHISE_ORDER] }, 1, 0] }
                     },
                     gstTotal: { 
                         $sum: { 
                             $cond: [DELIVERED_ORDER_STATUS_EXPR, { $ifNull: ['$pricing.tax', 0] }, 0] 
                         } 
                     },
-                    adminNetProfit: { 
-                        $sum: { 
-                            $cond: [DELIVERED_ORDER_STATUS_EXPR, { $ifNull: ['$platformProfit', 0] }, 0] 
-                        } 
+                    adminNetProfit: {
+                        $sum: {
+                            $cond: [DELIVERED_ORDER_STATUS_EXPR, hqView({ $ifNull: ['$platformProfit', 0] }, HQ_SHARE_EXPR), 0]
+                        }
                     }
                 }
             }
@@ -551,16 +569,16 @@ export async function getDashboardStats(query = {}) {
                         month: { $month: '$createdAt' }
                     },
                     orders: { $sum: 1 },
-                    revenue: { 
-                        $sum: { 
-                            $cond: [{ $eq: ['$orderStatus', 'delivered'] }, { $ifNull: ['$pricing.total', 0] }, 0] 
-                        } 
+                    revenue: {
+                        $sum: {
+                            $cond: [{ $eq: ['$orderStatus', 'delivered'] }, hqView({ $ifNull: ['$pricing.total', 0] }, HQ_SHARE_EXPR), 0]
+                        }
                     },
                     commission: {
                         $sum: {
                             $cond: [
                                 { $eq: ['$orderStatus', 'delivered'] },
-                                { $ifNull: ['$platformProfit', { $ifNull: ['$pricing.platformFee', 0] }] },
+                                hqView({ $ifNull: ['$platformProfit', { $ifNull: ['$pricing.platformFee', 0] }] }, HQ_SHARE_EXPR),
                                 0
                             ]
                         }
@@ -723,6 +741,10 @@ export async function getDashboardStats(query = {}) {
             }
         },
         revenue: { total: Number(totals.revenueTotal || 0) },
+        franchiseOrders: {
+            delivered: Number(totals.franchiseOrdersDelivered || 0),
+            hqCommission: Number(totals.franchiseOrderHqShare || 0)
+        },
         commission: { total: Number(totals.commissionTotal || 0) },
         platformFee: { total: Number(totals.platformFeeTotal || 0) },
         deliveryFee: { total: Number(totals.deliveryFeeTotal || 0) },
@@ -5174,6 +5196,8 @@ export async function updateWithdrawalStatus(id, { status, adminNote, rejectionR
 
     // pending -> approved | rejected, exactly once (conditional update)
     await transitionWithdrawal(FoodRestaurantWithdrawal, id, status, { adminNote, rejectionReason, transactionId });
+    // HQ paying a franchise-zone restaurant is charged to that franchise.
+    if (String(status).toLowerCase() === 'approved') await recordHqPaidWithdrawal('restaurant', id);
 
     return FoodRestaurantWithdrawal.findById(id).populate('restaurantId', 'restaurantName').lean();
 }
@@ -5223,6 +5247,8 @@ export async function updateDeliveryWithdrawalStatus(id, { status, adminNote, re
     // pending -> approved | rejected, exactly once. The rider's balance is derived from approved
     // withdrawals, so approving here is what reduces it — there is no separate wallet to update.
     await transitionWithdrawal(FoodDeliveryWithdrawal, id, status, { adminNote, rejectionReason, transactionId });
+    // HQ paying a franchise-zone rider is charged to that franchise.
+    if (String(status).toLowerCase() === 'approved') await recordHqPaidWithdrawal('rider', id);
 
     return FoodDeliveryWithdrawal.findById(id).populate('deliveryPartnerId', 'name phone profilePartnerId').lean();
 }
@@ -5397,6 +5423,7 @@ export async function markDeliveryPayoutAsPaid({ deliveryPartnerId, amount, tran
         }], sessionOpts(session));
         return created;
     });
+    await recordHqPaidWithdrawal('rider', withdrawal._id);
 
     try {
         const { notifyOwnerSafely } = await import('../../../../core/notifications/firebase.service.js');
@@ -5441,7 +5468,7 @@ export async function markDeliveryPayoutAsPaid({ deliveryPartnerId, amount, tran
  * (the same record type the self-deposit flow creates), which immediately frees up the partner's
  * cash limit since cashInHand everywhere is computed live from completed deposits, not a stored counter.
  */
-export async function settleDeliveryCashLimit(deliveryPartnerId, { amount, adminNote } = {}, adminUser) {
+export async function settleDeliveryCashLimit(deliveryPartnerId, { amount, adminNote } = {}, adminUser, { collectedBy = getFranchiseScope() ? 'FRANCHISE' : 'HQ' } = {}) {
     if (!deliveryPartnerId || !mongoose.Types.ObjectId.isValid(deliveryPartnerId)) {
         throw new ValidationError('Valid delivery partner ID is required');
     }
@@ -5468,7 +5495,8 @@ export async function settleDeliveryCashLimit(deliveryPartnerId, { amount, admin
             paymentMethod: 'cash',
             status: 'Completed',
             adminId: adminUser?._id,
-            adminNote: adminNote || 'Cash limit settled by admin'
+            adminNote: adminNote || (collectedBy === 'FRANCHISE' ? 'Cash collected by franchise' : 'Cash limit settled by admin'),
+            collectedBy
         }], sessionOpts(session));
         return created;
     });

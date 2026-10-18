@@ -141,14 +141,14 @@ export default function MyBookings() {
 
     return (
         <AnimatedPage className="bg-slate-50 dark:bg-[#0a0a0a] min-h-screen pb-10 transition-colors">
-            <div className="bg-white dark:bg-[#0a0a0a] p-4 flex items-center shadow-sm sticky top-0 z-10 border-b dark:border-gray-800">
+            <div className="bg-white dark:bg-[#0a0a0a] p-4 md:px-[max(1.5rem,calc((100%-61rem)/2))] flex items-center shadow-sm sticky top-0 z-10 border-b dark:border-gray-800">
                 <button onClick={() => navigate("/")}>
                     <ArrowLeft className="w-6 h-6 text-gray-700 dark:text-white cursor-pointer" />
                 </button>
                 <h1 className="ml-4 text-xl font-semibold text-gray-800 dark:text-white">My Table Bookings</h1>
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-4 md:max-w-5xl md:mx-auto md:px-6 md:py-6 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 md:items-start">
                 {bookings.length > 0 ? (
                     bookings.map((booking) => (
                         <div key={booking._id} className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-gray-800 flex items-start gap-4">
@@ -205,7 +205,7 @@ export default function MyBookings() {
                         </div>
                     ))
                 ) : (
-                    <div className="text-center py-20">
+                    <div className="text-center py-20 md:col-span-2">
                         <div className="bg-slate-100 dark:bg-gray-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Utensils className="w-8 h-8 text-slate-300 dark:text-gray-600" />
                         </div>

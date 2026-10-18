@@ -335,7 +335,7 @@ export default function TableBooking() {
         </div>
       </div>
 
-      <div className="mx-auto -mt-4 max-w-md space-y-4 px-4">
+      <div className="mx-auto -mt-4 max-w-md md:max-w-2xl space-y-4 px-4">
         {!isDiningEnabled && (
           <section className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
             <p className="text-sm font-semibold text-amber-900">Dining bookings are paused by this restaurant.</p>
@@ -469,7 +469,7 @@ export default function TableBooking() {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 z-[70] border-t border-[#e6e7ef] bg-[#f5f6fb]/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-xl">
-        <div className="mx-auto max-w-md">
+        <div className="mx-auto max-w-md md:max-w-2xl">
           <Button
             disabled={!canProceed}
             onClick={handleProceed}

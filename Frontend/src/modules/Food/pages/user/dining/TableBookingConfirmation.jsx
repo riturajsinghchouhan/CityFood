@@ -119,7 +119,7 @@ export default function TableBookingConfirmation() {
     return (
         <AnimatedPage className="bg-slate-50 dark:bg-slate-950 min-h-screen pb-24 transition-colors">
             {/* Header */}
-            <div className="bg-primary text-white px-4 py-4 sticky top-0 z-50 shadow-md">
+            <div className="bg-primary text-white px-4 md:px-[max(1.5rem,calc((100%-45rem)/2))] py-4 sticky top-0 z-50 shadow-md">
                 <div className="flex items-center gap-3">
                     <button onClick={goBack} className="p-1 hover:bg-white/10 rounded-full transition-colors">
                         <ArrowLeft className="w-6 h-6" />
@@ -128,7 +128,7 @@ export default function TableBookingConfirmation() {
                 </div>
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-4 md:max-w-3xl md:mx-auto md:px-6 md:py-6">
                 {/* Booking Summary Card */}
                 <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
                     <div className="p-4 space-y-4">
@@ -314,7 +314,7 @@ export default function TableBookingConfirmation() {
             </div>
 
              {/* Sticky Action Button */}
-            <div className="fixed bottom-0 left-0 w-full bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-50 transition-colors">
+            <div className="fixed bottom-0 left-0 w-full bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 p-4 md:px-[max(1.5rem,calc((100%-45rem)/2))] pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-50 transition-colors">
                 <Button
                     onClick={handleBooking}
                     disabled={bookingInProgress}

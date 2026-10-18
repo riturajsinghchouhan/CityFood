@@ -2914,7 +2914,7 @@ function RestaurantDetailsContent() {
                     </div>
                   )}
                   {isExpanded && sectionItems.length > 0 && (
-                    <div className="space-y-0">
+                    <div className="space-y-0 lg:grid lg:grid-cols-2 lg:gap-x-10">
                       {sectionItems.map((item) => renderDishCard(item, isRecommended))}
                     </div>
                   )}
@@ -2958,7 +2958,7 @@ function RestaurantDetailsContent() {
 
                             {/* Subsection Items */}
                             {isSubsectionExpanded && subsectionItems.length > 0 && (
-                              <div className="space-y-0">
+                              <div className="space-y-0 lg:grid lg:grid-cols-2 lg:gap-x-10">
                                 {subsectionItems.map((item) => renderDishCard(item, isRecommended))}
                               </div>
                             )}

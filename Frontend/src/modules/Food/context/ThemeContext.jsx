@@ -5,7 +5,7 @@ const ThemeContext = createContext();
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     const path = window.location.pathname;
-    const isAdmin = path.includes('/admin');
+    const isAdmin = path.includes('/admin') || path.startsWith('/franchise');
     const isDelivery = path.includes('/delivery');
     const isRestaurant = path.includes('/restaurant') && !path.includes('/user/restaurants');
     const isUserApp = !isAdmin && !isRestaurant && !isDelivery;
@@ -29,7 +29,7 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     const path = window.location.pathname;
-    const isAdmin = path.includes('/admin');
+    const isAdmin = path.includes('/admin') || path.startsWith('/franchise');
     const isDelivery = path.includes('/delivery');
     const isRestaurant = path.includes('/restaurant') && !path.includes('/user/restaurants');
     

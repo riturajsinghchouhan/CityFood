@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import AdminLayout from "./AdminLayout";
 import Loader from "@food/components/Loader";
@@ -16,6 +16,16 @@ const OrderDetectDelivery = lazy(() => import("@food/pages/admin/OrderDetectDeli
 const Category = lazy(() => import("@food/pages/admin/categories/Category"));
 const FeeSettings = lazy(() => import("@food/pages/admin/fee-settings/FeeSettings"));
 const ReferralSettings = lazy(() => import("@food/pages/admin/referral-settings/ReferralSettings"));
+// Franchise Management (owner / super admin only)
+const FranchiseList = lazy(() => import("@food/pages/admin/franchise/FranchiseList"));
+const FranchiseForm = lazy(() => import("@food/pages/admin/franchise/FranchiseForm"));
+const FranchiseDetail = lazy(() => import("@food/pages/admin/franchise/FranchiseDetail"));
+const RidersWithoutZone = lazy(() => import("@food/pages/admin/franchise/RidersWithoutZone"));
+const FranchiseWithdrawals = lazy(() => import("@food/pages/admin/franchise/FranchiseWithdrawals"));
+// Franchise owner's own pages (the owner uses this admin panel for its zone)
+const MyFranchiseWallet = lazy(() => import("@food/pages/admin/myFranchise/Wallet"));
+const MyFranchiseFees = lazy(() => import("@food/pages/admin/myFranchise/Fees"));
+const MyFranchiseSettings = lazy(() => import("@food/pages/admin/myFranchise/FranchiseSettings"));
 // Restaurant Management
 const ZoneSetup = lazy(() => import("@food/pages/admin/restaurant/ZoneSetup"));
 const ZoneRanking = lazy(() => import("@food/pages/admin/restaurant/ZoneRanking"));
@@ -145,6 +155,8 @@ const AdminSignup = lazy(() => import("@food/pages/admin/auth/AdminSignup"));
 const AdminForgotPassword = lazy(() => import("@food/pages/admin/auth/AdminForgotPassword"));
 
 export default function AdminRouter() {
+  // Mounted at /admin for HQ and at /franchise for franchise owners.
+  const base = useLocation().pathname.startsWith("/franchise") ? "/franchise" : "/admin";
   useEffect(() => {
     const manifestLink = document.querySelector('link[rel="manifest"]');
     const appTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
@@ -165,9 +177,15 @@ export default function AdminRouter() {
       <Routes>
         {/* Protected Routes - With Layout */}
         {/* Admin Login - Same as earlier */}
-        <Route path="login" element={<AdminLogin />} />
-        <Route path="forgot-password" element={<AdminForgotPassword />} />
-        <Route path="signup" element={<AdminSignup />} />
+        {base === "/admin" ? (
+          <>
+            <Route path="login" element={<AdminLogin />} />
+            <Route path="forgot-password" element={<AdminForgotPassword />} />
+            <Route path="signup" element={<AdminSignup />} />
+          </>
+        ) : (
+          <Route path="signup" element={<Navigate to="/franchise/login" replace />} />
+        )}
 
         {/* Protected Routes - With Layout */}
         <Route
@@ -206,6 +224,15 @@ export default function AdminRouter() {
             <Route path="order-refunds/new" element={<NewRefundRequests />} />
 
             {/* RESTAURANT MANAGEMENT */}
+            <Route path="franchises" element={<FranchiseList />} />
+            <Route path="franchises/add" element={<FranchiseForm />} />
+            <Route path="franchises/edit/:id" element={<FranchiseForm />} />
+            <Route path="franchises/riders-without-zone" element={<RidersWithoutZone />} />
+            <Route path="franchise-withdrawals" element={<FranchiseWithdrawals />} />
+            <Route path="my-franchise/wallet" element={<MyFranchiseWallet />} />
+            <Route path="my-franchise/fees" element={<MyFranchiseFees />} />
+            <Route path="my-franchise/settings" element={<MyFranchiseSettings />} />
+            <Route path="franchises/:id" element={<FranchiseDetail />} />
             <Route path="zone-setup" element={<ZoneSetup />} />
             <Route path="zone-ranking" element={<ZoneRanking />} />
             <Route path="zone-setup/map" element={<AllZonesMap />} />
@@ -352,7 +379,7 @@ export default function AdminRouter() {
         </Route>
 
         {/* Redirect unknown admin routes to food admin */}
-        <Route path="*" element={<Navigate to="/admin/food" replace />} />
+        <Route path="*" element={<Navigate to={`${base}/food`} replace />} />
       </Routes>
     </Suspense>
   );

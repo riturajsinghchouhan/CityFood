@@ -264,6 +264,25 @@ const orderSchema = new mongoose.Schema(
             ref: 'FoodZone',
             index: true
         },
+        /** Franchise that owned the restaurant's zone when the order was placed. null = HQ-operated. */
+        franchiseId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'FoodFranchise',
+            default: null
+        },
+        /** Revenue terms frozen at order time so later franchise edits don't change past earnings. */
+        franchiseSnapshot: {
+            revenueModel: { type: String, default: '' },
+            commissionPercent: { type: Number, default: 0 },
+            /** Coupon discount the franchise funds (its own coupon); HQ coupons are funded by HQ. */
+            franchiseDiscount: { type: Number, default: 0 }
+        },
+        /** Set once the order is included in a franchise settlement, so it is never settled twice. */
+        franchiseSettlementId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'FoodFranchiseSettlement',
+            default: null
+        },
         transactionId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'FoodTransaction',
@@ -362,6 +381,7 @@ orderSchema.index({ 'deliveryAddress.location': '2dsphere' });
 orderSchema.index({ lastRiderLocation: '2dsphere' });
 orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ restaurantId: 1, orderStatus: 1, createdAt: -1 });
+orderSchema.index({ franchiseId: 1, orderStatus: 1, createdAt: -1 }, { partialFilterExpression: { franchiseId: { $type: 'objectId' } } });
 orderSchema.index({ 'dispatch.deliveryPartnerId': 1, orderStatus: 1 });
 orderSchema.index({ 'dispatch.status': 1, orderStatus: 1 });
 orderSchema.index({ orderStatus: 1, 'callAlert.primaryCallStatus': 1, createdAt: 1 });

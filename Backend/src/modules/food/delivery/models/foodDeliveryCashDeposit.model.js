@@ -35,7 +35,10 @@ const foodDeliveryCashDepositSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    adminNote: String
+    adminNote: String,
+    /** HQ (default) or the rider's franchise. Only cash that reached HQ is credited to the franchise in settlement. */
+    collectedBy: { type: String, enum: ['HQ', 'FRANCHISE'], default: 'HQ' },
+    franchiseSettlementId: { type: mongoose.Schema.Types.ObjectId, ref: 'FoodFranchiseSettlement', default: null }
 }, { 
     collection: 'payment_delivery_cash_deposits', 
     timestamps: true 

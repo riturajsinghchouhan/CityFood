@@ -183,7 +183,7 @@ export default function Restaurants() {
                           ? "grayscale opacity-75 cursor-not-allowed select-none" 
                           : "cursor-pointer hover:shadow-lg dark:hover:shadow-xl dark:hover:shadow-gray-900/50"
                       }`}>
-                        <div className="flex flex-row min-h-[120px] sm:min-h-[140px] md:min-h-[160px] lg:min-h-[180px] flex-1">
+                        <div className="flex flex-row md:flex-col-reverse min-h-[120px] sm:min-h-[140px] md:min-h-0 flex-1">
                           <CardContent className="flex-1 flex flex-col justify-between p-3 sm:p-4 md:p-5 lg:p-6 min-w-0 overflow-hidden">
                             <div className="flex-1 flex flex-col justify-between gap-2">
                               <div className="flex-shrink-0">
@@ -238,7 +238,7 @@ export default function Restaurants() {
                             </div>
                           </CardContent>
 
-                          <div className="w-36 sm:w-44 md:w-56 lg:w-64 xl:w-72 flex-shrink-0 relative overflow-hidden group/image">
+                          <div className="w-36 sm:w-44 md:w-full md:h-44 lg:h-48 flex-shrink-0 relative overflow-hidden group/image">
                             <img
                               src={restaurant.image || getPlaceholderImage({ width: 400, height: 300, text: "Restaurant" })}
                               alt={restaurant.name}

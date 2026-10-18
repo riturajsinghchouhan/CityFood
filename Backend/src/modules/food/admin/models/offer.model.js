@@ -17,7 +17,9 @@ const foodOfferSchema = new mongoose.Schema(
         isFirstOrderOnly: { type: Boolean, default: false },
         endDate: { type: Date },
         status: { type: String, enum: ['active', 'paused', 'inactive'], default: 'active', index: true },
-        showInCart: { type: Boolean, default: true }
+        showInCart: { type: Boolean, default: true },
+        /** Set when a franchise created the coupon: valid only in its zone and funded by it. null = HQ coupon. */
+        franchiseId: { type: mongoose.Schema.Types.ObjectId, ref: 'FoodFranchise', default: null, index: true }
     },
     { collection: 'food_offers', timestamps: true }
 );

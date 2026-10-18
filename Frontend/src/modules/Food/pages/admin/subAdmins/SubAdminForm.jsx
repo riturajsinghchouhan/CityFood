@@ -35,6 +35,7 @@ export default function SubAdminForm({ subAdmin, onClose }) {
   const extractMenuLabels = () => {
     const labels = [];
     adminSidebarMenu.forEach((item) => {
+      if (item.superAdminOnly || item.franchiseOnly) return;
       if (item.type === "section") {
         labels.push({ type: "section", label: item.label });
         item.items?.forEach((subItem) => {

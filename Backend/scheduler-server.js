@@ -73,6 +73,26 @@ const startScheduler = async () => {
             logger.error(`Payment reconciliation startup error: ${err.message}`);
         }
 
+        // Franchise billing: renew subscriptions, weekly settlements, grace / suspend from dues. Hourly, lock-protected.
+        try {
+            const { runFranchiseBillingTick } = await import('./src/modules/food/franchise/services/franchiseFinance.service.js');
+            const runFranchiseBilling = async () => {
+                try {
+                    const result = await runFranchiseBillingTick();
+                    if (result?.statusChanges?.length || result?.settlements?.length) {
+                        logger.info(`[Franchise] billing tick: ${JSON.stringify(result)}`);
+                    }
+                } catch (err) {
+                    logger.error(`Franchise billing error: ${err.message}`);
+                }
+            };
+            setTimeout(runFranchiseBilling, 3 * 60 * 1000);
+            setInterval(runFranchiseBilling, 60 * 60 * 1000);
+            logger.info('Franchise billing job initialized (hourly)');
+        } catch (err) {
+            logger.error(`Franchise billing startup error: ${err.message}`);
+        }
+
         // Create a simple HTTP server for health checks
         const http = await import('http');
         const server = http.createServer((req, res) => {

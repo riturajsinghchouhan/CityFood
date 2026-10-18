@@ -495,7 +495,7 @@ export default function UserOrderDetails() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] pb-24 font-sans relative">
       {/* Header */}
-      <div className="bg-white dark:bg-[#121212] p-4 flex items-center sticky top-0 z-20 shadow-sm border-b dark:border-gray-800">
+      <div className="bg-white dark:bg-[#121212] p-4 md:px-[max(1.5rem,calc((100%-45rem)/2))] flex items-center sticky top-0 z-20 shadow-sm border-b dark:border-gray-800">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -509,7 +509,7 @@ export default function UserOrderDetails() {
       </div>
 
       {/* Scrollable Content */}
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-4 md:max-w-3xl md:mx-auto md:px-6 md:py-6">
         {/* Status Card */}
         <div className="bg-white dark:bg-[#121212] p-4 rounded-xl flex items-center gap-3 shadow-sm border dark:border-gray-800">
           <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg">
@@ -796,7 +796,7 @@ export default function UserOrderDetails() {
       </div>
 
       {/* Fixed Bottom Buttons */}
-      <div className="fixed bottom-0 w-full bg-white dark:bg-[#121212] border-t border-gray-200 dark:border-gray-800 p-4 flex gap-3 z-20">
+      <div className="fixed bottom-0 w-full bg-white dark:bg-[#121212] border-t border-gray-200 dark:border-gray-800 p-4 md:px-[max(1.5rem,calc((100%-45rem)/2))] flex gap-3 z-20">
         <button
           type="button"
           onClick={() => handleReorder(order)}
@@ -817,7 +817,7 @@ export default function UserOrderDetails() {
 
       {/* Restaurant Complaint Button - Below Order Details */}
       {order && (
-        <div className="p-4 pb-24">
+        <div className="p-4 pb-24 md:max-w-3xl md:mx-auto md:px-6">
           <button
             type="button"
             onClick={() => {

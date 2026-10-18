@@ -36,7 +36,7 @@ const pushDebugWarn = (prefix, message, data = {}) => {};
 function normalizeModuleFromPath(pathname = window.location.pathname) {
   // Admin routes can contain words such as "restaurant" and "delivery" in
   // their settings URLs, so admin must be resolved before those modules.
-  if (pathname.includes("/admin")) return "admin";
+  if (pathname.includes("/admin") || pathname.startsWith("/franchise")) return "admin";
   if (pathname.includes("/restaurant") && !pathname.includes("/restaurants")) return "restaurant";
   if (pathname.includes("/delivery")) return "delivery";
   return "user";

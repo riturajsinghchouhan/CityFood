@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { Navigate, useLocation } from "react-router-dom"
 import { isModuleAuthenticated } from "@food/utils/auth"
-import { adminSidebarMenu } from "../../utils/adminSidebarMenu.js"
+import { adminSidebarMenu, blockedPathsForRole, panelBaseForRole, toAdminPath } from "../../utils/adminSidebarMenu.js"
 
 // Flatten menu to map paths to required permissions
 const buildPathPermissions = () => {
@@ -60,7 +60,19 @@ export default function ProtectedRoute({ children }) {
   }, []);
 
   if (!isAuthenticated) {
-    return <Navigate to="/admin/login" state={{ from: location.pathname }} replace />
+    const loginPath = location.pathname.startsWith("/franchise") ? "/franchise/login" : "/admin/login"
+    return <Navigate to={loginPath} state={{ from: location.pathname }} replace />
+  }
+
+  // Menu paths are /admin based; a franchise owner sees the same pages under /franchise.
+  const pathname = toAdminPath(location.pathname)
+  const home = `${panelBaseForRole(adminUser?.role)}/food`
+
+  // Franchise owners use this panel for their zone; HQ-only pages send them to the dashboard,
+  // and the franchise-only pages are not for HQ.
+  const blocked = blockedPathsForRole(adminUser?.role)
+  if (blocked.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
+    return <Navigate to={home} replace />
   }
 
   // Check sub admin access
@@ -69,14 +81,14 @@ export default function ProtectedRoute({ children }) {
       const allowed = adminUser.accessibleModules || [];
 
       // Find matching path configuration
-      const match = pathPermissions.find(p => location.pathname === p.path || location.pathname.startsWith(p.path + '/'));
+      const match = pathPermissions.find(p => pathname === p.path || pathname.startsWith(p.path + '/'));
 
       if (match) {
         // Check if user has AT LEAST ONE of the required permissions
         const hasAccess = match.permissions.some(perm => allowed.includes(perm));
         if (!hasAccess) {
           const firstAllowed = pathPermissions.find(p => p.permissions.some(perm => allowed.includes(perm)));
-          if (firstAllowed && firstAllowed.path !== location.pathname) {
+          if (firstAllowed && firstAllowed.path !== pathname) {
             return <Navigate to={firstAllowed.path} replace />
           } else {
             return (

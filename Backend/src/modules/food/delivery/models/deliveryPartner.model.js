@@ -33,6 +33,12 @@ const deliveryPartnerSchema = new mongoose.Schema(
         state: {
             type: String
         },
+        /** Service zone chosen at registration; decides which franchise (or HQ) manages this rider. */
+        zoneId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'FoodZone',
+            index: true
+        },
         vehicleType: {
             type: String
         },

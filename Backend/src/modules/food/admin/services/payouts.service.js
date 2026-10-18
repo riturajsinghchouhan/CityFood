@@ -1,3 +1,4 @@
+import { recordHqPaidWithdrawal } from '../../franchise/services/franchiseFinance.service.js';
 import mongoose from 'mongoose';
 import { FoodOrder } from '../../orders/models/order.model.js';
 import { FoodTransaction } from '../../orders/models/foodTransaction.model.js';
@@ -398,6 +399,7 @@ export async function markPayoutAsPaid({ restaurantId, amount, transactionId, ad
         }], sessionOpts(session));
         return created;
     });
+    await recordHqPaidWithdrawal('restaurant', withdrawal._id);
 
     try {
         const { notifyOwnerSafely } = await import('../../../../core/notifications/firebase.service.js');

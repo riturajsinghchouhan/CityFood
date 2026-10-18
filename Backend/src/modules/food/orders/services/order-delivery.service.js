@@ -17,6 +17,7 @@ import {
   NotFoundError,
 } from '../../../../core/auth/errors.js';
 import { buildPaginatedResult, buildPaginationOptions } from '../../../../utils/helpers.js';
+import { riderMayServeFranchise } from '../../franchise/services/franchiseResolver.service.js';
 import { logger } from '../../../../utils/logger.js';
 import { getIO, rooms } from '../../../../config/socket.js';
 import { getFirebaseDB } from '../../../../config/firebase.js';
@@ -426,9 +427,15 @@ export async function acceptOrderDelivery(orderId, deliveryPartnerId) {
   const partnerId = new mongoose.Types.ObjectId(deliveryPartnerId);
 
   const existingOrder = await FoodOrder.findOne(identity)
-    .select('pricing payment dispatch orderStatus')
+    .select('pricing payment dispatch orderStatus franchiseId')
     .lean();
   if (!existingOrder) throw new NotFoundError('Order not found');
+
+  // A franchise order can only be taken by that franchise's riders (and HQ orders only by HQ riders).
+  const rider = await FoodDeliveryPartner.findById(partnerId).select('zoneId').lean();
+  if (!(await riderMayServeFranchise(rider?.zoneId, existingOrder.franchiseId))) {
+    throw new ForbiddenError('This order belongs to another zone');
+  }
   if (
     existingOrder.dispatch?.status === 'accepted' &&
     String(existingOrder.dispatch?.deliveryPartnerId || '') === String(deliveryPartnerId)

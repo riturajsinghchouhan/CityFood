@@ -2139,7 +2139,7 @@ export default function Cart() {
     return (
       <AnimatedPage className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a]">
         <div className="bg-white dark:bg-[#1a1a1a] border-b dark:border-gray-800 sticky top-0 z-10">
-          <div className="flex items-center gap-3 px-4 py-3">
+          <div className="flex items-center gap-3 px-4 md:px-6 py-3 md:max-w-3xl md:mx-auto">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -2169,7 +2169,7 @@ export default function Cart() {
     <div className="relative min-h-screen bg-slate-50 dark:bg-[#0a0a0a]">
       {/* Header - Sticky at top */}
       <div className="bg-white dark:bg-[#1a1a1a] border-b dark:border-gray-800 sticky top-0 z-20 flex-shrink-0">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl md:max-w-3xl mx-auto">
           <div className="flex items-center justify-between px-3 md:px-6 py-2 md:py-3">
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <Button 
@@ -3004,7 +3004,7 @@ export default function Cart() {
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4">
-          <div className="w-full max-w-lg mx-auto space-y-3">
+          <div className="w-full max-w-lg md:max-w-3xl mx-auto space-y-3">
             {/* Pay Using - Slim Pro UI */}
             <div
               className="flex items-center justify-between p-2 bg-gray-50 dark:bg-[#222222] rounded-xl border border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#282828] active:scale-[0.98] transition-all duration-200 shadow-sm"
@@ -3077,7 +3077,7 @@ export default function Cart() {
 
               {/* Modal Sheet */}
               <div
-                className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl overflow-hidden"
+                className="absolute bottom-0 left-0 right-0 md:mx-auto md:max-w-xl md:bottom-6 md:rounded-3xl bg-white rounded-t-3xl shadow-2xl overflow-hidden"
                 style={{ animation: 'slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}
               >
                 <div className="px-6 py-8">
@@ -3384,7 +3384,7 @@ export default function Cart() {
                   animate={{ y: 0 }}
                   exit={{ y: "100%" }}
                   transition={{ type: "spring", damping: 30, stiffness: 350 }}
-                  className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1a1a1a] rounded-t-[2rem] z-[101] shadow-2xl overflow-hidden max-h-[82vh] md:max-h-[60vh] flex flex-col"
+                  className="fixed bottom-0 left-0 right-0 md:mx-auto md:max-w-xl md:bottom-6 md:rounded-[2rem] bg-white dark:bg-[#1a1a1a] rounded-t-[2rem] z-[101] shadow-2xl overflow-hidden max-h-[82vh] md:max-h-[60vh] flex flex-col"
                   style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
                 >
                   <div className="p-5 md:p-6 flex flex-col h-full min-h-0">

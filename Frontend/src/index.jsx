@@ -20,7 +20,7 @@ import('./modules/Food/utils/themeSettings.js')
   .catch(() => { /* Silently fail */ })
 
 // Apply saved theme (Default to dark for User App)
-const isUserApp = !window.location.pathname.includes('/admin') && !window.location.pathname.includes('/restaurant') && !window.location.pathname.includes('/delivery');
+const isUserApp = !window.location.pathname.includes('/admin') && !window.location.pathname.startsWith('/franchise') && !window.location.pathname.includes('/restaurant') && !window.location.pathname.includes('/delivery');
 if (isUserApp) {
   document.documentElement.classList.add('user-app');
 }
@@ -58,8 +58,8 @@ function resolveNativeInitialRoute() {
   if (pathname.startsWith('/restaurant')) return `/food${pathname}`
   if (pathname.startsWith('/delivery')) return `/food${pathname}`
   if (pathname.startsWith('/user')) return `/food${pathname}`
-  if (pathname.startsWith('/admin')) return pathname
-  if (storedRoute.startsWith('/food/') || storedRoute.startsWith('/admin')) {
+  if (pathname.startsWith('/admin') || pathname.startsWith('/franchise')) return pathname
+  if (storedRoute.startsWith('/food/') || storedRoute.startsWith('/admin') || storedRoute.startsWith('/franchise')) {
     return storedRoute
   }
 

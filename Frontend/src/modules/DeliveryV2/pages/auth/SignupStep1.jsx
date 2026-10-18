@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
 import useDeliveryBackNavigation from "../../hooks/useDeliveryBackNavigation"
 import { EMAIL_REGEX } from "@/shared/utils/emailValidation"
+import { zoneAPI } from "@food/api"
 const debugLog = (...args) => { }
 const debugWarn = (...args) => { }
 const debugError = (...args) => { }
@@ -23,6 +24,7 @@ export default function SignupStep1() {
       address: "",
       city: "",
       state: "",
+      zoneId: "",
       vehicleType: "bike",
       vehicleName: "",
       vehicleNumber: "",
@@ -41,6 +43,27 @@ export default function SignupStep1() {
   })
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [zones, setZones] = useState([])
+  const [zonesLoading, setZonesLoading] = useState(true)
+
+  // Service zone decides which city (franchise or HQ) manages this rider.
+  useEffect(() => {
+    let cancelled = false
+    zoneAPI.getPublicZones()
+      .then((res) => {
+        if (cancelled) return
+        const list = res?.data?.data?.zones || res?.data?.data || []
+        setZones(Array.isArray(list) ? list : [])
+      })
+      .catch((err) => {
+        debugError("Failed to fetch zones:", err)
+        if (!cancelled) toast.error("Could not load service zones. Please try again.")
+      })
+      .finally(() => {
+        if (!cancelled) setZonesLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [])
 
   const sanitizeLocationValue = (value) =>
     value.replace(/[^A-Za-z\s.-]/g, "").replace(/\s{2,}/g, " ")
@@ -153,6 +176,10 @@ export default function SignupStep1() {
       newErrors.state = "State can contain letters only"
     }
 
+    if (!formData.zoneId) {
+      newErrors.zoneId = "Please select your service zone"
+    }
+
     const isBicycle = formData.vehicleType === "bicycle"
     const isEVorBicycle = formData.vehicleType === "ev" || formData.vehicleType === "bicycle"
 
@@ -204,6 +231,7 @@ export default function SignupStep1() {
         address: formData.address.trim(),
         city: formData.city.trim(),
         state: formData.state.trim(),
+        zoneId: formData.zoneId,
         vehicleType: formData.vehicleType || "bike",
         vehicleName: formData.vehicleName?.trim() || "",
         vehicleNumber: formData.vehicleNumber.trim(),
@@ -331,6 +359,31 @@ export default function SignupStep1() {
               />
               {errors.state && <p className="text-red-500 text-sm mt-1">{errors.state}</p>}
             </div>
+          </div>
+
+          {/* Service Zone */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Service Zone <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="zoneId"
+              value={formData.zoneId}
+              onChange={handleChange}
+              disabled={zonesLoading}
+              className={`w-full px-4 py-3 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 ${errors.zoneId ? "border-red-500" : "border-gray-300"
+                }`}
+            >
+              <option value="">{zonesLoading ? "Loading zones..." : "Select your service zone"}</option>
+              {zones.map((z) => {
+                const id = String(z?._id || z?.id || "")
+                const label = z?.name || z?.zoneName || z?.serviceLocation || id
+                return <option key={id} value={id}>{label}</option>
+              })}
+            </select>
+            {errors.zoneId
+              ? <p className="text-red-500 text-sm mt-1">{errors.zoneId}</p>
+              : <p className="text-xs text-gray-500 mt-1">You will get orders only from this zone.</p>}
           </div>
 
           {/* Vehicle Type */}

@@ -36,6 +36,9 @@ const foodDeliveryWithdrawalSchema = new mongoose.Schema({
     transactionId: String, // Final bank transaction reference from admin
     /** Client-supplied request id: replaying the same request returns the same withdrawal */
     idempotencyKey: { type: String, default: undefined, trim: true },
+    /** Who paid this withdrawal. A franchise pays its own zone's restaurants and riders; HQ may pay on its behalf. */
+    paidBy: { type: String, enum: ['HQ', 'FRANCHISE'], default: undefined },
+    franchiseId: { type: mongoose.Schema.Types.ObjectId, ref: 'FoodFranchise', default: undefined, index: true },
     processedAt: Date
 }, { 
     collection: 'payment_delivery_withdrawals', 

@@ -659,6 +659,48 @@ export const adminAPI = {
   deleteZone: (id) =>
     adminClient.delete(`/food/admin/zones/${id}`),
 
+  /** Franchises (owner / super admin only). One franchise operates one zone. */
+  getFranchises: (params = {}) =>
+    adminClient.get("/food/admin/franchises", { params }),
+  getFranchiseAvailableZones: (franchiseId) =>
+    adminClient.get("/food/admin/franchises/available-zones", { params: franchiseId ? { franchiseId } : {} }),
+  getFranchiseById: (id) =>
+    adminClient.get(`/food/admin/franchises/${id}`),
+  createFranchise: (body) =>
+    adminClient.post("/food/admin/franchises", body ?? {}),
+  updateFranchise: (id, body) =>
+    adminClient.patch(`/food/admin/franchises/${id}`, body ?? {}),
+  updateFranchiseStatus: (id, status, reason = "") =>
+    adminClient.patch(`/food/admin/franchises/${id}/status`, { status, reason }),
+  getFranchiseRestaurants: (id, params = {}) =>
+    adminClient.get(`/food/admin/franchises/${id}/restaurants`, { params }),
+  getFranchiseDeliveryPartners: (id, params = {}) =>
+    adminClient.get(`/food/admin/franchises/${id}/delivery-partners`, { params }),
+  getFranchiseOrders: (id, params = {}) =>
+    adminClient.get(`/food/admin/franchises/${id}/orders`, { params }),
+  setFranchiseOwnerLogin: (id, password) =>
+    adminClient.post(`/food/admin/franchises/${id}/owner-login`, { password }),
+  getFranchiseFinance: (id) =>
+    adminClient.get(`/food/admin/franchises/${id}/finance`),
+  runFranchiseSettlement: (id) =>
+    adminClient.post(`/food/admin/franchises/${id}/settlements/run`),
+  markFranchiseSettlementPaid: (id, settlementId, utr, force = false) =>
+    adminClient.patch(`/food/admin/franchises/${id}/settlements/${settlementId}/paid`, { utr, force }),
+  addFranchiseAdjustment: (id, body) =>
+    adminClient.post(`/food/admin/franchises/${id}/adjustments`, body),
+  hqPayFranchiseWithdrawal: (id, kind, withdrawalId, utr) =>
+    adminClient.post(`/food/admin/franchises/${id}/payouts/${kind}/${withdrawalId}/pay`, { utr }),
+  getRidersWithoutZone: (params = {}) =>
+    adminClient.get("/food/admin/franchises/riders/without-zone", { params }),
+  setRiderZone: (riderId, zoneId) =>
+    adminClient.patch(`/food/admin/franchises/riders/${riderId}/zone`, { zoneId }),
+  getFranchiseWithdrawals: (params = {}) =>
+    adminClient.get("/food/admin/franchises/withdrawals", { params }),
+  approveFranchiseWithdrawal: (id, utr) =>
+    adminClient.patch(`/food/admin/franchises/withdrawals/${id}/approve`, { utr }),
+  rejectFranchiseWithdrawal: (id, reason) =>
+    adminClient.patch(`/food/admin/franchises/withdrawals/${id}/reject`, { reason }),
+
   /** Business Settings */
   getBusinessSettings: () =>
     adminClient.get("/food/admin/business-settings"),
@@ -2153,3 +2195,36 @@ export const publicAPI = {
 
 
 
+
+/** Franchise owner panel. Every call is scoped by the backend to the owner's own franchise zone. */
+/** Franchise owner's own APIs. The owner signs in to the admin panel, so these use the admin session. */
+export const franchiseAPI = {
+  login: (login, password) => adminClient.post("/food/franchise/auth/login", { login, password }),
+  me: () => adminClient.get("/food/auth/me"),
+  logout: (refreshToken) => adminClient.post("/food/auth/logout", { refreshToken }),
+  changePassword: (currentPassword, newPassword) =>
+    adminClient.post("/food/franchise/auth/change-password", { currentPassword, newPassword }),
+  getDashboard: () => adminClient.get("/food/franchise/dashboard"),
+  getRestaurants: (params = {}) => adminClient.get("/food/franchise/restaurants", { params }),
+  approveRestaurant: (id) => adminClient.patch(`/food/franchise/restaurants/${id}/approve`),
+  rejectRestaurant: (id, reason) => adminClient.patch(`/food/franchise/restaurants/${id}/reject`, { reason }),
+  setRestaurantCommission: (id, value, type = "percentage") =>
+    adminClient.put(`/food/franchise/restaurants/${id}/commission`, { type, value }),
+  getRiders: (params = {}) => adminClient.get("/food/franchise/riders", { params }),
+  approveRider: (id) => adminClient.patch(`/food/franchise/riders/${id}/approve`),
+  rejectRider: (id, reason) => adminClient.patch(`/food/franchise/riders/${id}/reject`, { reason }),
+  collectRiderCash: (id, amount, note = "") => adminClient.post(`/food/franchise/riders/${id}/collect-cash`, { amount, note }),
+  getOrders: (params = {}) => adminClient.get("/food/franchise/orders", { params }),
+  getPricing: () => adminClient.get("/food/franchise/pricing"),
+  updatePricing: (body) => adminClient.put("/food/franchise/pricing", body),
+  getCoupons: () => adminClient.get("/food/franchise/coupons"),
+  createCoupon: (body) => adminClient.post("/food/franchise/coupons", body),
+  updateCoupon: (id, body) => adminClient.patch(`/food/franchise/coupons/${id}`, body),
+  deleteCoupon: (id) => adminClient.delete(`/food/franchise/coupons/${id}`),
+  getPayouts: (kind = "restaurant", status = "pending") => adminClient.get("/food/franchise/payouts", { params: { kind, status } }),
+  payPayout: (kind, id, utr, note = "") => adminClient.patch(`/food/franchise/payouts/${kind}/${id}/pay`, { utr, note }),
+  rejectPayout: (kind, id, reason) => adminClient.patch(`/food/franchise/payouts/${kind}/${id}/reject`, { reason }),
+  getFinance: () => adminClient.get("/food/franchise/finance"),
+  getWallet: () => adminClient.get("/food/franchise/wallet"),
+  requestWithdrawal: (amount, note = "") => adminClient.post("/food/franchise/withdrawals", { amount, note }),
+};

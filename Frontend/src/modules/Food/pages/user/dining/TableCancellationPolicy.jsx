@@ -19,7 +19,7 @@ export default function TableCancellationPolicy() {
         <AnimatedPage className="min-h-screen bg-[#f8f9fa] pb-20">
             {/* Header */}
             <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100">
-                <div className="max-w-lg mx-auto px-4 h-16 flex items-center gap-4">
+                <div className="max-w-lg md:max-w-2xl mx-auto px-4 h-16 flex items-center gap-4">
                     <button onClick={handleBack} className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-900 active:scale-90 transition-all">
                         <ArrowLeft className="w-6 h-6" />
                     </button>
@@ -27,7 +27,7 @@ export default function TableCancellationPolicy() {
                 </div>
             </div>
 
-            <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
+            <div className="max-w-lg md:max-w-2xl mx-auto px-4 py-8 space-y-6">
                 {/* Hero Card */}
                 <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 text-center space-y-4">
                     <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-2 animate-bounce">

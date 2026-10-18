@@ -6,6 +6,7 @@ import { OrdersProvider } from "@food/context/OrdersContext"
 import SearchOverlay from "./SearchOverlay"
 import BottomNavigation from "./BottomNavigation"
 import DesktopNavbar from "./DesktopNavbar"
+import Footer from "./Footer"
 import { UserNotificationProvider } from "@food/context/UserNotificationContext"
 import AppIntroSplash from "./AppIntroSplash"
 import { LocationProvider } from "@food/context/LocationProvider"
@@ -117,16 +118,30 @@ function UserLayoutShell() {
 
   const isUnder250 = normalizedPath === "/under-250" || normalizedPath === "/user/under-250"
 
+  // Inner pages get the same desktop header in normal flow (md+ only); auth screens stay bare.
+  const isAuthPage = /^\/(user\/)?auth(\/|$)/.test(normalizedPath)
+  const showStaticDesktopNav = !showBottomNav && !isAuthPage && !isOutOfService
+
+  // Desktop footer on browse pages, not on task flows (cart, tracking, forms).
+  const showDesktopFooter = !isOutOfService && (
+    normalizedPath === "/" ||
+    normalizedPath === "/user" ||
+    normalizedPath === "" ||
+    /^\/(user\/)?(dining|under-250|offers|gourmet|collections|categories|category\/[^/]+|help)$/.test(normalizedPath)
+  )
+
   return (
     <>
       <div className="hidden md:block">
         {showBottomNav && <DesktopNavbar showLogo={!isUnder250} />}
+        {showStaticDesktopNav && <DesktopNavbar variant="static" />}
       </div>
       <LocationGuard>
-        <main className={`${showBottomNav ? "md:pt-40 pb-[calc(76px+max(env(safe-area-inset-bottom,0px),10px))] md:pb-0" : ""}`}>
+        <main className={`${showBottomNav ? "md:pt-20 pb-[calc(76px+max(env(safe-area-inset-bottom,0px),10px))] md:pb-0" : ""}`}>
           <Outlet />
         </main>
       </LocationGuard>
+      {showDesktopFooter && <Footer />}
       {showBottomNav && <BottomNavigation />}
     </>
   )

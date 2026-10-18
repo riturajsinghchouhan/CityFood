@@ -703,8 +703,8 @@ Order again from this restaurant in the ${companyName} app.`
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] pb-24">
-        <div className="bg-white dark:bg-[#121212] p-4 flex items-center shadow-sm sticky top-0 z-10 border-b dark:border-gray-800">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] pb-24 md:pb-12 md:max-w-5xl md:mx-auto md:px-6 md:pt-6">
+        <div className="bg-white dark:bg-[#121212] p-4 flex items-center shadow-sm sticky top-0 md:static z-10 border-b dark:border-gray-800 md:rounded-t-2xl">
           <Link to="/user">
             <ArrowLeft className="w-6 h-6 text-gray-700 dark:text-gray-300 cursor-pointer" />
           </Link>
@@ -719,8 +719,8 @@ Order again from this restaurant in the ${companyName} app.`
 
   if (orders.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] pb-24">
-        <div className="bg-white dark:bg-[#121212] p-4 flex items-center shadow-sm sticky top-0 z-10 border-b dark:border-gray-800">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] pb-24 md:pb-12 md:max-w-5xl md:mx-auto md:px-6 md:pt-6">
+        <div className="bg-white dark:bg-[#121212] p-4 flex items-center shadow-sm sticky top-0 md:static z-10 border-b dark:border-gray-800 md:rounded-t-2xl">
           <Link to="/user">
             <ArrowLeft className="w-6 h-6 text-gray-700 dark:text-gray-300 cursor-pointer" />
           </Link>
@@ -737,9 +737,9 @@ Order again from this restaurant in the ${companyName} app.`
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] pb-24 font-sans">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] pb-24 md:pb-12 font-sans md:max-w-5xl md:mx-auto md:px-6 md:pt-6">
       {/* Header */}
-      <div className="bg-white dark:bg-[#121212] p-4 flex items-center shadow-sm sticky top-0 z-10 border-b dark:border-gray-800">
+      <div className="bg-white dark:bg-[#121212] p-4 flex items-center shadow-sm sticky top-0 md:static z-10 border-b dark:border-gray-800 md:rounded-t-2xl">
         <Link to="/user">
           <ArrowLeft className="w-6 h-6 text-gray-700 dark:text-gray-300 cursor-pointer" />
         </Link>
@@ -761,7 +761,7 @@ Order again from this restaurant in the ${companyName} app.`
       </div>
 
       {/* Tabs */}
-      <div className="bg-white dark:bg-[#121212] px-4 pt-3 flex gap-6 border-b dark:border-gray-800 sticky top-[60px] z-10 shadow-sm">
+      <div className="bg-white dark:bg-[#121212] px-4 pt-3 flex gap-6 border-b dark:border-gray-800 sticky top-[60px] md:static z-10 shadow-sm md:rounded-b-2xl">
         <button 
           onClick={() => setActiveTab('today')}
           className={`pb-3 text-[15px] font-semibold transition-colors relative ${activeTab === 'today' ? 'text-primary' : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-300'}`}
@@ -783,9 +783,9 @@ Order again from this restaurant in the ${companyName} app.`
       </div>
 
       {/* Orders List */}
-      <div className="px-4 py-2 space-y-4">
+      <div className="px-4 py-2 space-y-4 md:px-0 md:py-6 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 lg:items-start">
         {filteredOrders.length === 0 ? (
-          <div className="bg-white dark:bg-[#121212] rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 text-center">
+          <div className="bg-white dark:bg-[#121212] rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 text-center lg:col-span-2">
             <p className="text-gray-600 dark:text-gray-400">No orders found matching your search</p>
           </div>
         ) : (

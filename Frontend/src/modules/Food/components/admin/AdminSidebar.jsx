@@ -52,7 +52,7 @@ import {
 } from "lucide-react"
 import { cn } from "@food/utils/utils"
 import { Input } from "@food/components/ui/input"
-import { adminSidebarMenu } from "@food/utils/adminSidebarMenu"
+import { adminSidebarMenu, menuForRole, isFranchiseRole } from "@food/utils/adminSidebarMenu"
 import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
 import { adminAPI } from "@food/api"
 const debugLog = (...args) => { }
@@ -162,7 +162,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
 
     // CUSTOMER MANAGEMENT
     if (p.includes("contact-messages")) return badges.contactMessages || 0
-    if (p === "/admin/food/support-tickets") return badges.userSupportTickets || 0
+    if (p === "/admin/food/support-tickets" || p === "/franchise/food/support-tickets") return badges.userSupportTickets || 0
 
     // DELIVERYMAN MANAGEMENT
     if (l === "deliveryman") return (badges.deliveryPartners || 0) + (badges.earningAddons || 0)
@@ -319,12 +319,13 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
 
   // Filter menu items based on search query and sub-admin permissions
   const filteredMenuData = useMemo(() => {
-    let sourceMenu = adminSidebarMenu
+    const roleMenu = menuForRole(adminUser?.role)
+    let sourceMenu = roleMenu
 
     if (adminUser?.role === 'SUB_ADMIN') {
       const allowed = adminUser.accessibleModules || []
       sourceMenu = []
-      adminSidebarMenu.forEach((item) => {
+      roleMenu.forEach((item) => {
         if (item.type === "section") {
           const filteredItems = item.items.reduce((acc, subItem) => {
             if (subItem.type === "expandable") {
@@ -438,7 +439,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
     const matchesPath = (candidatePath) =>
       currentPath === candidatePath || currentPath.startsWith(`${candidatePath}/`)
 
-    if (targetPath === "/admin" || targetPath === "/admin/food") {
+    if (["/admin", "/admin/food", "/franchise", "/franchise/food"].includes(targetPath)) {
       return currentPath === targetPath
     }
 
@@ -784,11 +785,11 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
             </div>
           </div>
 
-          {/* Admin Panel Label */}
+          {/* Panel Label: franchise owners use the same panel for their zone */}
           {!isVisuallyCollapsed && (
             <div className="mb-3 animate-[slideIn_0.4s_ease-out_0.1s_both]">
               <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider text-left">
-                Admin Panel
+                {isFranchiseRole(adminUser?.role) ? "Franchise Panel" : "Admin Panel"}
               </h2>
             </div>
           )}

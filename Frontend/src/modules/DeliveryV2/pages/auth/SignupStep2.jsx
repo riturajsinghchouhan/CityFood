@@ -376,6 +376,13 @@ export default function SignupStep2() {
       return
     }
 
+    // Details saved before service zones were introduced have no zone; send the rider back to pick one.
+    if (!details.zoneId) {
+      toast.error("Please select your service zone")
+      navigate("/food/delivery/signup/details")
+      return
+    }
+
     if (!documents.profilePhoto) {
       toast.error("Profile Photo is required")
       return
@@ -406,6 +413,7 @@ export default function SignupStep2() {
     if (details.address) formData.append("address", details.address)
     if (details.city) formData.append("city", details.city)
     if (details.state) formData.append("state", details.state)
+    if (details.zoneId) formData.append("zoneId", details.zoneId)
     if (details.vehicleType) formData.append("vehicleType", details.vehicleType)
     if (details.vehicleName) formData.append("vehicleName", details.vehicleName)
     if (details.vehicleNumber) formData.append("vehicleNumber", details.vehicleNumber)

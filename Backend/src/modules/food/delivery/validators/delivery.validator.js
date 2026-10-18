@@ -18,6 +18,10 @@ const deliveryRegisterSchema = z.object({
     address: z.string().optional(),
     city: z.string().optional(),
     state: z.string().optional(),
+    zoneId: z
+        .string({ required_error: 'Please select your service zone' })
+        .trim()
+        .regex(/^[a-f0-9]{24}$/i, 'Please select a valid service zone'),
     vehicleType: z.string().optional(),
     vehicleName: z.string().optional(),
     vehicleNumber: z.string().optional(),

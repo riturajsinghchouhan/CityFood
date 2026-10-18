@@ -60,11 +60,11 @@ export default function Collections() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0a0a0a]">
+    <div className="min-h-screen bg-white dark:bg-[#0a0a0a] relative">
       {/* Back Button */}
       <button
         onClick={goBack}
-        className="fixed top-4 left-4 z-20 w-10 h-10 bg-gray-800/60 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-gray-800/80 transition-colors"
+        className="fixed md:absolute top-4 left-4 md:left-[max(1.5rem,calc((100%-77rem)/2))] z-20 w-10 h-10 bg-gray-800/60 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-gray-800/80 transition-colors"
       >
         <ArrowLeft className="h-5 w-5 text-white" />
       </button>
@@ -82,7 +82,7 @@ export default function Collections() {
 
       {/* Tabs */}
       <div className="sticky top-0 bg-white dark:bg-[#1a1a1a] z-10 border-b dark:border-gray-800">
-        <div className="flex">
+        <div className="flex md:max-w-xl md:mx-auto">
           <button
             onClick={() => setActiveTab("delivery")}
             className={`flex-1 py-4 text-center font-semibold transition-colors relative ${activeTab === "delivery" ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"

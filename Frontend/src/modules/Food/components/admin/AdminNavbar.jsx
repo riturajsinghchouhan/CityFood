@@ -47,6 +47,7 @@ import { adminAPI } from "@food/api";
 import { clearModuleAuth } from "@food/utils/auth";
 import { getCachedSettings, loadBusinessSettings, setCachedSettings } from "@food/utils/businessSettings";
 import useAdminNotifications from "@food/hooks/useAdminNotifications";
+import { isFranchiseSession } from "@food/utils/adminSidebarMenu";
 const debugLog = (...args) => { }
 const debugWarn = (...args) => { }
 const debugError = (...args) => { }
@@ -265,6 +266,8 @@ export default function AdminNavbar({ onMenuClick }) {
 
   // Handle logout
   const handleLogout = async () => {
+    // Read the role before the session is cleared: franchise owners go back to their own login.
+    const loginPath = isFranchiseSession() ? "/franchise/login" : "/admin/login";
     try {
       // Call backend logout API to clear refresh token cookie
       try {
@@ -289,7 +292,7 @@ export default function AdminNavbar({ onMenuClick }) {
       window.dispatchEvent(new Event('adminAuthChanged'));
 
       // Navigate to admin login page
-      navigate('/admin/login', { replace: true });
+      navigate(loginPath, { replace: true });
     } catch (error) {
       // Even if there's an error, we should still clear local data and logout
       debugError("Error during logout:", error);
@@ -305,7 +308,7 @@ export default function AdminNavbar({ onMenuClick }) {
       window.dispatchEvent(new Event('adminAuthChanged'));
 
       // Navigate to login
-      navigate('/admin/login', { replace: true });
+      navigate(loginPath, { replace: true });
     }
   };
 
@@ -355,7 +358,8 @@ export default function AdminNavbar({ onMenuClick }) {
               </span>
             </div>
 
-            {/* Maintenance Mode Quick Toggle */}
+            {/* Maintenance Mode Quick Toggle (platform-wide, so HQ only) */}
+            {!isFranchiseSession() && (
             <div className="flex items-center pl-1 sm:pl-3 border-l border-neutral-200 ml-1 sm:ml-2">
               <button
                 type="button"
@@ -423,6 +427,7 @@ export default function AdminNavbar({ onMenuClick }) {
                 </div>
               </button>
             </div>
+            )}
           </div>
 
           {/* Center: Search Bar */}
@@ -529,7 +534,7 @@ export default function AdminNavbar({ onMenuClick }) {
 
                   <div className="hidden md:block">
                     <p className="text-sm font-medium text-neutral-900">
-                      {adminData?.name || "Admin User"}
+                      {adminData?.name || (adminData?.role === "FRANCHISE_OWNER" ? "Franchise Owner" : "Admin User")}
                     </p>
                     <p className="text-xs text-neutral-500">
                       {adminData?.email
@@ -576,7 +581,7 @@ export default function AdminNavbar({ onMenuClick }) {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-neutral-900">
-                        {adminData?.name || "Admin User"}
+                        {adminData?.name || (adminData?.role === "FRANCHISE_OWNER" ? "Franchise Owner" : "Admin User")}
                       </p>
                       <p className="text-xs text-neutral-500">
                         {adminData?.email

@@ -532,6 +532,9 @@ export default function OrdersPage({ statusKey = "all" }) {
         customerName,
         customerPhone,
         restaurant,
+        // Franchise orders: money reaches HQ, but HQ earns only its commission on them.
+        franchise: order.franchise || null,
+        hqEarning: order.hqEarning ?? null,
         items,
         actualItemTotal,
         originalItemCost: actualItemTotal,

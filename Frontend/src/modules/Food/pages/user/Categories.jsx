@@ -73,7 +73,7 @@ export default function Categories() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0a0a0a] pb-10">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md border-b border-neutral-100 dark:border-gray-800 px-4 py-4 flex items-center gap-4">
+      <div className="sticky top-0 z-50 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md border-b border-neutral-100 dark:border-gray-800 px-4 md:px-[max(1.5rem,calc((100%-69rem)/2))] py-4 flex items-center gap-4">
         <button onClick={goBack} className="p-2 hover:bg-neutral-100 dark:hover:bg-gray-800 rounded-full transition-colors active:scale-95">
           <ArrowLeft className="h-6 w-6 text-neutral-800 dark:text-white" />
         </button>
@@ -84,7 +84,8 @@ export default function Categories() {
       </div>
 
       {/* Search Bar */}
-      <div className="px-4 py-6">
+      <div className="px-4 py-6 md:px-6 md:max-w-6xl md:mx-auto">
+        <div className="md:max-w-xl">
         <div className="relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 dark:text-gray-500 group-focus-within:text-primary transition-colors" />
           <input
@@ -95,12 +96,13 @@ export default function Categories() {
             className="w-full pl-12 pr-4 py-4 bg-neutral-50 dark:bg-gray-900 border border-neutral-100 dark:border-gray-800 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all placeholder:text-neutral-400 dark:placeholder:text-gray-600 dark:text-white"
           />
         </div>
+        </div>
       </div>
 
       {/* Grid */}
-      <div className="px-4">
+      <div className="px-4 md:px-6 md:max-w-6xl md:mx-auto">
         {loading ? (
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-x-4 gap-y-10">
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-9 gap-x-4 lg:gap-x-6 gap-y-10">
             {[...Array(12)].map((_, i) => (
               <div key={i} className="flex flex-col items-center gap-3 animate-pulse">
                 <div className="w-full aspect-square rounded-full bg-neutral-100 dark:bg-gray-800 border border-neutral-50 dark:border-gray-700" />
@@ -109,7 +111,7 @@ export default function Categories() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-x-4 gap-y-10">
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-9 gap-x-4 lg:gap-x-6 gap-y-10">
             {filteredCategories.map((category, index) => {
               return (
                 <motion.div
@@ -131,7 +133,7 @@ export default function Categories() {
                         sizes="(max-width: 640px) 25vw, 15vw"
                       />
                     </div>
-                    <span className="text-[11px] font-bold text-neutral-700 dark:text-gray-300 text-center leading-tight">
+                    <span className="text-[11px] md:text-xs font-bold text-neutral-700 dark:text-gray-300 text-center leading-tight">
                       {category.name}
                     </span>
                   </Link>

@@ -321,6 +321,17 @@ export const adminLogin = async (email, password) => {
 
   const admin = await FoodAdmin.findOne({ email });
   if (!admin) {
+    // Franchise owners sign in on the same admin login page with their owner email.
+    const { FoodFranchiseUser } = await import("../../modules/food/franchise/models/franchiseUser.model.js");
+    if (await FoodFranchiseUser.exists({ email: String(email).trim().toLowerCase() })) {
+      const { loginFranchiseOwner } = await import("../../modules/food/franchise/services/franchiseAuth.service.js");
+      try {
+        return await loginFranchiseOwner({ login: email, password });
+      } catch (err) {
+        if (err instanceof AuthError && /Invalid login/.test(err.message)) throw new AuthError("Invalid credentials");
+        throw err;
+      }
+    }
     throw new AuthError("Invalid credentials");
   }
 
@@ -736,6 +747,18 @@ export const getProfile = async (userId, role) => {
       };
       break;
     }
+    case "FRANCHISE_OWNER": {
+      const { FoodFranchiseUser } = await import("../../modules/food/franchise/models/franchiseUser.model.js");
+      const { FoodFranchise } = await import("../../modules/food/franchise/models/franchise.model.js");
+      const user = await FoodFranchiseUser.findById(id).lean();
+      if (!user) break;
+      const franchise = await FoodFranchise.findById(user.franchiseId)
+        .select("name code status zoneId revenueModel commissionPercent")
+        .populate("zoneId", "name")
+        .lean();
+      profile = { ...user, role: "FRANCHISE_OWNER", franchise };
+      break;
+    }
     default:
       throw new AuthError("Unknown role");
   }
@@ -954,6 +977,15 @@ export const refreshAccessToken = async (token) => {
     payload = jwt.default.verify(token, config.jwtRefreshSecret);
   } catch {
     throw new AuthError("Invalid refresh token");
+  }
+
+  // A franchise login stops working when HQ disables it or terminates the franchise.
+  if (payload?.role === "FRANCHISE_OWNER") {
+    const { FoodFranchiseUser } = await import("../../modules/food/franchise/models/franchiseUser.model.js");
+    const fu = await FoodFranchiseUser.findById(payload.userId).select("isActive").lean();
+    if (!fu || fu.isActive === false) {
+      throw new AuthError("Franchise login is disabled");
+    }
   }
 
   // If deactivated user, do not issue fresh access tokens (forces logout on client)

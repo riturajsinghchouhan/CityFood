@@ -39,8 +39,8 @@ export default function AdminLogin() {
       }
 
       setAuthData("admin", accessToken, adminUser, refreshToken)
-      toast.success("Welcome, Administrator")
-      navigate("/admin/food", { replace: true })
+      toast.success(adminUser?.role === "FRANCHISE_OWNER" ? `Welcome, ${adminUser.name || "Franchise owner"}` : "Welcome, Administrator")
+      navigate(adminUser?.role === "FRANCHISE_OWNER" ? "/franchise/food" : "/admin/food", { replace: true })
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || "Login failed. Check your credentials."
       toast.error(msg)

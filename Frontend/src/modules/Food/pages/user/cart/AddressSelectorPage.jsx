@@ -733,7 +733,7 @@ export default function AddressSelectorPage() {
       <AnimatedPage
         className="fixed inset-0 z-50 bg-white dark:bg-[#0a0a0a] flex flex-col h-screen overflow-hidden"
       >
-        <div className="flex-shrink-0 bg-white dark:bg-[#1a1a1a] border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center gap-4">
+        <div className="flex-shrink-0 bg-white dark:bg-[#1a1a1a] border-b border-gray-100 dark:border-gray-800 px-4 md:px-[max(1.5rem,calc((100%-45rem)/2))] py-3 flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={handleCancelAddressForm} className="rounded-full">
             <ChevronLeft className="h-6 w-6" />
           </Button>
@@ -745,7 +745,7 @@ export default function AddressSelectorPage() {
           onScroll={(e) => {
             setFormScrollTop(e.currentTarget.scrollTop)
           }}
-          className="flex-1 overflow-y-auto"
+          className="flex-1 overflow-y-auto md:w-full md:max-w-3xl md:mx-auto md:px-6 md:pt-4"
           style={{ paddingBottom: `${96 + keyboardInset}px` }}
         >
           {/* Map Section - Parallax enabled */}
@@ -937,7 +937,7 @@ export default function AddressSelectorPage() {
         </div>
 
         <div
-          className="fixed left-0 right-0 p-4 bg-white dark:bg-[#1a1a1a] border-t dark:border-gray-800 transition-[bottom] duration-150"
+          className="fixed left-0 right-0 p-4 md:px-[max(1.5rem,calc((100%-45rem)/2))] bg-white dark:bg-[#1a1a1a] border-t dark:border-gray-800 transition-[bottom] duration-150"
           style={{ bottom: `${keyboardInset}px` }}
         >
           <Button
@@ -955,15 +955,15 @@ export default function AddressSelectorPage() {
 
   return (
     <AnimatedPage className="min-h-screen bg-white dark:bg-[#0a0a0a] flex flex-col">
-      <div className="flex-shrink-0 bg-white dark:bg-[#1a1a1a] border-b border-gray-100 dark:border-gray-800 px-4 py-4 flex items-center gap-4">
+      <div className="flex-shrink-0 bg-white dark:bg-[#1a1a1a] border-b border-gray-100 dark:border-gray-800 px-4 md:px-[max(1.5rem,calc((100%-45rem)/2))] py-4 flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full">
           <ChevronLeft className="h-6 w-6" />
         </Button>
         <h1 className="text-xl font-bold">Select Location</h1>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-10">
-        <div className="p-4 bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-800">
+      <div className="flex-1 overflow-y-auto pb-10 md:w-full md:max-w-3xl md:mx-auto md:pt-6">
+        <div className="p-4 bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-800 md:rounded-2xl md:border">
           <button
             onClick={handleUseCurrentLocation}
             className="w-full flex items-center gap-4 p-4 bg-white dark:bg-[#1a1a1a] rounded-xl shadow-sm hover:shadow-md transition-all group"
@@ -987,9 +987,9 @@ export default function AddressSelectorPage() {
             </Button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
             {addresses.length === 0 ? (
-              <div className="text-center py-10 opacity-50">
+              <div className="text-center py-10 opacity-50 md:col-span-2">
                 <MapPin className="h-12 w-12 mx-auto mb-2 text-gray-400" />
                 <p>No addresses saved yet</p>
               </div>

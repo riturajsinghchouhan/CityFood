@@ -1,3 +1,4 @@
+import { isFranchiseSession } from "@food/utils/adminSidebarMenu"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Card, CardContent, CardHeader, CardTitle } from "@food/components/ui/card"
@@ -188,7 +189,7 @@ export default function AdminHome() {
         <div className="flex flex-col gap-4 border-b border-neutral-200 bg-linear-to-br from-white via-neutral-50 to-neutral-100 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-neutral-500">Admin Overview</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-neutral-500">{isFranchiseSession() ? "Franchise Overview" : "Admin Overview"}</p>
               <h1 className="text-2xl font-semibold text-neutral-900">Operations Command</h1>
             </div>
 

@@ -9,6 +9,8 @@ const NATIVE_LAST_ROUTE_KEY = 'native_last_route'
 const FoodApp = lazy(() => import('../modules/Food/routes'))
 const AuthApp = lazy(() => import('../modules/auth/routes'))
 import ProtectedRoute from '@food/components/ProtectedRoute'
+import { isModuleAuthenticated } from '@food/utils/auth'
+import { isFranchiseSession } from '@food/utils/adminSidebarMenu'
 
 const PageLoader = () => {
   if (typeof window !== 'undefined') {
@@ -50,6 +52,24 @@ const RedirectToFood = () => {
 
 const MasterLandingPage = lazy(() => import('./MasterLandingPage'))
 const AdminRouter = lazy(() => import('../modules/Food/components/admin/AdminRouter'))
+const FranchiseLogin = lazy(() => import('../modules/Franchise/FranchiseLogin'))
+
+/**
+ * HQ uses the panel at /admin, franchise owners the same pages at /franchise.
+ * Pages still link to /admin/...; a signed-in owner is moved to the /franchise copy of that URL
+ * (and HQ back to /admin), so each panel stays on its own URL.
+ */
+const PanelGate = ({ panel }) => {
+  const location = useLocation()
+  if (isModuleAuthenticated('admin')) {
+    const target = isFranchiseSession() ? 'franchise' : 'admin'
+    if (target !== panel) {
+      const rest = location.pathname.replace(/^\/(admin|franchise)/, '')
+      return <Navigate to={`/${target}${rest}${location.search}${location.hash}`} replace />
+    }
+  }
+  return <Suspense fallback={<PageLoader />}><AdminRouter /></Suspense>
+}
 
 const AppRoutes = () => {
   const location = useLocation()
@@ -69,7 +89,7 @@ const AppRoutes = () => {
     if (!isNativeLikeShell) return
 
     const route = `${location.pathname || ''}${location.search || ''}`
-    if (route.startsWith('/food/') || route.startsWith('/admin')) {
+    if (route.startsWith('/food/') || route.startsWith('/admin') || route.startsWith('/franchise')) {
       localStorage.setItem(NATIVE_LAST_ROUTE_KEY, route)
     }
   }, [location.pathname, location.search])
@@ -85,7 +105,11 @@ const AppRoutes = () => {
       <Route path="/food/*" element={<FoodAppWrapper />} />
 
       {/* Global Admin Portal - AdminRouter handles its own protection for sub-routes */}
-      <Route path="/admin/*" element={<Suspense fallback={<PageLoader />}><AdminRouter /></Suspense>} />
+      <Route path="/admin/*" element={<PanelGate panel="admin" />} />
+
+      {/* Franchise owner panel - same pages as admin, scoped by the backend to the owner's zone */}
+      <Route path="/franchise/login" element={<Suspense fallback={<PageLoader />}><FranchiseLogin /></Suspense>} />
+      <Route path="/franchise/*" element={<PanelGate panel="franchise" />} />
 
       {/* Handle root and other paths via FoodAppWrapper */}
       <Route path="/" element={

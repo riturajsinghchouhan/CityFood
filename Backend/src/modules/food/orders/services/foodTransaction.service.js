@@ -5,10 +5,17 @@ import mongoose from 'mongoose';
 import { round2 } from '../../../../utils/money.js';
 import { sessionOpts } from '../../../../utils/dbTransaction.js';
 import * as financeService from './finance.service.js';
+import { FoodFranchise } from '../../franchise/models/franchise.model.js';
 
 const RESTAURANT_COMMISSION_CACHE_MS = 60 * 1000;
 let restaurantCommissionRulesCache = null;
 let restaurantCommissionRulesLoadedAt = 0;
+
+/** Call after a commission rule changes so new orders pick it up at once instead of after the cache TTL. */
+export function invalidateRestaurantCommissionRulesCache() {
+    restaurantCommissionRulesCache = null;
+    restaurantCommissionRulesLoadedAt = 0;
+}
 
 async function getActiveRestaurantCommissionRules() {
     const now = Date.now();
@@ -77,15 +84,24 @@ export async function getRestaurantCommissionSnapshot(orderDoc) {
         null;
 
     if (!rule) {
-        // If no specific rule, try to use global default
-        const globalSettings = await FoodFeeSettings.findOne({ isActive: true }).sort({ createdAt: -1 }).lean() || {};
-        if (globalSettings.globalRestaurantCommission > 0) {
-            rule = {
-                defaultCommission: {
-                    type: 'percentage',
-                    value: globalSettings.globalRestaurantCommission
-                }
-            };
+        // No restaurant-specific rule: a franchise default comes first, then the HQ global default.
+        const franchiseIdRaw = orderDoc?.franchiseId?._id ?? orderDoc?.franchiseId ?? null;
+        const franchise = franchiseIdRaw && mongoose.Types.ObjectId.isValid(String(franchiseIdRaw))
+            ? await FoodFranchise.findById(franchiseIdRaw).select('pricing.restaurantCommissionPercent').lean()
+            : null;
+        const franchisePercent = franchise?.pricing?.restaurantCommissionPercent;
+        if (franchisePercent !== null && franchisePercent !== undefined && Number.isFinite(Number(franchisePercent))) {
+            rule = { defaultCommission: { type: 'percentage', value: Number(franchisePercent) } };
+        } else {
+            const globalSettings = await FoodFeeSettings.findOne({ isActive: true }).sort({ createdAt: -1 }).lean() || {};
+            if (globalSettings.globalRestaurantCommission > 0) {
+                rule = {
+                    defaultCommission: {
+                        type: 'percentage',
+                        value: globalSettings.globalRestaurantCommission
+                    }
+                };
+            }
         }
     }
 

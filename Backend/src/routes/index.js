@@ -21,6 +21,9 @@ import appConfigRoutes from '../core/appConfig/appConfig.routes.js';
 import promocodeRoutes from './promocodeRoutes.js';
 import { requireZone } from '../middlewares/zone.middleware.js';
 import envSettingRoutes from './admin/envSettingRoutes.js';
+import franchiseAdminRoutes from '../modules/food/franchise/routes/franchiseAdmin.routes.js';
+import franchisePanelRoutes from '../modules/food/franchise/routes/franchisePanel.routes.js';
+import { franchiseAdminGate } from '../modules/food/franchise/middleware/franchiseAdminGate.middleware.js';
 
 const router = express.Router();
 
@@ -62,7 +65,12 @@ router.use('/v1/uploads', uploadRoutes);
 router.get('/v1/food/admin/business-settings/public', businessSettingsController.getBusinessSettings);
 
 router.use('/v1/food/admin/env', envSettingRoutes);
-router.use('/v1/food/admin', authMiddleware, requireRoles('ADMIN', 'SUPER_ADMIN', 'SUB_ADMIN'), restaurantAdminRoutes);
+// Franchise management is owner-level only: sub-admins are excluded.
+router.use('/v1/food/admin/franchises', authMiddleware, requireRoles('ADMIN', 'SUPER_ADMIN'), franchiseAdminRoutes);
+// Franchise owner panel (own login; every route scoped to the owner's franchise zone).
+router.use('/v1/food/franchise', franchisePanelRoutes);
+// Franchise owners use the same admin APIs; franchiseAdminGate limits them to their zone and to operational actions.
+router.use('/v1/food/admin', authMiddleware, requireRoles('ADMIN', 'SUPER_ADMIN', 'SUB_ADMIN', 'FRANCHISE_OWNER'), franchiseAdminGate, restaurantAdminRoutes);
 router.use('/v1/food/user', authMiddleware, requireRoles('USER'), userRoutes);
 router.use('/v1/food/notifications', authMiddleware, requireRoles('USER', 'RESTAURANT', 'DELIVERY_PARTNER'), notificationRoutes);
 router.use('/v1/food/orders', authMiddleware, requireRoles('USER'), orderUserRoutes);

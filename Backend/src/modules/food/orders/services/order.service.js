@@ -6,6 +6,8 @@ import { FoodUser } from '../../../../core/users/user.model.js';
 import { FoodRestaurant } from '../../restaurant/models/restaurant.model.js';
 import { FoodDeliveryPartner } from '../../delivery/models/deliveryPartner.model.js';
 import { FoodZone } from '../../admin/models/zone.model.js';
+import { resolveFranchiseForZone } from '../../franchise/services/franchiseResolver.service.js';
+import { splitFranchiseOrder } from '../../franchise/services/franchiseFinance.service.js';
 import { FoodFeeSettings } from '../../admin/models/feeSettings.model.js';
 import { FoodBusinessSettings } from '../../admin/models/businessSettings.model.js';
 import { ValidationError, ForbiddenError, NotFoundError } from '../../../../core/auth/errors.js';
@@ -157,6 +159,11 @@ export async function createOrder(userId, dto) {
   if (restaurant.isAcceptingOrders === false)
     throw new ValidationError("Restaurant not accepting orders");
 
+  // Order belongs to the franchise of the restaurant's zone (not the customer's zone).
+  const franchise = await resolveFranchiseForZone(restaurant.zoneId);
+  if (franchise?.status === "suspended")
+    throw new ValidationError("Ordering is temporarily unavailable in this area. Please try again later.");
+
   // Check if delivery partners are available online in the zone (for immediate orders)
   if (!dto.scheduledAt) {
     const riderAvailability = await dispatchService.checkRidersAvailabilityInZone({
@@ -292,8 +299,20 @@ export async function createOrder(userId, dto) {
   // Calculate restaurant commission and taxes from subtotal
   const commissionSnapshot = await foodTransactionService.getRestaurantCommissionSnapshot({
     pricing: normalizedPricing,
-    restaurantId: dto.restaurantId
+    restaurantId: dto.restaurantId,
+    franchiseId: franchise?._id || null
   });
+
+  // A franchise's own coupon is funded by the franchise, so it comes out of the franchise's earning.
+  let franchiseDiscount = 0;
+  if (franchise && Number(normalizedPricing.discount) > 0 && dto.pricing?.couponCode) {
+    const couponOffer = await FoodOffer.findOne({ couponCode: String(dto.pricing.couponCode).trim().toUpperCase() })
+      .select('franchiseId')
+      .lean();
+    if (couponOffer?.franchiseId && String(couponOffer.franchiseId) === String(franchise._id)) {
+      franchiseDiscount = Number(normalizedPricing.discount) || 0;
+    }
+  }
 
   normalizedPricing.restaurantCommission = commissionSnapshot.commissionAmount || 0;
   normalizedPricing.gstOnItem = commissionSnapshot.gstOnItem || 0;
@@ -318,6 +337,10 @@ export async function createOrder(userId, dto) {
     zoneId: dto.zoneId
       ? new mongoose.Types.ObjectId(dto.zoneId)
       : restaurant.zoneId,
+    franchiseId: franchise?._id || null,
+    franchiseSnapshot: franchise
+      ? { revenueModel: franchise.revenueModel, commissionPercent: franchise.commissionPercent || 0, franchiseDiscount }
+      : undefined,
     items: dto.items,
     deliveryAddress,
     customerName: dto.customerName || deliveryAddress.fullName || "",
@@ -1601,6 +1624,12 @@ export async function listOrdersAdmin(query) {
     filter.restaurantId = new mongoose.Types.ObjectId(restaurantIdRaw);
   }
 
+  // HQ can split the list: franchise=hq (HQ-run zones), franchise=any, or a franchise id.
+  const franchiseRaw = typeof query.franchise === "string" ? query.franchise.trim() : "";
+  if (franchiseRaw === "hq") filter.franchiseId = null;
+  else if (franchiseRaw === "any") filter.franchiseId = { $ne: null };
+  else if (mongoose.Types.ObjectId.isValid(franchiseRaw)) filter.franchiseId = new mongoose.Types.ObjectId(franchiseRaw);
+
   if (startDateRaw || endDateRaw) {
     const createdAt = {};
     const start = startDateRaw ? new Date(startDateRaw) : null;
@@ -1622,6 +1651,7 @@ export async function listOrdersAdmin(query) {
       .populate("userId", "name phone email flag codEnabled")
       .populate("restaurantId", "restaurantName area city ownerPhone")
       .populate("dispatch.deliveryPartnerId", "name phone")
+      .populate("franchiseId", "name code")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -1638,11 +1668,22 @@ export async function listOrdersAdmin(query) {
     : [];
   const orderCountMap = new Map(orderCountAgg.map(x => [String(x._id), x.count]));
 
-  const enrichedDocs = docs.map(d => ({
-    ...d,
-    customerFlag: d.userId?.flag === 'red' ? 'red' : 'green',
-    customerOrderCount: orderCountMap.get(String(d.userId?._id)) || 0,
-  }));
+  const enrichedDocs = docs.map(d => {
+    // Franchise orders: the customer paid HQ, but HQ only earns its commission on them.
+    const franchise = d.franchiseId && typeof d.franchiseId === "object"
+      ? { _id: String(d.franchiseId._id), name: d.franchiseId.name, code: d.franchiseId.code }
+      : null;
+    const split = franchise ? splitFranchiseOrder(d) : null;
+    return {
+      ...d,
+      franchiseId: franchise?._id || null,
+      franchise,
+      franchiseEarning: split ? split.franchiseGross : null,
+      hqEarning: split ? split.hqShare : null,
+      customerFlag: d.userId?.flag === 'red' ? 'red' : 'green',
+      customerOrderCount: orderCountMap.get(String(d.userId?._id)) || 0,
+    };
+  });
 
   const paginated = buildPaginatedResult({ docs: enrichedDocs.map(d => normalizeOrderForClient(d)), total, page, limit });
   return { ...paginated, orders: paginated.data };

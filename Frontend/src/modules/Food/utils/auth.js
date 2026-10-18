@@ -16,7 +16,8 @@ function decodeJwtPayload(token) {
 }
 
 const MODULE_TOKEN_ROLES = {
-  admin: new Set(["ADMIN", "SUPER_ADMIN", "SUB_ADMIN"]),
+  // Franchise owners sign in to the same admin panel (scoped to their zone by the backend).
+  admin: new Set(["ADMIN", "SUPER_ADMIN", "SUB_ADMIN", "FRANCHISE_OWNER"]),
   restaurant: new Set(["RESTAURANT"]),
   delivery: new Set(["DELIVERY_PARTNER"]),
   user: new Set(["USER"]),

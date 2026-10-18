@@ -26,6 +26,7 @@ import {
   removeDeliveryOffersForPartners,
   clearDeliveryOffersForOrder,
 } from './order-dispatch.firebase.js';
+import { getRiderScopeFilterForZone } from '../../franchise/services/franchiseResolver.service.js';
 
 function isPointInPolygon(lat, lng, polygon) {
   if (!Array.isArray(polygon) || polygon.length < 3) return false;
@@ -123,9 +124,12 @@ async function listNearbyOnlineDeliveryPartners(
 
   const [rLng, rLat] = restaurant.location.coordinates;
   const capacityFullIds = await getCapacityFullDeliveryPartnerIds();
+  // Franchise zones are served only by their own riders; HQ zones never get franchise riders.
+  const riderScope = await getRiderScopeFilterForZone(restaurant.zoneId);
   const allOnline = await FoodDeliveryPartner.find({
     availabilityStatus: 'online',
     status: 'approved',
+    ...riderScope,
   })
     .select('_id status lastLat lastLng lastLocationAt name')
     .lean();
@@ -676,9 +680,11 @@ export async function checkRidersAvailabilityInZone({ restaurantId, zoneId } = {
     }
   }
 
+  const riderScope = await getRiderScopeFilterForZone(restaurant?.zoneId || effectiveZoneId);
   const allOnline = await FoodDeliveryPartner.find({
     availabilityStatus: 'online',
     status: 'approved',
+    ...riderScope,
   })
     .select('_id status lastLat lastLng lastLocation')
     .lean();

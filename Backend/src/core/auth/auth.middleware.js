@@ -4,7 +4,9 @@ import { FoodUser } from '../users/user.model.js';
 import { apiRateLimiter } from '../../middleware/rateLimit.js';
 
 export const requireAdmin = (req, res, next) => {
-    if (!['ADMIN', 'SUPER_ADMIN', 'SUB_ADMIN'].includes(req.user?.role)) {
+    // A franchise owner reaches admin routes only through franchiseAdminGate, which sets req.franchise.
+    const franchiseOwner = req.user?.role === 'FRANCHISE_OWNER' && Boolean(req.franchise);
+    if (!franchiseOwner && !['ADMIN', 'SUPER_ADMIN', 'SUB_ADMIN'].includes(req.user?.role)) {
         return sendError(res, 403, 'Admin access required');
     }
     next();

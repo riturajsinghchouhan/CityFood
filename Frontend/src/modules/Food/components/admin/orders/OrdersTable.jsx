@@ -160,6 +160,11 @@ export default function OrdersTable({
                   </div>
                 </th>
               )}
+              {visibleColumns.franchise !== false && (
+                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  Franchise
+                </th>
+              )}
               {visibleColumns.foodItems && (
                 <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider min-w-[200px]">
                   <div className="flex items-center gap-2">
@@ -270,6 +275,20 @@ export default function OrdersTable({
                 {visibleColumns.restaurant && (
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm font-medium text-slate-700">{formatRestaurantName(order.restaurant)}</span>
+                  </td>
+                )}
+                {visibleColumns.franchise !== false && (
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.franchise ? (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="inline-flex w-fit px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">{order.franchise.name}</span>
+                        {order.hqEarning !== null && order.hqEarning !== undefined && (
+                          <span className="text-[11px] text-slate-500">HQ earns ₹{Number(order.hqEarning).toFixed(2)}</span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-xs font-medium text-slate-400">HQ</span>
+                    )}
                   </td>
                 )}
                 {visibleColumns.foodItems && (

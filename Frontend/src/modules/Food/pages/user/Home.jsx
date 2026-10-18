@@ -2191,7 +2191,7 @@ export default function Home() {
           {/* Brand Top Section (Dark) */}
           {/* Decoupled Dark Background - Dynamic height based on actual components to prevent clipping sticky elements while covering properly */}
           <div 
-             className="absolute top-0 left-0 right-0 overflow-hidden rounded-b-[28px] bg-gradient-to-b from-[#3a142c] to-[#1a0a14] shadow-lg pointer-events-none z-0 transition-all duration-300 [transform:translateZ(0)] [mask-image:-webkit-radial-gradient(white,black)]"
+             className={`absolute top-0 left-0 right-0 overflow-hidden rounded-b-[28px] bg-gradient-to-b from-[#3a142c] to-[#1a0a14] shadow-lg pointer-events-none z-0 transition-all duration-300 [transform:translateZ(0)] [mask-image:-webkit-radial-gradient(white,black)] ${festVideoActive ? "md:relative md:mx-auto md:mt-4 md:w-[calc(100%-2rem)] md:max-w-7xl md:rounded-3xl" : "md:hidden"}`}
              style={{ height: festVideoActive ? '360px' : (headerBgHeight > 0 ? `${headerBgHeight}px` : (activeTab === 'food' ? '300px' : '140px')) }}
           >
             {festVideoActive && (
@@ -2234,7 +2234,9 @@ export default function Home() {
           </div>
 
           {/* Unified Scroll Container so Sticky Search Bar works for the whole page */}
-          <div className="relative z-10 w-full mb-2">
+          <div className="relative z-10 w-full mb-2 md:max-w-7xl md:mx-auto md:px-4 lg:px-6">
+            {/* Desktop shows location/search/veg in DesktopNavbar; "contents" keeps the mobile sticky search working */}
+            <div className="contents md:hidden">
             <HomeHeader
               activeTab={activeTab}
               setActiveTab={setActiveTab}
@@ -2249,6 +2251,7 @@ export default function Home() {
               handleVoiceSearchClick={handleVoiceSearchClick}
               pushSearchDown={activeTab === "food" && festVideoActive}
             />
+            </div>
 
             {activeTab === "food" && (
               <div id="fest-banner-wrapper" className="w-full">
@@ -2283,9 +2286,9 @@ export default function Home() {
                 <div ref={categoryAnchorRef} className="h-0 w-full" />
                 <div
                   id="categories-section"
-                  className={`sticky top-[60px] z-[50] w-full transition-all duration-300 ${isCategoryStuck ? "bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.05)] pb-2 pt-2 border-b border-white/50 dark:border-white/10 px-4" : "bg-transparent px-4 py-2.5"} space-y-3`}
+                  className={`sticky top-[60px] md:static z-[50] w-full transition-all duration-300 ${isCategoryStuck ? "bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.05)] pb-2 pt-2 border-b border-white/50 dark:border-white/10 px-4 md:bg-transparent md:shadow-none md:backdrop-blur-none md:border-transparent md:py-2.5" : "bg-transparent px-4 py-2.5"} space-y-3`}
                 >
-                  <div className={`flex items-center gap-2 min-w-0 ${isCategoryStuck ? 'hidden' : ''}`}>
+                  <div className={`flex items-center gap-2 min-w-0 ${isCategoryStuck ? 'hidden md:flex' : ''}`}>
                     <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white min-w-0 flex-shrink leading-tight">What's on your mind today?</h2>
                     <div className="h-[1px] bg-gray-100 dark:bg-gray-800 flex-1"></div>
                     <Link to="/food/user/under-250" className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-0.5 whitespace-nowrap shrink-0 hover:text-gray-900 dark:hover:text-white transition-colors">
@@ -2294,7 +2297,7 @@ export default function Home() {
                   </div>
 
                   {/* Categories Horizontal Slider */}
-                  <div className="flex overflow-x-auto gap-1.5 pb-2 scrollbar-hide -mx-4 px-4 mask-edge-fade">
+                  <div className="flex overflow-x-auto gap-1.5 sm:gap-3 md:gap-5 lg:gap-7 pb-2 scrollbar-hide -mx-4 px-4 mask-edge-fade">
                     {[
                       {
                         id: "all",
@@ -2310,7 +2313,7 @@ export default function Home() {
                         key={category.id || index}
                         to={category.slug === 'all' ? '/food/user/under-250' : `/food/user/category/${category.slug || category.name.toLowerCase().replace(/\s+/g, "-")}`}
                         onClick={() => setSelectedCategory(category.name)}
-                        className={`flex-shrink-0 flex flex-col items-center gap-1.5 group w-[76px] transition-transform ${isActive ? 'scale-105' : ''}`}
+                        className={`flex-shrink-0 flex flex-col items-center gap-1.5 group w-[76px] sm:w-[92px] transition-transform ${isActive ? 'scale-105' : ''}`}
                       >
                         <div className={`relative w-[68px] h-[68px] sm:w-[84px] sm:h-[84px] rounded-full overflow-hidden shadow-md border-2 ${isActive ? 'border-primary ring-2 ring-primary/30' : 'border-gray-100 dark:border-gray-800'} bg-white dark:bg-[#1a1a1a] group-active:scale-95 transition-all duration-300`}>
                           {/* Shining Glint Effect */}
@@ -2355,7 +2358,7 @@ export default function Home() {
 
 
                 {/* Filters Sticky Sidebar Header */}
-                <section className="bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md sticky top-0 z-[40] -mx-4 w-[calc(100%+2rem)] border-b border-gray-100 dark:border-white/5 shadow-sm transition-colors duration-300">
+                <section className="bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md sticky top-0 md:static z-[40] -mx-4 w-[calc(100%+2rem)] md:mx-0 md:w-full border-b border-gray-100 dark:border-white/5 shadow-sm transition-colors duration-300">
                   <div
                     className="flex items-center gap-2 overflow-x-auto scrollbar-hide px-4 py-2.5"
                     style={{
@@ -2714,7 +2717,7 @@ export default function Home() {
 
             {/* Modal Content */}
             <motion.div
-              className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1a1a1a] rounded-t-3xl max-h-[85vh] flex flex-col"
+              className="absolute bottom-0 left-0 right-0 md:mx-auto md:max-w-2xl md:bottom-6 md:rounded-3xl md:overflow-hidden bg-white dark:bg-[#1a1a1a] rounded-t-3xl max-h-[85vh] flex flex-col"
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
@@ -3320,7 +3323,7 @@ export default function Home() {
                 damping: 30,
                 stiffness: 300,
               }}
-              className="fixed inset-x-0 bottom-0 top-12 sm:top-16 md:top-20 z-[9999] bg-white dark:bg-[#1a1a1a] rounded-t-3xl shadow-2xl overflow-hidden flex flex-col"
+              className="fixed inset-x-0 bottom-0 top-12 sm:top-16 md:top-20 md:mx-auto md:max-w-3xl z-[9999] bg-white dark:bg-[#1a1a1a] rounded-t-3xl shadow-2xl overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}>
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 sm:px-6 sm:py-5 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
@@ -3575,7 +3578,7 @@ export default function Home() {
 
                 {/* Manage Collections Bottom Sheet */}
                 <motion.div
-                  className="fixed left-0 right-0 bottom-0 z-[10000] bg-white rounded-t-3xl shadow-2xl"
+                  className="fixed left-0 right-0 bottom-0 md:mx-auto md:max-w-xl md:bottom-6 md:rounded-3xl z-[10000] bg-white rounded-t-3xl shadow-2xl"
                   initial={{ y: "100%" }}
                   animate={{ y: 0 }}
                   exit={{ y: "100%" }}

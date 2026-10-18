@@ -5,17 +5,23 @@ import { DeliveryBonusTransaction } from '../../admin/models/deliveryBonusTransa
 import { getRiderBalances } from '../../../../core/payments/payoutBalances.service.js';
 import { FoodEarningAddon } from '../../admin/models/earningAddon.model.js';
 import { FoodOrder } from '../../orders/models/order.model.js';
+import { FoodZone } from '../../admin/models/zone.model.js';
 import { uploadDeliveryImage } from '../../../../services/upload.service.js';
 import { ValidationError } from '../../../../core/auth/errors.js';
 import { getDeliveryCashLimitSettings } from '../../admin/services/admin.service.js';
 
 export const registerDeliveryPartner = async (payload, files) => {
-    const { 
-        name, phone, email, countryCode, address, city, state, 
+    const {
+        name, phone, email, countryCode, address, city, state, zoneId,
         vehicleType, vehicleName, vehicleNumber, drivingLicenseNumber, panNumber, aadharNumber,
-        fcmToken, platform 
+        fcmToken, platform
     } = payload;
     const refRaw = typeof payload?.ref === 'string' ? String(payload.ref).trim() : '';
+
+    const zone = await FoodZone.findOne({ _id: zoneId, isActive: true }).select('_id').lean();
+    if (!zone) {
+        throw new ValidationError('Selected service zone is not available. Please choose another zone.');
+    }
 
     const existing = await FoodDeliveryPartner.findOne({ phone });
     if (existing) {
@@ -84,6 +90,7 @@ export const registerDeliveryPartner = async (payload, files) => {
         address,
         city,
         state,
+        zoneId: zone._id,
         vehicleType,
         vehicleName,
         vehicleNumber,

@@ -31,7 +31,7 @@ export default function TableEditUserPage() {
         <AnimatedPage className="min-h-screen bg-[#f8f9fa] pb-20">
             {/* Header */}
             <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100">
-                <div className="max-w-lg mx-auto px-4 h-16 flex items-center gap-4">
+                <div className="max-w-lg md:max-w-2xl mx-auto px-4 h-16 flex items-center gap-4">
                     <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-900 active:scale-90 transition-all">
                         <ArrowLeft className="w-6 h-6" />
                     </button>
@@ -39,7 +39,7 @@ export default function TableEditUserPage() {
                 </div>
             </div>
 
-            <div className="max-w-lg mx-auto px-4 py-8 space-y-8">
+            <div className="max-w-lg md:max-w-2xl mx-auto px-4 py-8 space-y-8">
                 <div className="text-center space-y-2">
                     <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-xl shadow-red-100">
                         <User className="w-10 h-10" />

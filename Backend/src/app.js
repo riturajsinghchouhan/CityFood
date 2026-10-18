@@ -1,3 +1,4 @@
+import './core/franchiseScope/register.js'; // must run before any model is compiled
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
