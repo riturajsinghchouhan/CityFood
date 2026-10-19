@@ -71,6 +71,7 @@ export function verifyUserOtp(
   name = null,
   fcmToken = null,
   platform = "web",
+  zoneId = null,
 ) {
   const digits = normalizePhone(phone);
   if (!digits) {
@@ -99,6 +100,7 @@ export function verifyUserOtp(
     ...(refValue ? { ref: refValue } : {}),
     ...(name ? { name } : {}),
     ...(fcmToken ? { fcmToken, platform } : {}),
+    ...(zoneId ? { zoneId } : {}),
   });
 }
 

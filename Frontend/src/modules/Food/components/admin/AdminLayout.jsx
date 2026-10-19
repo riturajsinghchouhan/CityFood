@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react"
-import { Outlet } from "react-router-dom"
+import { Outlet, useLocation } from "react-router-dom"
 import AdminSidebar from "./AdminSidebar"
 import AdminNavbar from "./AdminNavbar"
+import FranchiseFilterBar from "./FranchiseFilterBar"
+import { isFranchiseSession } from "@food/utils/adminSidebarMenu"
+import { FRANCHISE_FILTER_EVENT, getFranchiseFilter, isFranchiseFilterPage } from "@food/utils/franchiseFilter"
 import { API_BASE_URL } from "@food/api/config"
 import { adminAPI } from "@/services/api/index.js"
 const debugLog = (...args) => {}
@@ -12,6 +15,16 @@ const debugError = (...args) => {}
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const { pathname } = useLocation();
+  const [franchiseFilter, setFranchiseFilterState] = useState(getFranchiseFilter);
+  // HQ only: franchise owners are already limited to their own zone.
+  const showFranchiseFilter = !isFranchiseSession() && isFranchiseFilterPage(pathname);
+
+  useEffect(() => {
+    const onChange = (e) => setFranchiseFilterState(e.detail?.franchiseId || getFranchiseFilter());
+    window.addEventListener(FRANCHISE_FILTER_EVENT, onChange);
+    return () => window.removeEventListener(FRANCHISE_FILTER_EVENT, onChange);
+  }, []);
 
   // Smaller admin type: turns on the "admin-compact" text scale (see shared/styles/global.css)
   useEffect(() => {
@@ -81,7 +94,9 @@ export default function AdminLayout() {
 
         {/* Page Content */}
         <main className="flex-1 min-h-0 w-full max-w-full overflow-x-hidden overflow-y-auto bg-neutral-100">
-          <Outlet />
+          {showFranchiseFilter && <FranchiseFilterBar />}
+          {/* Re-mount the page when the franchise filter changes so it refetches its data. */}
+          <Outlet key={showFranchiseFilter ? franchiseFilter : "page"} />
         </main>
       </div>
     </div>

@@ -24,6 +24,7 @@ import envSettingRoutes from './admin/envSettingRoutes.js';
 import franchiseAdminRoutes from '../modules/food/franchise/routes/franchiseAdmin.routes.js';
 import franchisePanelRoutes from '../modules/food/franchise/routes/franchisePanel.routes.js';
 import { franchiseAdminGate } from '../modules/food/franchise/middleware/franchiseAdminGate.middleware.js';
+import { listFranchiseOptionsController } from '../modules/food/franchise/controllers/franchiseAdmin.controller.js';
 
 const router = express.Router();
 
@@ -65,6 +66,8 @@ router.use('/v1/uploads', uploadRoutes);
 router.get('/v1/food/admin/business-settings/public', businessSettingsController.getBusinessSettings);
 
 router.use('/v1/food/admin/env', envSettingRoutes);
+// Franchise names for the "filter by franchise" dropdown; sub-admins see it on the pages they manage.
+router.get('/v1/food/admin/franchise-options', authMiddleware, requireRoles('ADMIN', 'SUPER_ADMIN', 'SUB_ADMIN'), listFranchiseOptionsController);
 // Franchise management is owner-level only: sub-admins are excluded.
 router.use('/v1/food/admin/franchises', authMiddleware, requireRoles('ADMIN', 'SUPER_ADMIN'), franchiseAdminRoutes);
 // Franchise owner panel (own login; every route scoped to the owner's franchise zone).

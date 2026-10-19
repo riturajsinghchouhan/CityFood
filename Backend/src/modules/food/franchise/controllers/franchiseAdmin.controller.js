@@ -32,6 +32,11 @@ export const listFranchisesController = async (req, res, next) => {
     }
 };
 
+export const listFranchiseOptionsController = handle(async (req, res) => {
+    const franchises = await franchiseService.listFranchiseOptions();
+    return sendResponse(res, 200, 'Franchises fetched successfully', { franchises });
+});
+
 export const listAvailableZonesController = async (req, res, next) => {
     try {
         const zones = await franchiseService.listAvailableZones(req.query.franchiseId);

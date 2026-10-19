@@ -157,6 +157,13 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: 'USER'
         },
+        /** Service zone the customer picked at login; admins filter customers by it. */
+        zoneId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'FoodZone',
+            default: null,
+            index: true
+        },
         addresses: {
             type: [userAddressSchema],
             default: []

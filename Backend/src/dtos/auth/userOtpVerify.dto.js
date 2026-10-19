@@ -16,6 +16,7 @@ const schema = z.object({
   fcmToken: z.string().optional(),
   platform: z.enum(["web", "mobile"]).optional(),
   name: z.string().trim().min(2, "Name must be at least 2 characters").max(100).optional(),
+  zoneId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid zone").optional().or(z.literal("")),
 });
 
 export const validateUserOtpVerifyDto = (body) => {

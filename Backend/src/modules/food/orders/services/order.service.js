@@ -299,6 +299,7 @@ export async function createOrder(userId, dto) {
   // Calculate restaurant commission and taxes from subtotal
   const commissionSnapshot = await foodTransactionService.getRestaurantCommissionSnapshot({
     pricing: normalizedPricing,
+    paymentMethod,
     restaurantId: dto.restaurantId,
     franchiseId: franchise?._id || null
   });

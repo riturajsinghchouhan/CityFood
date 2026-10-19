@@ -72,6 +72,44 @@ export function splitFranchiseOrder(order, restaurantShareOverride = null) {
     };
 }
 
+/**
+ * Who gets what from one order, for HQ and franchise orders alike. The parts always add up to
+ * what the customer paid:
+ *   customerPaid = restaurant + rider + franchiseEarning + hqEarning + taxes + paymentGatewayFee
+ * - platformEarning: delivery fee + platform fee + restaurant commission - rider pay - franchise coupon.
+ *   On a franchise order it is the franchise's gross (HQ takes its commission % of it); on an HQ
+ *   order all of it is HQ's.
+ * - hqCouponCost: coupon discount HQ funds (any coupon that is not the franchise's own).
+ * - taxes: GST from the customer, GST on item / commission and TCS - owed to the government.
+ */
+export function splitOrderEarnings(order, restaurantShareOverride = null) {
+    const s = splitFranchiseOrder(order, restaurantShareOverride);
+    const p = order?.pricing || {};
+    const isFranchiseOrder = Boolean(order?.franchiseId);
+    const hqCouponCost = Math.max(0, num(p.discount) - num(order?.franchiseSnapshot?.franchiseDiscount));
+    const hqCommission = isFranchiseOrder ? s.hqShare : s.franchiseGross;
+    const taxes = {
+        gstFromCustomer: round2(num(p.tax)),
+        gstOnItem: round2(num(p.gstOnItem)),
+        gstOnCommission: round2(num(p.gstOnCommission)),
+        tcs: round2(num(p.tcs))
+    };
+    taxes.total = round2(taxes.gstFromCustomer + taxes.gstOnItem + taxes.gstOnCommission + taxes.tcs);
+    return {
+        isFranchiseOrder,
+        customerPaid: s.customerPaid,
+        restaurantShare: s.restaurantShare,
+        riderShare: s.riderShare,
+        platformEarning: s.franchiseGross,
+        franchiseEarning: isFranchiseOrder ? round2(s.franchiseGross - s.hqShare) : 0,
+        hqCommission: round2(hqCommission),
+        hqCouponCost: round2(hqCouponCost),
+        hqEarning: round2(hqCommission - hqCouponCost),
+        taxes,
+        paymentGatewayFee: round2(num(p.paymentGatewayFee))
+    };
+}
+
 const SETTLEABLE_ORDER_FILTER = {
     orderStatus: 'delivered',
     franchiseSettlementId: null,
@@ -87,14 +125,18 @@ const deliveredBefore = (cutoff) => ({
 
 async function loadUnsettledOrders(franchiseId, cutoff) {
     const orders = await FoodOrder.find({ franchiseId, ...SETTLEABLE_ORDER_FILTER, ...deliveredBefore(cutoff) })
-        .select('_id pricing payment.method riderEarning franchiseSnapshot')
+        .select('_id pricing payment.method riderEarning franchiseSnapshot deliveryState.deliveredAt updatedAt')
         .lean();
     if (!orders.length) return [];
     const txs = await FoodTransaction.find({ orderId: { $in: orders.map((o) => o._id) } })
         .select('orderId amounts.restaurantShare')
         .lean();
     const shareByOrder = new Map(txs.map((t) => [String(t.orderId), t?.amounts?.restaurantShare]));
-    return orders.map((o) => ({ _id: o._id, ...splitFranchiseOrder(o, shareByOrder.get(String(o._id)) ?? null) }));
+    return orders.map((o) => ({
+        _id: o._id,
+        deliveredAt: o.deliveryState?.deliveredAt || o.updatedAt || null,
+        ...splitFranchiseOrder(o, shareByOrder.get(String(o._id)) ?? null)
+    }));
 }
 
 async function franchiseRiderIds(franchise) {
@@ -143,6 +185,7 @@ function summarizeOrders(orders) {
         riderShare: sum(orders, 'riderShare'),
         franchiseGross: sum(orders, 'franchiseGross'),
         hqShare: sum(orders, 'hqShare'),
+        franchiseEarning: round2(sum(orders, 'franchiseGross') - sum(orders, 'hqShare')),
         net: sum(orders, 'net')
     };
 }
@@ -177,6 +220,11 @@ export async function getFranchiseBalance(franchiseId, { now = new Date() } = {}
     const pendingWithdrawals = sum(pendingRequests, 'amount');
     // Orders still inside the holdback (refund window) cannot be withdrawn yet.
     const readyBalance = round2(sum(readyOrders, 'net') + riderCashDeposited + adjustmentsTotal + openingBalance);
+    // Orders inside the holdback: what they add to the balance and when the first of them unlocks.
+    const holdbackDays = num(franchise.finance?.holdbackDays ?? 7);
+    const readyIds = new Set(readyOrders.map((o) => String(o._id)));
+    const heldOrders = orders.filter((o) => !readyIds.has(String(o._id)));
+    const firstHeld = heldOrders.reduce((min, o) => (o.deliveredAt && (!min || o.deliveredAt < min) ? o.deliveredAt : min), null);
     return {
         balance,
         dues: round2(Math.max(0, -balance)),
@@ -187,7 +235,12 @@ export async function getFranchiseBalance(franchiseId, { now = new Date() } = {}
         pendingAdjustments: adjustmentsTotal,
         pendingWithdrawals,
         availableToWithdraw: round2(Math.max(0, Math.min(readyBalance, balance) - pendingWithdrawals)),
-        holdbackDays: num(franchise.finance?.holdbackDays ?? 7),
+        holdbackDays,
+        onHold: {
+            count: heldOrders.length,
+            net: sum(heldOrders, 'net'),
+            nextReleaseAt: firstHeld ? new Date(new Date(firstHeld).getTime() + holdbackDays * DAY_MS) : null
+        },
         creditLimit: num(franchise.finance?.creditLimit ?? 10000)
     };
 }

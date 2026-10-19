@@ -7,6 +7,7 @@ import { FoodRestaurant } from "../../modules/food/restaurant/models/restaurant.
 import { FoodDeliveryPartner } from "../../modules/food/delivery/models/deliveryPartner.model.js";
 import { FoodReferralSettings } from "../../modules/food/admin/models/referralSettings.model.js";
 import { FoodReferralLog } from "../../modules/food/admin/models/referralLog.model.js";
+import { FoodZone } from "../../modules/food/admin/models/zone.model.js";
 import { createOrUpdateOtp, verifyOtp } from "../otp/otp.service.js";
 import { signAccessToken, signRefreshToken } from "./token.util.js";
 import { FoodRefreshToken } from "../refreshTokens/refreshToken.model.js";
@@ -113,8 +114,14 @@ export const verifyUserOtpAndLogin = async (
   fcmToken,
   platform,
   name,
+  zoneId,
 ) => {
   const trimmedName = typeof name === "string" ? name.trim() : "";
+  // Zone picked on the login screen; ignored unless it is a live zone.
+  const selectedZone =
+    zoneId && mongoose.Types.ObjectId.isValid(zoneId)
+      ? await FoodZone.findOne({ _id: zoneId, isActive: true }).select("_id").lean()
+      : null;
 
   // Legacy customers imported from the old DB had their phone stored with the
   // country code baked in (e.g. "+919815450007"), while the live app always
@@ -160,6 +167,7 @@ export const verifyUserOtpAndLogin = async (
       phone,
       isVerified: true,
       name: trimmedName,
+      ...(selectedZone ? { zoneId: selectedZone._id } : {}),
     });
   } else {
     let needsSave = false;
@@ -169,6 +177,10 @@ export const verifyUserOtpAndLogin = async (
     }
     if (trimmedName && !userDoc.name) {
       userDoc.name = trimmedName;
+      needsSave = true;
+    }
+    if (selectedZone && String(userDoc.zoneId || "") !== String(selectedZone._id)) {
+      userDoc.zoneId = selectedZone._id;
       needsSave = true;
     }
     if (needsSave) await userDoc.save();

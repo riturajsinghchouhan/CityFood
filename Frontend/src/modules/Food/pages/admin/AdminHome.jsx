@@ -26,7 +26,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-import { Activity, ArrowUpRight, ShoppingBag, CreditCard, Truck, Receipt, DollarSign, Store, UserCheck, Package, UserCircle, Clock, CheckCircle, Plus, XCircle } from "lucide-react"
+import { Activity, ArrowUpRight, Building2, ShoppingBag, CreditCard, Truck, Receipt, DollarSign, Store, UserCheck, Package, UserCircle, Clock, CheckCircle, Plus, XCircle } from "lucide-react"
 import { adminAPI } from "@food/api"
 const debugLog = () => {}
 const debugError = () => {}
@@ -140,6 +140,8 @@ export default function AdminHome() {
   const deliveryFeeTotal = dashboardData?.deliveryFee?.total || 0
   const gstTotal = dashboardData?.gst?.total || 0
   const totalAdminEarnings = dashboardData?.totalAdminEarnings || 0
+  const franchiseEarningTotal = dashboardData?.franchiseOrders?.franchiseEarning || 0
+  const franchiseOrdersDelivered = dashboardData?.franchiseOrders?.delivered || 0
 
   // Additional stats
   const totalRestaurants = dashboardData?.restaurants?.total || 0
@@ -233,7 +235,7 @@ export default function AdminHome() {
                 <p className="text-xs text-neutral-400">Revenue, commissions, fees and total platform earnings</p>
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {/* 1. Gross revenue */}
               <MetricCard
                 title="Gross revenue"
@@ -242,6 +244,15 @@ export default function AdminHome() {
                 icon={<ShoppingBag className="h-5 w-5 text-emerald-600" />}
                 accent="bg-emerald-200/40"
                 path="/admin/food/transaction-report"
+              />
+              {/* Franchise earning: what franchises keep from their delivered orders after HQ's commission */}
+              <MetricCard
+                title="Franchise earning"
+                value={formatCurrency(franchiseEarningTotal)}
+                helper={`${periodLabel} from ${franchiseOrdersDelivered} franchise orders`}
+                icon={<Building2 className="h-5 w-5 text-teal-600" />}
+                accent="bg-teal-200/40"
+                path={isFranchiseSession() ? "/admin/food/my-franchise/wallet" : "/admin/food/franchises"}
               />
               {/* 2. Commission earned */}
               <MetricCard

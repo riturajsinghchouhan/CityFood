@@ -145,15 +145,12 @@ export default function OrderDetails({ idProp, mongoIdProp, onClose }) {
             )
           const paidAmount = firstNumber(order.payment?.amountDue, order.payment?.amount, total) ?? total
 
-          // Admin and Restaurant Payout calculations
-          const deliveryCostToAdmin = firstNumber(order.riderEarning, 30);
-          const deliveryGstToAdmin = deliveryCostToAdmin * 0.18;
+          // Restaurant payout calculation
           const restaurantCommission = Number(pricing.restaurantCommission) || 0;
           const gstOnItem = Number(pricing.gstOnItem) || 0;
           const gstOnCommission = Number(pricing.gstOnCommission) || 0;
           const paymentGatewayFee = Number(pricing.paymentGatewayFee) || 0;
           const tcs = Number(pricing.tcs) || 0;
-          const totalAdminReceivable = deliveryCostToAdmin + deliveryGstToAdmin + platformFee + taxes + packagingFee + restaurantCommission + gstOnItem + gstOnCommission + paymentGatewayFee + tcs;
           const restaurantGets = Math.max(0, itemSubtotal + packagingFee - restaurantCommission - gstOnItem - gstOnCommission - paymentGatewayFee - tcs);
           const deliveryDistance = firstNumber(order.deliveryDistance, order.customer?.distance, 0);
 
@@ -256,9 +253,6 @@ export default function OrderDetails({ idProp, mongoIdProp, onClose }) {
               total,
               paidAmount,
               paymentStatus,
-              deliveryCostToAdmin,
-              deliveryGstToAdmin,
-              totalAdminReceivable,
               restaurantCommission,
               gstOnItem,
               gstOnCommission,

@@ -50,10 +50,10 @@ const M = {};
 const S = {}; // services
 const ctx = {}; // ids and tokens shared between steps
 
-async function api(method, path, { token, body } = {}) {
+async function api(method, path, { token, body, headers = {} } = {}) {
     const res = await fetch(`${base}/api/v1${path}`, {
         method,
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...headers },
         body: body === undefined ? undefined : JSON.stringify(body)
     });
     const json = await res.json().catch(() => ({}));
@@ -251,6 +251,26 @@ test('5. Franchise pricing, commission and coupons apply only in its zone', opts
     assert.equal(franchiseDefault.commissionAmount, 48, 'franchise default 12%');
     const hqDefault = await S.tx.getRestaurantCommissionSnapshot({ pricing: { subtotal: 400, total: 418 }, restaurantId: ctx.r3 });
     assert.equal(hqDefault.commissionAmount, 40, 'HQ global 10%');
+
+    // Gateway fee only when the customer paid through the gateway.
+    const fee = await M.Fee.findOne({ isActive: true }).sort({ createdAt: -1 }).lean();
+    await M.Fee.updateOne({ _id: fee._id }, { $set: { globalPaymentGatewayFee: 2, applyGlobalTaxes: true } });
+    const online = await S.tx.getRestaurantCommissionSnapshot({ pricing: { subtotal: 400, total: 418 }, restaurantId: ctx.r3, payment: { method: 'razorpay' } });
+    assert.equal(online.paymentGatewayFee, 8.36);
+    const cash = await S.tx.getRestaurantCommissionSnapshot({ pricing: { subtotal: 400, total: 418 }, restaurantId: ctx.r3, paymentMethod: 'cash' });
+    assert.equal(cash.paymentGatewayFee, 0, 'no gateway fee on cash');
+    await M.Fee.updateOne({ _id: fee._id }, { $set: { globalPaymentGatewayFee: fee.globalPaymentGatewayFee ?? 0, applyGlobalTaxes: fee.applyGlobalTaxes ?? true } });
+
+    // Who gets what: the parts always add up to what the customer paid (order FOD-1374823's numbers).
+    const sample = { subtotal: 120, tax: 14, packagingFee: 10, deliveryFee: 30, platformFee: 5, restaurantCommission: 12, gstOnCommission: 2.16, paymentGatewayFee: 3.58, tcs: 1.2, discount: 0, total: 179 };
+    const fr = S.finance.splitOrderEarnings({ franchiseId: ctx.fi, franchiseSnapshot: { revenueModel: 'COMMISSION', commissionPercent: 20 }, riderEarning: 0, pricing: sample }, 111.06);
+    assert.deepEqual([fr.franchiseEarning, fr.hqEarning, fr.taxes.total], [37.6, 9.4, 17.36]);
+    const parts = (x) => Math.round((x.restaurantShare + x.riderShare + x.franchiseEarning + x.hqEarning + x.taxes.total + x.paymentGatewayFee) * 100) / 100;
+    assert.equal(parts(fr), 179);
+    // HQ order with an HQ coupon: HQ keeps the platform earning minus the coupon.
+    const hq = S.finance.splitOrderEarnings({ riderEarning: 25, pricing: { ...sample, discount: 20, total: 159, paymentGatewayFee: 0 } }, 114.64);
+    assert.deepEqual([hq.franchiseEarning, hq.hqCommission, hq.hqEarning], [0, 22, 2]);
+    assert.equal(parts(hq), 159);
 });
 
 test('6. Dispatch: franchise orders go only to franchise riders, HQ orders never do', opts, async () => {
@@ -388,6 +408,20 @@ test('8b. Franchise uses the admin panel for its zone; HQ sees only its commissi
     const hqOnly = await api('GET', '/food/admin/orders?franchise=hq', { token: ctx.hq });
     assert.equal(hqOnly.data.orders.length, 0);
 
+    // HQ "filter by franchise": reads with the header show only that franchise's zone.
+    const options = await api('GET', '/food/admin/franchise-options', { token: ctx.hq });
+    assert.equal(options.status, 200, JSON.stringify(options.body));
+    assert.ok(options.data.franchises.some((f) => f.id === String(ctx.fi) && f.zoneName === 'Indore'));
+    const asIndore = { 'X-Franchise-Filter': String(ctx.fi) };
+    const allRestaurants = JSON.stringify((await api('GET', '/food/admin/restaurants', { token: ctx.hq })).data);
+    assert.ok(allRestaurants.includes('Indori Poha') && allRestaurants.includes('Bhopali Gosht'), 'HQ sees every zone');
+    const filtered = await api('GET', '/food/admin/restaurants', { token: ctx.hq, headers: asIndore });
+    assert.equal(filtered.status, 200, JSON.stringify(filtered.body));
+    const filteredNames = JSON.stringify(filtered.data);
+    assert.ok(filteredNames.includes('Indori Poha') && !filteredNames.includes('Bhopali Gosht'), 'filter shows only Indore');
+    assert.equal((await api('GET', `/food/admin/restaurants/${ctx.r3}`, { token: ctx.hq, headers: asIndore })).status, 404);
+    assert.equal((await api('GET', '/food/admin/restaurants', { token: ctx.hq, headers: { 'X-Franchise-Filter': 'bad' } })).status, 400);
+
     // Franchise pays its rider from the admin "Delivery Withdrawal" page: no charge to the franchise.
     const [dw] = await M.RiderWithdrawal.create([{ deliveryPartnerId: ctx.d1, amount: 80, status: 'pending' }]);
     const before = await M.Adjustment.countDocuments({ franchiseId: ctx.fi });
@@ -401,6 +435,11 @@ test('8b. Franchise uses the admin panel for its zone; HQ sees only its commissi
     const wallet = await api('GET', '/food/franchise/wallet', { token: owner });
     assert.equal(wallet.status, 200);
     assert.equal(wallet.data.balance.availableToWithdraw, 440.4, 'only orders past the holdback');
+    // Recent orders are on hold and the wallet says when they unlock.
+    const { onHold, unsettledOrders, holdbackDays } = wallet.data.balance;
+    assert.ok(onHold.count > 0 && onHold.nextReleaseAt, JSON.stringify(onHold));
+    assert.ok(new Date(onHold.nextReleaseAt) > new Date(Date.now() + (holdbackDays - 1) * DAY));
+    assert.equal(unsettledOrders.franchiseEarning, Math.round((unsettledOrders.franchiseGross - unsettledOrders.hqShare) * 100) / 100);
     assert.equal((await api('POST', '/food/franchise/withdrawals', { token: owner, body: { amount: 500 } })).status, 400);
     const req1 = await api('POST', '/food/franchise/withdrawals', { token: owner, body: { amount: 400, note: 'Weekly' } });
     assert.equal(req1.status, 201, JSON.stringify(req1.body));

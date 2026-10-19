@@ -122,10 +122,13 @@ export async function getRestaurantCommissionSnapshot(orderDoc) {
     const tcs = applyTaxes ? (Number(globalSettings.globalTcs) || 0) : 0;
 
     const totalPaid = Number(orderDoc?.pricing?.total) || 0;
+    // The gateway fee covers Razorpay's charge, so cash and wallet orders (no gateway) don't pay it.
+    const paymentMethod = String(orderDoc?.payment?.method || orderDoc?.paymentMethod || '').toLowerCase();
+    const usesGateway = paymentMethod !== 'cash' && paymentMethod !== 'wallet';
 
     result.gstOnItem = round2(baseAmount * (gstOnItemRate / 100));
     result.gstOnCommission = round2(result.commissionAmount * (gstOnCommission / 100));
-    result.paymentGatewayFee = round2(totalPaid * (pgFee / 100));
+    result.paymentGatewayFee = usesGateway ? round2(totalPaid * (pgFee / 100)) : 0;
     result.tcs = round2(baseAmount * (tcs / 100));
 
     return result;

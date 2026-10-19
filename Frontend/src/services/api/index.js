@@ -169,6 +169,7 @@ export const authAPI = {
     _referralCode,
     fcmToken = null,
     platform = "web",
+    zoneId = null,
   ) => {
     if (!phone || !otp)
       return Promise.reject(new Error("Phone and OTP are required"));
@@ -179,6 +180,7 @@ export const authAPI = {
       _name,
       fcmToken,
       platform,
+      zoneId,
     );
   },
   getCurrentUser: () => getUserMeOnce(),
@@ -530,6 +532,9 @@ export const adminAPI = {
   bulkApproveFood: (ids) =>
     adminClient.patch("/food/admin/foods/bulk-approve", { ids }),
   /** Customers (admin) */
+  /** Franchise names for the "filter by franchise" dropdown. */
+  getFranchiseOptions: () =>
+    adminClient.get("/food/admin/franchise-options"),
   getCustomers: (params = {}) =>
     adminClient.get("/food/admin/customers", { params }),
   getCustomerById: (id) =>

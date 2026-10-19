@@ -33,7 +33,15 @@ export default function Customers() {
     status: "",
     sortBy: "",
     chooseFirst: "",
+    zoneId: "",
   })
+  const [zones, setZones] = useState([])
+
+  useEffect(() => {
+    adminAPI.getZones()
+      .then((res) => setZones(res?.data?.data?.zones || []))
+      .catch(() => setZones([]))
+  }, [])
 
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 50
@@ -81,6 +89,7 @@ export default function Customers() {
           ...(filters.joiningDate && { joiningDate: filters.joiningDate }),
           ...(filters.sortBy && { sortBy: filters.sortBy }),
           ...(filters.chooseFirst && { chooseFirst: filters.chooseFirst }),
+          ...(filters.zoneId && { customerZoneId: filters.zoneId }),
         }
 
         const response = await adminAPI.getCustomers(params)
@@ -113,7 +122,7 @@ export default function Customers() {
       cancelled = true
       clearTimeout(t)
     }
-  }, [searchQuery, filters.status, filters.joiningDate, filters.sortBy, filters.chooseFirst, currentPage])
+  }, [searchQuery, filters.status, filters.joiningDate, filters.sortBy, filters.chooseFirst, filters.zoneId, currentPage])
 
   const [searchParams] = useSearchParams()
   const userIdFromUrl = searchParams.get("userId")
@@ -293,7 +302,26 @@ export default function Customers() {
       <div className="max-w-7xl mx-auto">
         {/* Filters Section */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                Zone
+              </label>
+              <select
+                value={filters.zoneId}
+                onChange={(e) => handleFilterChange("zoneId", e.target.value)}
+                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              >
+                <option value="">All Zones</option>
+                {zones.map((z) => (
+                  <option key={z._id || z.id} value={z._id || z.id}>
+                    {z.name || z.zoneName || z.serviceLocation}
+                  </option>
+                ))}
+                <option value="none">No zone selected</option>
+              </select>
+            </div>
+
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Order Date
@@ -386,6 +414,7 @@ export default function Customers() {
                     status: "",
                     sortBy: "",
                     chooseFirst: "",
+                    zoneId: "",
                   })
                 }}
                 className="px-6 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
@@ -451,7 +480,7 @@ export default function Customers() {
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px]">
+            <table className="w-full min-w-[1080px]">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Sl</th>
@@ -459,6 +488,7 @@ export default function Customers() {
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Flag</th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Contact Information</th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Address</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Zone</th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total Order</th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total Order Amount</th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Wallet Balance</th>
@@ -471,13 +501,13 @@ export default function Customers() {
               <tbody className="bg-white divide-y divide-slate-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={12} className="px-6 py-8 text-center">
+                    <td colSpan={13} className="px-6 py-8 text-center">
                       <div className="text-sm text-slate-500">Loading customers...</div>
                     </td>
                   </tr>
                 ) : customers.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="px-6 py-8 text-center">
+                    <td colSpan={13} className="px-6 py-8 text-center">
                       <div className="text-sm text-slate-500">No customers found</div>
                     </td>
                   </tr>
@@ -539,6 +569,13 @@ export default function Customers() {
                             <span className="text-xs text-slate-500">Address not provided</span>
                           )}
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {customer.zoneName ? (
+                          <span className="text-sm text-slate-700">{customer.zoneName}</span>
+                        ) : (
+                          <span className="text-xs text-slate-500">Not selected</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm text-slate-700">{customer.totalOrder || 0}</span>

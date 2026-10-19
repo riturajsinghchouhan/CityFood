@@ -6,6 +6,7 @@
 
 import axios from "axios";
 import { readStoredZoneContext } from "@food/utils/locationPersistence";
+import { activeFranchiseFilter } from "@food/utils/franchiseFilter";
 import { clearModuleAuth, getModuleRefreshToken, getModuleToken, setModuleAccessToken } from "@food/utils/auth";
 
 // Prefer explicit env. If not set, default to /api/v1 so the Vite proxy can forward to backend.
@@ -161,6 +162,14 @@ function createModuleClient(moduleName) {
         if (lat && lng) {
           config.headers["X-User-Lat"] = lat;
           config.headers["X-User-Lng"] = lng;
+        }
+      }
+
+      // HQ "filter by franchise": scope admin reads on filterable pages to the selected franchise.
+      if (moduleName === "admin" && String(config.method || "get").toLowerCase() === "get") {
+        const franchiseId = activeFranchiseFilter();
+        if (franchiseId && String(config.url || "").includes("/food/admin/")) {
+          config.headers["X-Franchise-Filter"] = franchiseId;
         }
       }
 

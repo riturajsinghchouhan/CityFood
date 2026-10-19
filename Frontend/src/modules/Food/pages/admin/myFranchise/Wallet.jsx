@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import { Wallet as WalletIcon, Send } from "lucide-react"
+import { Wallet as WalletIcon, Send, Info } from "lucide-react"
 import { toast } from "sonner"
 import { franchiseAPI } from "@food/api"
 import {
@@ -61,6 +61,38 @@ export default function Wallet() {
     return <div className="p-6 text-center text-slate-500">{loading ? "Loading wallet..." : "Wallet is not available."}</div>
   }
   const { balance, withdrawals, adjustments, bank } = data
+  const orders = balance.unsettledOrders || {}
+  const onHold = balance.onHold || {}
+  const canWithdraw = balance.availableToWithdraw >= 1
+  const onlinePaid = Number(orders.customerPaid || 0) - Number(orders.cashCollected || 0)
+  // Why the withdraw button is off, in the order the owner should act on.
+  const reasons = []
+  if (balance.balance < -0.005) {
+    reasons.push(
+      `You owe HQ ${formatInr(-balance.balance)}. Your riders collected ${formatInr(orders.cashCollected)} in cash on ${formatCount(orders.cashCount)} COD orders. ` +
+      `That cash already holds your earning and the restaurants' share, so HQ has nothing to pay you for those orders; HQ's commission and the taxes in it are due to HQ.`,
+    )
+  }
+  if (Number(onHold.count) > 0 && balance.balance > -0.005) {
+    reasons.push(
+      `${formatInr(Math.max(0, onHold.net))} from ${formatCount(onHold.count)} recent orders is on hold for ${balance.holdbackDays} days (refund window)` +
+      (onHold.nextReleaseAt ? ` and starts unlocking on ${formatDateTime(onHold.nextReleaseAt)}.` : "."),
+    )
+  }
+  if (Number(balance.pendingWithdrawals) > 0) {
+    reasons.push(`${formatInr(balance.pendingWithdrawals)} is already requested and waiting for HQ.`)
+  }
+  if (!reasons.length) reasons.push("No online-order money is waiting with HQ yet.")
+  const statement = [
+    ["Online payments received by HQ", onlinePaid],
+    ["Cash collected by your riders", Number(orders.cashCollected || 0)],
+    ["Restaurants' share (you pay them)", Number(orders.restaurantShare || 0)],
+    ["Riders' share (you pay them)", Number(orders.riderShare || 0)],
+    ["Your earning", Number(orders.franchiseEarning ?? (Number(orders.franchiseGross || 0) - Number(orders.hqShare || 0)))],
+    ["HQ commission", Number(orders.hqShare || 0)],
+    // Rest of what customers paid: GST, TCS, gateway fee (net of any HQ-funded coupon), all held by HQ.
+    ["Taxes & gateway fee (HQ keeps)", Number(orders.customerPaid || 0) - Number(orders.restaurantShare || 0) - Number(orders.riderShare || 0) - Number(orders.franchiseGross || 0)],
+  ]
 
   return (
     <div className="p-2 lg:p-3 bg-slate-50 min-h-screen">
@@ -78,6 +110,49 @@ export default function Wallet() {
           <StatTile label="Requests waiting" value={formatInr(balance.pendingWithdrawals)} hint="Sent to HQ, not paid yet" />
           <StatTile label="Orders in wallet" value={formatCount(balance.unsettledOrders.count)} hint={`${formatInr(balance.unsettledOrders.customerPaid)} paid by customers`} />
         </div>
+
+        <section className="bg-white border border-slate-200 rounded-lg p-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div>
+            <h2 className="text-base font-semibold text-slate-900 mb-2">How your wallet is worked out</h2>
+            <p className="text-xs text-slate-500 mb-3">{formatCount(orders.count)} unsettled orders, {formatInr(orders.customerPaid)} paid by customers</p>
+            <dl className="text-sm divide-y divide-slate-100">
+              {statement.map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between py-1.5">
+                  <dt className="text-slate-600">{label}</dt>
+                  <dd className="tabular-nums text-slate-900">{formatInr(value)}</dd>
+                </div>
+              ))}
+              {Number(balance.riderCashDeposited) > 0 && (
+                <div className="flex items-center justify-between py-1.5">
+                  <dt className="text-slate-600">Rider cash deposited with HQ</dt>
+                  <dd className="tabular-nums text-slate-900">{formatInr(balance.riderCashDeposited)}</dd>
+                </div>
+              )}
+              {Math.abs(Number(balance.pendingAdjustments) || 0) > 0.005 && (
+                <div className="flex items-center justify-between py-1.5">
+                  <dt className="text-slate-600">Fees and adjustments</dt>
+                  <dd className="tabular-nums"><SignedAmount value={balance.pendingAdjustments} {...you} /></dd>
+                </div>
+              )}
+              <div className="flex items-center justify-between py-1.5 font-semibold">
+                <dt className="text-slate-900">Wallet balance</dt>
+                <dd className="tabular-nums"><SignedAmount value={balance.balance} {...you} /></dd>
+              </div>
+            </dl>
+            <p className="text-xs text-slate-500 mt-2">
+              Balance = restaurants + riders + your earning − cash your riders collected (+ rider cash deposited with HQ and adjustments).
+              Online orders: HQ holds the money and owes you that part. COD orders: your riders hold the cash, so you owe HQ its commission and the taxes.
+            </p>
+          </div>
+          <div className={`rounded-lg p-4 ${canWithdraw ? "bg-green-50 border border-green-200" : "bg-amber-50 border border-amber-200"}`}>
+            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900 mb-2">
+              <Info className="w-4 h-4" /> {canWithdraw ? `You can withdraw ${formatInr(balance.availableToWithdraw)}` : "Why you can't withdraw right now"}
+            </h2>
+            <ul className="list-disc pl-5 space-y-1.5 text-sm text-slate-700">
+              {(canWithdraw ? reasons.filter((r) => !r.startsWith("No online")) : reasons).map((r) => <li key={r}>{r}</li>)}
+            </ul>
+          </div>
+        </section>
 
         <form onSubmit={request} className="bg-white border border-slate-200 rounded-lg p-5 grid grid-cols-1 md:grid-cols-[1fr_2fr_auto] gap-3 items-end">
           <div>

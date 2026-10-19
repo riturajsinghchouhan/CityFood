@@ -1,6 +1,6 @@
-import { recordHqPaidWithdrawal } from '../../franchise/services/franchiseFinance.service.js';
+import { recordHqPaidWithdrawal, splitOrderEarnings } from '../../franchise/services/franchiseFinance.service.js';
 import { getFranchiseScope } from '../../../../core/franchiseScope/franchiseScope.js';
-import { HQ_SHARE_EXPR } from '../../franchise/services/franchise.service.js';
+import { HQ_SHARE_EXPR, FRANCHISE_GROSS_EXPR } from '../../franchise/services/franchise.service.js';
 import mongoose from 'mongoose';
 import { ValidationError } from '../../../../core/auth/errors.js';
 import { FoodRestaurant } from '../../restaurant/models/restaurant.model.js';
@@ -536,6 +536,11 @@ export async function getDashboardStats(query = {}) {
                             $cond: [{ $and: [DELIVERED_ORDER_STATUS_EXPR, IS_FRANCHISE_ORDER] }, HQ_SHARE_EXPR, 0]
                         }
                     },
+                    franchiseOrderGross: {
+                        $sum: {
+                            $cond: [{ $and: [DELIVERED_ORDER_STATUS_EXPR, IS_FRANCHISE_ORDER] }, FRANCHISE_GROSS_EXPR, 0]
+                        }
+                    },
                     franchiseOrdersDelivered: {
                         $sum: { $cond: [{ $and: [DELIVERED_ORDER_STATUS_EXPR, IS_FRANCHISE_ORDER] }, 1, 0] }
                     },
@@ -743,7 +748,9 @@ export async function getDashboardStats(query = {}) {
         revenue: { total: Number(totals.revenueTotal || 0) },
         franchiseOrders: {
             delivered: Number(totals.franchiseOrdersDelivered || 0),
-            hqCommission: Number(totals.franchiseOrderHqShare || 0)
+            hqCommission: Number(totals.franchiseOrderHqShare || 0),
+            // What franchises keep after HQ's commission (same as franchiseNet on the franchise pages).
+            franchiseEarning: Number(totals.franchiseOrderGross || 0) - Number(totals.franchiseOrderHqShare || 0)
         },
         commission: { total: Number(totals.commissionTotal || 0) },
         platformFee: { total: Number(totals.platformFeeTotal || 0) },
@@ -834,6 +841,15 @@ export async function getTransactionReport(query = {}) {
         .sort({ createdAt: -1 })
         .lean();
 
+    const franchiseIds = [...new Set(transactionRows.map((tx) => tx.orderId?.franchiseId).filter(Boolean).map(String))];
+    const franchiseNames = new Map(
+        franchiseIds.length
+            ? (await mongoose.model('FoodFranchise').find({ _id: { $in: franchiseIds } }).select('name').lean())
+                .map((f) => [String(f._id), f.name])
+            : []
+    );
+    const earningsOf = (tx) => splitOrderEarnings(tx.orderId || {}, tx.amounts?.restaurantShare ?? null);
+
     const transactions = transactionRows.map((tx) => {
         const order = tx.orderId || {};
         const pricing = order.pricing || {};
@@ -856,9 +872,7 @@ export async function getTransactionReport(query = {}) {
                 ? Number(pricing.platformFee || 0) || 0
                 : platformFeeDerived;
 
-        const deliveryFeeUser = Number(pricing.deliveryFee || 0);
-        const deliveryCostAdmin = Number(tx.amounts?.riderShare) || Number(order.riderEarning) || 30;
-        const deliveryGstAdmin = deliveryCostAdmin * 0.18;
+        const earnings = earningsOf(tx);
 
         const isDelivered = order.orderStatus === 'delivered';
         const displayStatus = isDelivered 
@@ -912,22 +926,18 @@ export async function getTransactionReport(query = {}) {
                 price: i.price,
                 originalPrice: i.originalPrice,
             })),
-            adminEarningBreakdown: {
-                originalItemCost,
-                restaurantDiscount,
-                itemSubtotalAfterDiscount: subtotal,
-                deliveryProfit: deliveryFeeUser - deliveryCostAdmin - deliveryGstAdmin,
-                platformFee: platformFee,
-                packagingFee: packagingFee,
+            paymentMethod: order.payment?.method || tx.paymentMethod || '',
+            franchise: order.franchiseId
+                ? { id: String(order.franchiseId), name: franchiseNames.get(String(order.franchiseId)) || 'Franchise', commissionPercent: Number(order.franchiseSnapshot?.commissionPercent || 0), revenueModel: order.franchiseSnapshot?.revenueModel || '' }
+                : null,
+            // Who gets what; the parts add up to orderAmount (see splitOrderEarnings).
+            earnings: {
+                ...earnings,
+                deliveryFee,
+                platformFee,
+                packagingFee,
                 restaurantCommission: Number(pricing.restaurantCommission || 0),
-                gstOnItem: Number(pricing.gstOnItem || 0),
-                gstOnCommission: Number(pricing.gstOnCommission || 0),
-                paymentGatewayFee: Number(pricing.paymentGatewayFee || 0),
-                tcs: Number(pricing.tcs || 0),
-                totalAdminReceivable: Number(pricing.totalAdminReceivable || 0),
-                deliveryCostToAdmin: deliveryCostAdmin,
-                deliveryGstToAdmin: deliveryGstAdmin,
-                gstCollectedFromUser: Number(pricing.tax || 0)
+                discount
             }
         };
     });
@@ -938,14 +948,13 @@ export async function getTransactionReport(query = {}) {
     let restaurantEarning = 0;
     let deliverymanEarning = 0;
 
+    let franchiseEarning = 0;
     let adminEarningBreakdown = {
-        deliveryProfit: 0,
-        platformFee: 0,
-        packagingFee: 0,
-        restaurantCommission: 0,
-        gstOnCommission: 0,
-        paymentGatewayFee: 0,
-        tcs: 0
+        hqCommission: 0,
+        hqCouponCost: 0,
+        franchiseEarning: 0,
+        taxes: 0,
+        paymentGatewayFee: 0
     };
 
     for (const tx of transactionRows) {
@@ -956,35 +965,18 @@ export async function getTransactionReport(query = {}) {
 
         // Calculate Summary
         if (isCompletedTx) {
-            const pricing = order.pricing || {};
-            const totalPaid = tx.amounts?.totalCustomerPaid || pricing.total || 0;
-            const riderShare = Number(tx.amounts?.riderShare) || Number(order.riderEarning) || 0;
+            const e = earningsOf(tx);
+            completedTransaction += e.customerPaid;
+            adminEarning += e.hqEarning;
+            restaurantEarning += e.restaurantShare;
+            deliverymanEarning += e.riderShare;
+            franchiseEarning += e.franchiseEarning;
 
-            const restCommission = Number(pricing.restaurantCommission || 0);
-            const gstOnItem = Number(pricing.gstOnItem || 0);
-            const gstOnComm = Number(pricing.gstOnCommission || 0);
-            const pgFee = Number(pricing.paymentGatewayFee || 0);
-            const tcsVal = Number(pricing.tcs || 0);
-            const fallbackRestShare = (pricing.subtotal || 0) + (pricing.packagingFee || 0) - restCommission - gstOnItem - gstOnComm - pgFee - tcsVal;
-            const fallbackAdminProfit = (pricing.platformFee || 0) + (pricing.deliveryFee || 0) + restCommission + gstOnItem + pgFee + tcsVal - riderShare;
-
-            completedTransaction += totalPaid;
-            adminEarning += (tx.amounts?.platformNetProfit !== undefined ? tx.amounts.platformNetProfit : Math.max(0, fallbackAdminProfit));
-            restaurantEarning += (tx.amounts?.restaurantShare !== undefined ? tx.amounts.restaurantShare : Math.max(0, fallbackRestShare));
-            deliverymanEarning += riderShare;
-
-            // Breakdown
-            const deliveryFeeUser = Number(pricing.deliveryFee || 0);
-            const deliveryCostAdmin = riderShare || 30;
-            const deliveryGstAdmin = deliveryCostAdmin * 0.18;
-
-            adminEarningBreakdown.deliveryProfit += (deliveryFeeUser - deliveryCostAdmin - deliveryGstAdmin);
-            adminEarningBreakdown.platformFee += Number(pricing.platformFee || 0);
-            adminEarningBreakdown.packagingFee += Number(pricing.packagingFee || 0);
-            adminEarningBreakdown.restaurantCommission += restCommission;
-            adminEarningBreakdown.gstOnCommission += gstOnComm;
-            adminEarningBreakdown.paymentGatewayFee += pgFee;
-            adminEarningBreakdown.tcs += tcsVal;
+            adminEarningBreakdown.hqCommission += e.hqCommission;
+            adminEarningBreakdown.hqCouponCost += e.hqCouponCost;
+            adminEarningBreakdown.franchiseEarning += e.franchiseEarning;
+            adminEarningBreakdown.taxes += e.taxes.total;
+            adminEarningBreakdown.paymentGatewayFee += e.paymentGatewayFee;
         }
         if (tx.status === 'refunded' || isCancelled) {
             refundedTransaction += tx.amounts?.totalCustomerPaid || order.pricing?.total || 0;
@@ -994,10 +986,12 @@ export async function getTransactionReport(query = {}) {
     const summary = {
         completedTransaction,
         refundedTransaction, // Returning amount instead of count for consistency, frontend might expect count though
-        adminEarning,
+        // A franchise owner's "admin earning" is its own earning, not HQ's commission.
+        adminEarning: getFranchiseScope() ? franchiseEarning : adminEarning,
         adminEarningBreakdown,
         restaurantEarning,
         deliverymanEarning,
+        franchiseEarning,
     };
 
     return { transactions, summary };
@@ -1333,6 +1327,11 @@ export async function getCustomers(query = {}) {
         if (String(query.status) === 'inactive') filter.isActive = false;
     }
 
+    // Zone the customer picked at login ("none" = customers who never picked one).
+    const customerZoneId = String(query.customerZoneId || '').trim();
+    if (customerZoneId === 'none') filter.zoneId = null;
+    else if (mongoose.Types.ObjectId.isValid(customerZoneId)) filter.zoneId = new mongoose.Types.ObjectId(customerZoneId);
+
     if (query.joiningDate && String(query.joiningDate).trim()) {
         const d = new Date(String(query.joiningDate));
         if (!Number.isNaN(d.getTime())) {
@@ -1365,7 +1364,8 @@ export async function getCustomers(query = {}) {
             .sort(sort)
             .skip(skip)
             .limit(limit)
-            .select('name email phone countryCode isVerified isActive flag codEnabled createdAt profileImage addresses')
+            .select('name email phone countryCode isVerified isActive flag codEnabled createdAt profileImage addresses zoneId')
+            .populate('zoneId', 'name')
             .lean(),
         FoodUser.countDocuments(filter)
     ]);
@@ -1443,7 +1443,9 @@ export async function getCustomers(query = {}) {
         walletBalance: walletMap.get(String(u._id)) || 0,
         joiningDate: u.createdAt,
         createdAt: u.createdAt,
-        addresses: u.addresses || []
+        addresses: u.addresses || [],
+        zoneId: u.zoneId?._id || null,
+        zoneName: u.zoneId?.name || ''
         });
     });
 

@@ -295,6 +295,19 @@ export async function listFranchises(query = {}) {
     return { franchises, summary };
 }
 
+/** Light list for the HQ "filter by franchise" dropdown on admin pages. */
+export async function listFranchiseOptions() {
+    const docs = await FoodFranchise.find({}).select('name code status zoneId').populate('zoneId', 'name').sort({ name: 1 }).lean();
+    return docs.map((d) => ({
+        id: String(d._id),
+        name: d.name,
+        code: d.code,
+        status: d.status,
+        zoneId: d.zoneId?._id ? String(d.zoneId._id) : d.zoneId ? String(d.zoneId) : null,
+        zoneName: d.zoneId?.name || ''
+    }));
+}
+
 export async function getFranchiseById(id) {
     const doc = await FoodFranchise.findById(toObjectId(id, 'franchise id')).populate('zoneId', 'name isActive').lean();
     if (!doc) throw new NotFoundError('Franchise not found');
