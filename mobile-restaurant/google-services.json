@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "597455299934",
+    "firebase_url": "https://cityfood-69559-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "cityfood-69559",
+    "storage_bucket": "cityfood-69559.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:597455299934:android:3b957e5521b5d68b8a5bcf",
+        "android_client_info": {
+          "package_name": "com.cityfood.delivery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC87HQxrh42uEWPMQKWwUu0cxIudr8lT-0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:597455299934:android:72c2e9822eceb4ff8a5bcf",
+        "android_client_info": {
+          "package_name": "com.cityfood.restaurant"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC87HQxrh42uEWPMQKWwUu0cxIudr8lT-0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:597455299934:android:f1495c3cd19e94838a5bcf",
+        "android_client_info": {
+          "package_name": "com.cityfood.user"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC87HQxrh42uEWPMQKWwUu0cxIudr8lT-0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
