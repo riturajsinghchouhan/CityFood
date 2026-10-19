@@ -1,12 +1,15 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useRef } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { adminAPI } from "@food/api"
 import { setAuthData } from "@food/utils/auth"
-import { ShieldCheck, UserCog, Star, Heart, ArrowRight, Loader2, Mail, Lock, Eye, EyeOff, ShieldQuestion } from "lucide-react"
-import { Button } from "@food/components/ui/button"
+import { ShieldCheck, Network, ArrowRight, Loader2, Mail, Lock, Eye, EyeOff, ShieldQuestion } from "lucide-react"
 import logoNew from "@/assets/logo.png"
 import { toast } from "sonner"
+
+const fieldClass =
+  "block w-full h-14 pl-13 pr-5 bg-slate-50 text-slate-900 border border-slate-200 rounded-xl outline-none transition " +
+  "placeholder:text-slate-400 focus:bg-white focus:border-red-400 focus:ring-4 focus:ring-red-500/10"
 
 export default function AdminLogin() {
   const navigate = useNavigate()
@@ -51,118 +54,102 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0a0a0a] flex flex-col relative overflow-hidden font-['Poppins']">
-      {/* Decorative Background Elements */}
-      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-primary/10 via-primary/5 to-transparent pointer-events-none" />
-      <div className="absolute top-[-100px] right-[-100px] w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none animate-pulse" />
-      <div className="absolute bottom-[-100px] left-[-100px] w-[400px] h-[400px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
-
-      {/* Main Content */}
-      <div className="absolute top-6 right-6 z-20">
-        <Link to="/user/auth/support">
-          <Button variant="ghost" className="text-gray-500 hover:text-primary font-semibold flex items-center gap-2">
-            <ShieldQuestion className="w-5 h-5" />
-            Support
-          </Button>
+    <div
+      className="min-h-dvh relative flex flex-col bg-[#fbf2e5] bg-cover bg-center font-['Poppins']"
+      style={{ backgroundImage: "url(/admin-login-bg.jpg)" }}
+    >
+      <div className="absolute top-5 right-5 z-20">
+        <Link
+          to="/user/auth/support"
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur text-sm font-semibold text-slate-600 hover:text-red-600 shadow-sm"
+        >
+          <ShieldQuestion className="w-4 h-4" />
+          Support
         </Link>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-10 [@media(max-height:860px)]:py-5">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="w-full max-w-[440px]"
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="w-full max-w-130 flex flex-col items-center"
         >
-          {/* Logo & Header */}
-          <div className="text-center mb-8">
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 200, damping: 20 }}
-              className="relative w-32 h-32 md:w-36 md:h-36 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden border-4 border-white mx-auto mb-4 bg-white"
-              style={{ borderRadius: '50%', WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
-            >
-              <img
-                src={logoNew}
-                alt="CityFood Logo"
-                className="w-full h-full object-cover scale-[1.15]"
-                style={{ borderRadius: '50%' }}
-              />
-            </motion.div>
+          {/* Logo & panel name. max-height variants keep the form above the fold on 768px-tall laptops. */}
+          <img
+            src={logoNew}
+            alt="CityFood"
+            className="w-40 h-40 sm:w-48 sm:h-48 [@media(max-height:860px)]:w-28 [@media(max-height:860px)]:h-28 rounded-full object-cover drop-shadow-[0_12px_24px_rgba(0,0,0,0.18)] select-none"
+          />
+          <p className="mt-2 mb-5 [@media(max-height:860px)]:mb-3 text-[13px] sm:text-sm font-semibold text-slate-700 uppercase tracking-[0.55em] pl-[0.55em]">
+            Admin Panel
+          </p>
 
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="text-gray-400 dark:text-gray-500 font-bold text-xs uppercase tracking-[0.3em]"
-            >
-              ADMIN PANEL
-            </motion.p>
-          </div>
+          {/* Login card */}
+          <div className="w-full bg-white rounded-[28px] px-6 py-8 sm:px-14 sm:py-12 [@media(max-height:860px)]:py-7 shadow-[0_30px_80px_-24px_rgba(140,70,20,0.35)] border border-white">
+            <h1 className="text-3xl sm:text-[38px] font-extrabold tracking-tight text-slate-900 leading-tight">Admin Entry</h1>
+            <div className="h-1 w-14 bg-red-600 rounded-full mt-3 mb-4" />
+            <p className="text-base sm:text-lg text-slate-500 leading-relaxed">
+              Authorized access only. Please sign in to continue.
+            </p>
 
-          {/* Login Card */}
-          <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-2xl rounded-[3rem] p-8 sm:p-12 shadow-[0_40px_80px_-20px_rgba(126,56,102,0.2)] dark:shadow-none border border-white/20 dark:border-gray-800 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-
-            <div className="mb-10 text-center sm:text-left">
-              <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2 font-['Outfit'] tracking-tight">
-                Admin Entry
-              </h2>
-              <div className="h-1 w-10 bg-primary rounded-full mb-3 hidden sm:block" />
-              <p className="text-base text-gray-500 dark:text-gray-400 font-medium">
-                Authorized access only. Please sign in to continue.
-              </p>
-            </div>
-
-            <form onSubmit={handleLogin} className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] ml-1">Email Address</label>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="email"
-                      required
-                      autoFocus
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="block w-full pl-12 pr-6 py-4 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white border-2 border-transparent focus:border-primary/50 rounded-2xl outline-none transition-all placeholder:text-gray-300 font-bold"
-                      placeholder="admin@tuggo.com"
-                    />
-                  </div>
+            <form onSubmit={handleLogin} className="mt-8 space-y-6 [@media(max-height:860px)]:mt-5 [@media(max-height:860px)]:space-y-4">
+              <div>
+                <label htmlFor="admin-email" className="block mb-2.5 text-xs sm:text-[13px] font-bold text-emerald-900 uppercase tracking-[0.18em]">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                  <input
+                    id="admin-email"
+                    type="email"
+                    required
+                    autoFocus
+                    autoComplete="username"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={fieldClass}
+                    placeholder="admin@tuggo.com"
+                  />
                 </div>
+              </div>
 
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-center px-1">
-                    <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Password</label>
-                    <Link to="/admin/forgot-password" size="sm" className="text-[10px] font-bold text-gray-400 hover:text-primary uppercase tracking-wider transition-colors">Forgot?</Link>
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="block w-full pl-12 pr-12 py-4 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white border-2 border-transparent focus:border-primary/50 rounded-2xl outline-none transition-all placeholder:text-gray-300 font-bold"
-                      placeholder="••••••••"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
+              <div>
+                <div className="flex justify-between items-center mb-2.5">
+                  <label htmlFor="admin-password" className="text-xs sm:text-[13px] font-bold text-emerald-900 uppercase tracking-[0.18em]">
+                    Password
+                  </label>
+                  <Link to="/admin/forgot-password" className="text-xs sm:text-[13px] font-bold text-red-600 hover:text-red-700 uppercase tracking-[0.12em]">
+                    Forgot?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                  <input
+                    id="admin-password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`${fieldClass} pr-14`}
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-slate-800 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4.5 bg-primary hover:bg-[#6a2f56] disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:text-gray-400 text-white rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 group overflow-hidden relative"
+                className="group w-full h-16 mt-2 flex items-center justify-center gap-3 rounded-xl bg-linear-to-b from-red-600 to-red-700 text-white text-lg sm:text-xl font-bold shadow-[0_14px_30px_-10px_rgba(220,38,38,0.65)] hover:brightness-110 active:scale-[0.99] transition disabled:opacity-60"
               >
                 {loading ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
@@ -172,23 +159,20 @@ export default function AdminLogin() {
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
-                <motion.div
-                  className="absolute inset-0 bg-white/20 translate-x-[-100%]"
-                  whileHover={{ translateX: "100%" }}
-                  transition={{ duration: 0.6 }}
-                />
               </button>
             </form>
           </div>
 
-          <div className="mt-12 flex justify-center items-center gap-6 opacity-30 grayscale hover:opacity-60 transition-opacity">
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Secure Access</span>
+          {/* Footer badges */}
+          <div className="mt-8 [@media(max-height:860px)]:mt-5 flex items-center justify-center gap-5 sm:gap-9 text-slate-600">
+            <div className="flex items-center gap-2.5">
+              <ShieldCheck className="w-5 h-5" />
+              <span className="text-xs sm:text-[13px] font-medium uppercase tracking-[0.15em]">Secure Access</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Heart className="w-4 h-4" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Admin Control</span>
+            <div className="h-7 w-px bg-slate-300" />
+            <div className="flex items-center gap-2.5">
+              <Network className="w-5 h-5" />
+              <span className="text-xs sm:text-[13px] font-medium uppercase tracking-[0.15em]">Admin Control</span>
             </div>
           </div>
         </motion.div>
@@ -196,5 +180,3 @@ export default function AdminLogin() {
     </div>
   )
 }
-
-

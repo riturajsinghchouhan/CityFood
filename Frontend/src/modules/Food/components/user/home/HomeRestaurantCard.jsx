@@ -1,11 +1,13 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { memo, useMemo } from "react";
 import {
   Bookmark,
+  Minus,
   Plus,
   Star,
   Timer,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Card } from "@food/components/ui/card";
 import { Button } from "@food/components/ui/button";
 import RestaurantImageCarousel, {
@@ -15,6 +17,9 @@ import RestaurantImageCarousel, {
 import { foodImages } from "@food/constants/images";
 import { useDeferredOutletTimings } from "@food/hooks/user/useDeferredOutletTimings";
 import { getRestaurantAvailabilityStatus } from "@food/utils/restaurantAvailability";
+import { useCart } from "@food/context/CartContext";
+import { isModuleAuthenticated } from "@food/utils/auth";
+import { buildCartLineId } from "@food/utils/foodVariants";
 
 function resolveRestaurantSlug(restaurant, index) {
   const nameStr = typeof restaurant?.name === "string" ? restaurant.name.trim() : "";
@@ -91,6 +96,8 @@ function buildPreviewItems(restaurant, backendOrigin) {
           foodImages[idx % foodImages.length],
         foodType: item.foodType,
         isRecommended: item.isRecommended === true,
+        hasVariants: item.hasVariants === true,
+        priceOnOtherPlatforms: otherPrice || null,
         price,
         finalPrice,
         hasDiscount: Boolean(offer),
@@ -99,12 +106,21 @@ function buildPreviewItems(restaurant, backendOrigin) {
     });
 }
 
-function PreviewItemCard({ item, onSelect }) {
+const stop = (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+};
+
+function PreviewItemCard({ item, quantity = 0, onSelect, onAdd, onChangeQuantity }) {
   const isVeg = item.foodType === "Veg";
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={(event) => onSelect(item, event)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") onSelect(item, event);
+      }}
       className="flex-shrink-0 w-[150px] sm:w-[170px] text-left focus:outline-none"
     >
       <div className="relative h-[120px] sm:h-[135px] w-full overflow-hidden rounded-2xl bg-gray-100 dark:bg-zinc-800">
@@ -123,9 +139,40 @@ function PreviewItemCard({ item, onSelect }) {
             Popular
           </span>
         )}
-        <span className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-primary/60 bg-white text-primary shadow-md">
-          <Plus className="h-5 w-5" strokeWidth={2.5} />
-        </span>
+        {quantity > 0 ? (
+          <div
+            onClick={stop}
+            className="absolute bottom-2 right-2 flex h-9 items-center gap-1 rounded-full border-2 border-primary bg-white px-1 text-primary shadow-md"
+          >
+            <button
+              type="button"
+              onClick={(event) => onChangeQuantity(item, quantity - 1, event)}
+              aria-label={`Remove one ${item.name}`}
+              className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-primary/10 active:scale-90"
+            >
+              <Minus className="h-4 w-4" strokeWidth={2.5} />
+            </button>
+            <span className="min-w-[14px] text-center text-sm font-bold">{quantity}</span>
+            <button
+              type="button"
+              onClick={(event) => onChangeQuantity(item, quantity + 1, event)}
+              aria-label={`Add one more ${item.name}`}
+              className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-primary/10 active:scale-90"
+            >
+              <Plus className="h-4 w-4" strokeWidth={2.5} />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={(event) => onAdd(item, event)}
+            aria-label={`Add ${item.name} to cart`}
+            title={item.hasVariants ? "Choose an option" : "Add to cart"}
+            className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-primary/60 bg-white text-primary shadow-md hover:scale-110 active:scale-90 transition-transform"
+          >
+            <Plus className="h-5 w-5" strokeWidth={2.5} />
+          </button>
+        )}
       </div>
 
       <div className="mt-2 flex items-start gap-1.5">
@@ -164,7 +211,7 @@ function PreviewItemCard({ item, onSelect }) {
           Our app: {item.lowerPercent}% lower
         </p>
       )}
-    </button>
+    </div>
   );
 }
 
@@ -178,6 +225,8 @@ function HomeRestaurantCard({
   animateEntrance = false,
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { addToCart, updateQuantity, getCartItem } = useCart();
   const isBanned = Boolean(
     restaurant?.isBanned === true ||
     restaurant?.status === 'banned' ||
@@ -227,6 +276,68 @@ function HomeRestaurantCard({
       event.stopPropagation();
     }
     navigate(`/user/restaurants/${restaurantSlug}${itemId ? `?highlightItemId=${itemId}` : ""}`);
+  };
+
+  // Same cart line id as the restaurant page (item id + "base"), so quantities stay in sync there.
+  const lineIdOf = (item) => buildCartLineId(item.id, "");
+  const quantityOf = (item) => getCartItem(lineIdOf(item))?.quantity || 0;
+
+  const canOrder = () => {
+    if (!isModuleAuthenticated("user")) {
+      toast.error("Please login to add items to cart");
+      navigate("/user/auth/login", { state: { from: location.pathname } });
+      return false;
+    }
+    if (isBanned || isOutOfService || !availability.isOpen) {
+      toast.error(isOutOfService ? "This restaurant does not deliver to your location." : "Restaurant is currently offline. Please try again later.");
+      return false;
+    }
+    return true;
+  };
+
+  const handleAddItem = (item, event) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    // Items with sizes/options are chosen on the restaurant page.
+    if (item.hasVariants) {
+      openItem(item.id);
+      return;
+    }
+    if (!canOrder()) return;
+    const lineItemId = lineIdOf(item);
+    const result = addToCart({
+      id: lineItemId,
+      lineItemId,
+      itemId: item.id,
+      name: item.name,
+      price: item.finalPrice,
+      originalPrice: item.price,
+      variantId: "",
+      variantName: "",
+      variantPrice: item.finalPrice,
+      image: item.image,
+      restaurant: restaurant.name,
+      restaurantId: restaurant.mongoId || restaurant.restaurantId || restaurant._id || restaurant.id,
+      isVeg: item.foodType === "Veg",
+      foodType: item.foodType,
+      priceOnOtherPlatforms: item.priceOnOtherPlatforms,
+    });
+    if (result?.ok === false) {
+      toast.error(result.error || "Could not add this item.");
+      return;
+    }
+    toast.success(`Added ${item.name} to cart`);
+  };
+
+  const handleChangeQuantity = (item, quantity, event) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    if (quantity > quantityOf(item) && !canOrder()) return;
+    updateQuantity(lineIdOf(item), quantity);
   };
 
   const handleSlideClick = (slide, event) => {
@@ -330,7 +441,10 @@ function HomeRestaurantCard({
                   <PreviewItemCard
                     key={item.id || item.name}
                     item={item}
+                    quantity={quantityOf(item)}
                     onSelect={(selected, event) => openItem(selected.id, event)}
+                    onAdd={handleAddItem}
+                    onChangeQuantity={handleChangeQuantity}
                   />
                 ))}
               </div>
