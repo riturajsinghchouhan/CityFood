@@ -1,4 +1,4 @@
-// ProtectedRoute requiredRole="user": unauthenticated users go to login with `from`.
+// ProtectedRoute requiredRole="restaurant": unauthenticated owners go to /login with `from`.
 import { Redirect, usePathname } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import { useAuth } from "../context/AuthContext";

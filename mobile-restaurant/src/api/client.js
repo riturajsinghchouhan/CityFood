@@ -1,13 +1,13 @@
-// The single HTTP client. Mirrors the web userClient (Frontend/src/services/api/axios.js):
-// Bearer auth, zone headers, single-flight refresh on 401, no refresh on 429,
-// and one error shape for both backend formats ({message} and {error}).
+// The single HTTP client. Mirrors the web restaurantClient (Frontend/src/services/api/axios.js,
+// createModuleClient("restaurant")): Bearer restaurant_accessToken, single-flight refresh on 401
+// via /food/auth/refresh-token, no refresh on 429, and one error shape for both backend formats
+// ({message} and {error}). No X-Zone-Id / X-User-Lat headers: those are customer-only.
 import axios, { create as createAxios } from "axios";
 import { API_BASE_URL, REQUEST_TIMEOUT_MS } from "../config";
 import { KEYS, secure, store } from "../storage";
 
 let accessToken = null;
 let refreshToken = null;
-let zoneContext = { zoneId: null, lat: null, lng: null };
 let sessionExpiredHandler = null;
 
 export async function loadTokens() {
@@ -37,11 +37,7 @@ export async function clearTokens() {
 export const getAccessToken = () => accessToken;
 export const getRefreshToken = () => refreshToken;
 
-export function setZoneContext(next) {
-  zoneContext = { ...zoneContext, ...next };
-}
-
-// Called once by AuthContext so a failed refresh logs the user out.
+// Called once by AuthContext so a failed refresh logs the restaurant out.
 export function onSessionExpired(handler) {
   sessionExpiredHandler = handler;
 }
@@ -92,9 +88,6 @@ http.interceptors.request.use((config) => {
   if (accessToken && !config.headers.Authorization) {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
-  if (zoneContext.zoneId) config.headers["X-Zone-Id"] = zoneContext.zoneId;
-  if (zoneContext.lat != null) config.headers["X-User-Lat"] = String(zoneContext.lat);
-  if (zoneContext.lng != null) config.headers["X-User-Lng"] = String(zoneContext.lng);
   return config;
 });
 

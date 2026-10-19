@@ -1,58 +1,71 @@
-// Light/Dark toggle (Profile > Appearance on web, ThemeContext.jsx) plus the
-// admin-configurable primary/secondary colors from GET /app-config/user_app.
+// Restaurant theme: LIGHT ONLY (the web's ThemeContext defaults restaurantAppTheme to light and has
+// no toggle). Admin colours come from GET /app-config/restaurant_app (primaryColor -> --rt-primary,
+// secondaryColor -> --rt-primary-strong, logoUrl -> restaurant_app_logo), as applyDynamicTheme does.
+// That endpoint is 404 today, so the defaults (#B80B3D / #66001D) stay.
+// API kept from the shared app: {mode, isDark, colors, logoUrl, setMode, toggleMode, applyAppConfig}.
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { getAppConfig } from "../api/content";
 import { KEYS, store } from "../storage";
-import { dark, light } from "./tokens";
+import { brand, derivePrimaryTokens, light } from "./tokens";
 
 const ThemeContext = createContext(null);
 
 const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
+const noop = () => {};
 
 export function ThemeProvider({ children }) {
-  // Web default for the customer app is light (ThemeContext wins over index.jsx).
-  const [mode, setModeState] = useState("light");
   const [overrides, setOverrides] = useState({});
-
-  useEffect(() => {
-    store.get(KEYS.theme).then((saved) => {
-      if (saved === "dark" || saved === "light") setModeState(saved);
-    });
-    store.get(KEYS.appConfig).then((cfg) => cfg && setOverrides(cfg));
-  }, []);
-
-  const setMode = useCallback((next) => {
-    setModeState(next);
-    store.set(KEYS.theme, next);
-  }, []);
 
   const applyAppConfig = useCallback((cfg) => {
     const next = {};
     if (HEX.test(cfg?.primaryColor || "")) next.primaryColor = cfg.primaryColor;
     if (HEX.test(cfg?.secondaryColor || "")) next.secondaryColor = cfg.secondaryColor;
     if (cfg?.logoUrl) next.logoUrl = cfg.logoUrl;
+    if (cfg?.fontFamily) next.fontFamily = cfg.fontFamily;
     setOverrides(next);
     store.set(KEYS.appConfig, next);
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    store.get(KEYS.appConfig).then((cfg) => {
+      if (!cancelled && cfg) setOverrides(cfg);
+    });
+    // Public, once per launch. A 404 (not configured) keeps the cached/default colours.
+    getAppConfig("restaurant_app")
+      .then((res) => {
+        const cfg = res?.data || null;
+        if (!cancelled && cfg && typeof cfg === "object") applyAppConfig(cfg);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [applyAppConfig]);
+
   const value = useMemo(() => {
-    const base = mode === "dark" ? dark : light;
-    // The web sets these as inline styles on <html>, which beat the .dark rules,
-    // so admin colors apply in both modes.
+    const primary = overrides.primaryColor || light.primary;
+    const primaryStrong = overrides.secondaryColor || light.primaryStrong;
     const colors = {
-      ...base,
-      primary: overrides.primaryColor || base.primary,
-      secondary: overrides.secondaryColor || base.secondary,
+      ...light,
+      primary,
+      primaryStrong,
+      secondary: primaryStrong,
+      ...derivePrimaryTokens(primary),
     };
     return {
-      mode,
-      isDark: mode === "dark",
+      mode: "light",
+      isDark: false,
       colors,
+      // RestaurantNavbar gradient is hard-coded on web (does not follow --rt-primary).
+      headerGradient: brand.headerGradient,
       logoUrl: overrides.logoUrl || null,
-      setMode,
-      toggleMode: () => setMode(mode === "dark" ? "light" : "dark"),
+      fontFamily: overrides.fontFamily || null,
+      setMode: noop,
+      toggleMode: noop,
       applyAppConfig,
     };
-  }, [mode, overrides, setMode, applyAppConfig]);
+  }, [overrides, applyAppConfig]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

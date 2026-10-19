@@ -1,6 +1,6 @@
-// Map web paths (push payload links, admin-configured banner/CTA links, server
-// redirects) to native routes: /food/user/x, /user/x, /food/x and /x are the same
-// screen on web, so strip those prefixes.
+// Map web paths (push payload links, notification-inbox links, back targets, admin-configured links)
+// to native routes. /food/restaurant/x and /restaurant/x are the same screen on web (audit §0 #4),
+// so both prefixes are stripped; the restaurant home (orders) is "/".
 import { router } from "expo-router";
 import { Linking } from "react-native";
 
@@ -16,10 +16,15 @@ export function toNativePath(webPath) {
       return null;
     }
   }
-  p = p.replace(/^\/food\/user(?=\/|$|\?)/, "").replace(/^\/food(?=\/|$|\?)/, "").replace(/^\/user(?=\/|$|\?)/, "");
+  p = p.replace(/^\/food\/restaurant(?=\/|$|\?)/, "").replace(/^\/restaurant(?=\/|$|\?)/, "");
+  // The backend sends restaurant order-status pushes with the USER link /food/user/orders/<id>.
+  p = p.replace(/^\/(?:food\/)?user\/orders\/([^/?]+).*$/, "/orders/$1");
   if (!p || p.startsWith("?")) p = `/${p}`;
-  p = p.replace(/^\/auth\/(login|sign-in)$/, "/login").replace(/^\/(login|sign-in)$/, "/login");
-  p = p.replace(/^\/orders\/([^/?]+)\/tracking/, "/orders/$1");
+  p = p.replace(/^\/auth\/(login|sign-in)$/, "/login").replace(/^\/(sign-in)$/, "/login");
+  // Case-insensitive web match: Explore links to /Share-Feedback.
+  p = p.replace(/^\/share-feedback$/i, "/share-feedback");
+  // Web redirect: reservations -> explore.
+  if (p === "/reservations") p = "/explore";
   return p;
 }
 

@@ -81,7 +81,7 @@ module.exports = {
         "expo-notifications",
         {
           icon: "./assets/notification-icon.png",
-          color: "#7e3866",
+          color: "#B80B3D",
           defaultChannel: "default",
           sounds: ["./assets/sounds/restaurant_order_ring.wav"],
         },
