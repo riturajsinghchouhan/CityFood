@@ -128,9 +128,9 @@ function NotificationsBell({ vegMode }) {
   };
   const close = () => setAnchor(null);
 
-  const cardBg = isDark ? "#111827" : "#ffffff";
+  const cardBg = isDark ? "#101828" : "#ffffff";
   const softBg = isDark ? "rgba(31,41,55,0.5)" : "rgba(249,250,251,0.5)";
-  const border = isDark ? "#1f2937" : "#f3f4f6";
+  const border = isDark ? "#1e2939" : "#f3f4f6";
 
   return (
     <>
@@ -150,7 +150,7 @@ function NotificationsBell({ vegMode }) {
             ]}
           >
             <View style={[styles.popHeader, { borderBottomColor: border, backgroundColor: softBg }]}>
-              <Text style={[styles.popTitle, { color: isDark ? "#ffffff" : "#111827" }]}>Notifications</Text>
+              <Text style={[styles.popTitle, { color: isDark ? "#ffffff" : "#101828" }]}>Notifications</Text>
               {totalUnreadCount > 0 ? (
                 <View style={styles.newBadge}>
                   <Text style={[styles.newBadgeText, { color: colors.primary }]}>{totalUnreadCount} New</Text>
@@ -162,12 +162,12 @@ function NotificationsBell({ vegMode }) {
                 merged.slice(0, 5).map((notif) => {
                   const Icon = ICON_MAP[notif.icon] || Bell;
                   return (
-                    <View key={`${notif.source}-${notif.id}`} style={[styles.popItem, { borderBottomColor: isDark ? "#1f2937" : "#f9fafb" }]}>
+                    <View key={`${notif.source}-${notif.id}`} style={[styles.popItem, { borderBottomColor: isDark ? "#1e2939" : "#f9fafb" }]}>
                       <View style={styles.popIcon}>
                         <Icon size={16} color={colors.primary} />
                       </View>
                       <View style={styles.flex1}>
-                        <Text numberOfLines={1} style={[styles.popItemTitle, { color: isDark ? "#ffffff" : "#111827" }]}>
+                        <Text numberOfLines={1} style={[styles.popItemTitle, { color: isDark ? "#ffffff" : "#101828" }]}>
                           {notif.title}
                         </Text>
                         <Text numberOfLines={1} style={styles.popItemMsg}>
@@ -207,7 +207,7 @@ export function HomeHeaderLocationRow({ location, handleLocationClick, vegMode =
     <View style={[styles.locRow, style]}>
       <View style={styles.locInner}>
         <Pressable onPress={onLocation} style={styles.locPress}>
-          <MapPin size={26} color="#e11d48" strokeWidth={2.5} />
+          <MapPin size={26} color="#ec003f" strokeWidth={2.5} />
           <View style={styles.locText}>
             <View style={styles.areaRow}>
               <Text numberOfLines={1} style={styles.area}>
@@ -305,7 +305,7 @@ export function HomeHeaderSearchRow({
 
         <ScalePressable scaleTo={0.95} onPress={() => handleVegModeChange?.(!vegMode)} style={styles.vegToggle}>
           <Text style={styles.vegText}>{"VEG\nMODE"}</Text>
-          <View style={[styles.vegTrack, { backgroundColor: vegMode ? "#16a34a" : "rgba(188,192,197,0.5)" }]}>
+          <View style={[styles.vegTrack, { backgroundColor: vegMode ? "#00a63e" : "rgba(188,192,197,0.5)" }]}>
             <Animated.View style={[styles.vegKnob, { transform: [{ translateX: knob }] }]} />
           </View>
         </ScalePressable>
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     borderWidth: 1,
-    backgroundColor: "#fb923c",
+    backgroundColor: "#ff8904",
   },
   popover: {
     position: "absolute",
@@ -387,17 +387,17 @@ const styles = StyleSheet.create({
   },
   popHeader: { padding: 16, borderBottomWidth: 1, flexDirection: "row", alignItems: "center", gap: 8 },
   popTitle: { fontWeight: "700", fontSize: 16 },
-  newBadge: { backgroundColor: "#ffedd5", borderRadius: 6, height: 16, paddingHorizontal: 8, justifyContent: "center" },
+  newBadge: { backgroundColor: "#ffedd4", borderRadius: 6, height: 16, paddingHorizontal: 8, justifyContent: "center" },
   newBadgeText: { fontSize: 10, fontWeight: "500", lineHeight: 14 },
   popList: { maxHeight: 384 },
   popItem: { padding: 16, flexDirection: "row", alignItems: "flex-start", gap: 12, borderBottomWidth: 1 },
   popIcon: { marginTop: 4, padding: 8, borderRadius: 9999, backgroundColor: "#f3f4f6" },
   popItemTitle: { fontSize: 14, fontWeight: "700" },
-  popItemMsg: { fontSize: 12, color: "#6b7280" },
+  popItemMsg: { fontSize: 12, color: "#6a7282" },
   popEmpty: { padding: 32, alignItems: "center", gap: 8 },
-  popEmptyText: { fontSize: 12, color: "#9ca3af", fontWeight: "500" },
+  popEmptyText: { fontSize: 12, color: "#99a1af", fontWeight: "500" },
   popFooter: { padding: 12, alignItems: "center" },
-  viewAll: { fontSize: 12, fontWeight: "700", color: "#9ca3af" },
+  viewAll: { fontSize: 12, fontWeight: "700", color: "#99a1af" },
   searchRow: { paddingHorizontal: 4, paddingBottom: 8, paddingTop: 8 },
   searchInner: { flexDirection: "row", alignItems: "center", gap: 10, width: "96%", alignSelf: "center" },
   searchPill: {
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
   },
   searchIcon: { marginRight: 8 },
   placeholderBox: { flex: 1, height: 20, overflow: "hidden", justifyContent: "center" },
-  placeholder: { fontSize: 13, fontWeight: "700", color: "#6b7280", lineHeight: 20 },
+  placeholder: { fontSize: 13, fontWeight: "700", color: "#6a7282", lineHeight: 20 },
   micArea: { flexDirection: "row", alignItems: "center", gap: 8, paddingLeft: 8 },
   micDivider: { width: 1, height: 20, backgroundColor: "#e5e7eb" },
   vegToggle: {
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
     borderColor: "#ffffff",
     ...cardShadow,
   },
-  vegText: { fontSize: 9, fontWeight: "900", lineHeight: 11, color: "#374151", letterSpacing: 0.45, textAlign: "center" },
+  vegText: { fontSize: 9, fontWeight: "900", lineHeight: 11, color: "#364153", letterSpacing: 0.45, textAlign: "center" },
   vegTrack: { marginTop: 2, width: 30, height: 16, borderRadius: 8, borderWidth: 1, borderColor: "#f3f4f6" },
   vegKnob: {
     position: "absolute",

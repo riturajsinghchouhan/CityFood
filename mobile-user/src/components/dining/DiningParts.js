@@ -520,7 +520,7 @@ export function DiningRestaurantCard({ restaurant, index, featured, favorite, on
               style={[
                 styles.statusBadge,
                 restaurant.isEnabled
-                  ? { backgroundColor: tw.green50, borderColor: "#bbf7d0" }
+                  ? { backgroundColor: tw.green50, borderColor: "#b9f8cf" }
                   : { backgroundColor: "transparent", borderColor: colors.border },
               ]}
             >

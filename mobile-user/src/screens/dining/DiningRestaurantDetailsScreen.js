@@ -487,10 +487,10 @@ export default function DiningRestaurantDetailsScreen() {
             <View style={styles.menuHeader}>
               <View>
                 <Text style={sectionTitle}>Menu</Text>
-                <Text style={[styles.menuUpdated, { color: isDark ? "#fb923c" : "#e19135" }]}>Last updated a month ago</Text>
+                <Text style={[styles.menuUpdated, { color: isDark ? "#ff8904" : "#e19135" }]}>Last updated a month ago</Text>
               </View>
               <View style={[styles.dishesPill, { backgroundColor: isDark ? "rgba(67,20,7,0.3)" : "#fff3e6" }]}>
-                <Text style={[styles.dishesPillText, { color: isDark ? "#fdba74" : "#e58a2c" }]}>
+                <Text style={[styles.dishesPillText, { color: isDark ? "#ffb86a" : "#e58a2c" }]}>
                   {featuredSections.length || 2} dishes
                 </Text>
               </View>

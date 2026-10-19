@@ -32,7 +32,7 @@ export default function StickyCartCard({ hasBottomNav = true }) {
 const styles = StyleSheet.create({
   wrap: { position: "absolute", right: 16, zIndex: 50 },
   button: {
-    backgroundColor: "#f97316",
+    backgroundColor: "#ff6900",
     borderRadius: 9999,
     padding: 12,
     borderWidth: 1,

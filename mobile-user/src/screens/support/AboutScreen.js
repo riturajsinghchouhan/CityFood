@@ -34,12 +34,12 @@ const iconMap = { Heart, Users, Shield, Clock, Star, Award };
 
 // The admin stores Tailwind classes (AboutUs.jsx colorOptions), e.g. "text-pink-600 dark:text-pink-400".
 const FEATURE_COLORS = {
-  pink: { fg: "#db2777", fgDark: "#f472b6", bg: "#fce7f3", bgDark: "rgba(131,24,67,0.3)" },
-  blue: { fg: "#2563eb", fgDark: "#60a5fa", bg: "#dbeafe", bgDark: "rgba(30,58,138,0.3)" },
-  green: { fg: "#16a34a", fgDark: "#4ade80", bg: "#dcfce7", bgDark: "rgba(20,83,45,0.3)" },
-  orange: { fg: "#ea580c", fgDark: "#fb923c", bg: "#ffedd5", bgDark: "rgba(124,45,18,0.3)" },
-  purple: { fg: "#9333ea", fgDark: "#c084fc", bg: "#f3e8ff", bgDark: "rgba(88,28,135,0.3)" },
-  red: { fg: "#dc2626", fgDark: "#f87171", bg: "#fee2e2", bgDark: "rgba(127,29,29,0.3)" },
+  pink: { fg: "#e60076", fgDark: "#fb64b6", bg: "#fce7f3", bgDark: "rgba(131,24,67,0.3)" },
+  blue: { fg: "#155dfc", fgDark: "#51a2ff", bg: "#dbeafe", bgDark: "rgba(30,58,138,0.3)" },
+  green: { fg: "#00a63e", fgDark: "#05df72", bg: "#dcfce7", bgDark: "rgba(20,83,45,0.3)" },
+  orange: { fg: "#f54900", fgDark: "#ff8904", bg: "#ffedd4", bgDark: "rgba(124,45,18,0.3)" },
+  purple: { fg: "#9810fa", fgDark: "#c27aff", bg: "#f3e8ff", bgDark: "rgba(88,28,135,0.3)" },
+  red: { fg: "#dc2626", fgDark: "#ff6467", bg: "#ffe2e2", bgDark: "rgba(127,29,29,0.3)" },
 };
 
 function featureColors(feature, isDark) {

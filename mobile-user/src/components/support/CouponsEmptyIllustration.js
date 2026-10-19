@@ -7,8 +7,8 @@ import { shadow } from "../../theme/tokens";
 import { c } from "./palette";
 
 const ROADS = [
-  { d: "M 20 100 Q 50 80, 80 100 T 140 100", stroke: "#a1a1aa", w: 4 },
-  { d: "M 100 20 Q 100 50, 100 80 T 100 140", stroke: "#a1a1aa", w: 4 },
+  { d: "M 20 100 Q 50 80, 80 100 T 140 100", stroke: "#9f9fa9", w: 4 },
+  { d: "M 100 20 Q 100 50, 100 80 T 100 140", stroke: "#9f9fa9", w: 4 },
   { d: "M 40 40 Q 60 60, 80 80 T 120 120", stroke: "#b4b4b8", w: 3 },
   { d: "M 160 40 Q 140 60, 120 80 T 80 120", stroke: "#b4b4b8", w: 3 },
   { d: "M 30 170 Q 50 150, 70 130 T 110 90", stroke: "#b4b4b8", w: 3 },

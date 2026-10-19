@@ -7,7 +7,7 @@ import { useTheme } from "../../theme/ThemeContext";
 import { tw } from "../../theme/tokens";
 import { calculateBestDiscount, getFoodPriceLabel, isRecommendedItem, RUPEE } from "../../screens/restaurant/lib";
 
-const ORANGE = "#f97316";
+const ORANGE = "#ff6900";
 
 // DishImage: "No image" box, pulse placeholder while loading.
 export function DishImage({ src, width, style, emptyLabel = "No image" }) {
@@ -141,7 +141,7 @@ function DishCard({
         { borderBottomColor: isDark ? tw.gray800 : tw.gray100 },
         highlighted && {
           borderWidth: 2,
-          borderColor: "#ea580c",
+          borderColor: "#f54900",
           backgroundColor: isDark ? "rgba(67,20,7,0.2)" : "rgba(255,247,237,0.4)",
           marginHorizontal: 4,
           marginVertical: 6,
@@ -222,7 +222,7 @@ function DishCard({
               <Pressable disabled={disabled} hitSlop={8} onPress={onDecrement}>
                 <Minus size={16} strokeWidth={3} color={disabled ? tw.gray500 : ORANGE} />
               </Pressable>
-              <Text style={{ fontSize: 13, fontWeight: "900", color: isDark ? "#fb923c" : "#ea580c" }}>{quantity}</Text>
+              <Text style={{ fontSize: 13, fontWeight: "900", color: isDark ? "#ff8904" : "#f54900" }}>{quantity}</Text>
               <Pressable disabled={disabled} hitSlop={8} onPress={onIncrement}>
                 <Plus size={16} strokeWidth={3} color={disabled ? tw.gray500 : ORANGE} />
               </Pressable>
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "#bbf7d0",
+    borderColor: "#b9f8cf",
     backgroundColor: tw.green50,
   },
   offBadgeText: { fontSize: 9, fontWeight: "700", color: tw.green600 },

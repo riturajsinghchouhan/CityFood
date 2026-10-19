@@ -202,7 +202,7 @@ export function ItemDetailSheet({
             <Text style={{ fontSize: 14, fontWeight: "600", color: disabled ? (isDark ? tw.gray600 : tw.gray500) : "#ffffff" }}>Add item</Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               {priceInfo.strike != null ? (
-                <Text style={{ fontSize: 14, color: "#fecaca", textDecorationLine: "line-through" }}>
+                <Text style={{ fontSize: 14, color: "#ffc9c9", textDecorationLine: "line-through" }}>
                   {RUPEE}
                   {priceInfo.strike}
                 </Text>

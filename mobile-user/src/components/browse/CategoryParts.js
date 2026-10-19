@@ -244,7 +244,7 @@ export const MatchedDishCard = memo(function MatchedDishCard({ row, isClosed, gr
       <View style={{ flex: 1, paddingVertical: 4, minWidth: 0 }}>
         <View style={{ flexDirection: "row", marginBottom: 6 }}>
           <View style={[styles.pill, { backgroundColor: isDark ? "rgba(80,7,36,0.3)" : "#fdf2f8" }]}>
-            <Text numberOfLines={1} style={{ fontSize: 9, fontWeight: "700", letterSpacing: 0.9, color: isDark ? "#f472b6" : "#be185d" }}>
+            <Text numberOfLines={1} style={{ fontSize: 9, fontWeight: "700", letterSpacing: 0.9, color: isDark ? "#fb64b6" : "#c6005c" }}>
               {String(row.name || "").toUpperCase()}
             </Text>
           </View>
@@ -505,7 +505,7 @@ export function CategoryFilterSheet({ visible, onClose, sortBy, setSortBy, activ
                     onPress={() => setSortBy(option.id)}
                     style={[styles.optionRow, { borderColor: border }, active && primaryActive]}
                   >
-                    <Text style={{ fontSize: 14, fontWeight: "500", color: active ? (isDark ? "#4ade80" : tw.green600) : idleText }}>{option.label}</Text>
+                    <Text style={{ fontSize: 14, fontWeight: "500", color: active ? (isDark ? "#05df72" : tw.green600) : idleText }}>{option.label}</Text>
                   </Pressable>
                 );
               })}
@@ -622,7 +622,7 @@ const styles = StyleSheet.create({
   },
   adBadge: { position: "absolute", top: 12, right: 56, backgroundColor: "rgba(0,0,0,0.5)", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
   bookmarkBtn: { position: "absolute", top: 12, right: 12, height: 36, width: 36, borderRadius: 12, alignItems: "center", justifyContent: "center", zIndex: 10 },
-  ratingBadge: { backgroundColor: "#059669", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, flexDirection: "row", alignItems: "center", gap: 4 },
+  ratingBadge: { backgroundColor: "#009966", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, flexDirection: "row", alignItems: "center", gap: 4 },
   sheetHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1 },
   sidebar: { width: 96, borderRightWidth: 1 },
   tab: { alignItems: "center", gap: 4, paddingVertical: 16, paddingHorizontal: 8 },

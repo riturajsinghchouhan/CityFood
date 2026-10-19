@@ -117,11 +117,11 @@ function PreviewItemCard({ item, onSelect, isDark, primary }) {
       </View>
       <View style={styles.previewNameRow}>
         {item.foodType ? (
-          <View style={[styles.vegBox, { borderColor: isVeg ? "#16a34a" : "#dc2626" }]}>
-            <View style={[styles.vegDot, { backgroundColor: isVeg ? "#16a34a" : "#dc2626" }]} />
+          <View style={[styles.vegBox, { borderColor: isVeg ? "#00a63e" : "#dc2626" }]}>
+            <View style={[styles.vegDot, { backgroundColor: isVeg ? "#00a63e" : "#dc2626" }]} />
           </View>
         ) : null}
-        <Text numberOfLines={2} style={[styles.previewName, { color: isDark ? "#f3f4f6" : "#111827" }]}>
+        <Text numberOfLines={2} style={[styles.previewName, { color: isDark ? "#f3f4f6" : "#101828" }]}>
           {item.name}
         </Text>
       </View>
@@ -134,7 +134,7 @@ function PreviewItemCard({ item, onSelect, isDark, primary }) {
             </View>
           </>
         ) : (
-          <Text style={[styles.plainPrice, { color: isDark ? "#d1d5db" : "#374151" }]}>₹{Math.round(item.price)}</Text>
+          <Text style={[styles.plainPrice, { color: isDark ? "#d1d5dc" : "#364153" }]}>₹{Math.round(item.price)}</Text>
         )}
       </View>
       {item.lowerPercent > 0 ? (
@@ -201,7 +201,7 @@ function HomeRestaurantCard({ restaurant, index = 0, isOutOfService = false, isF
             styles.card,
             {
               backgroundColor: isDark ? "#1a1a1a" : "#ffffff",
-              borderColor: isDark ? "#1f2937" : "rgba(229,231,235,0.8)",
+              borderColor: isDark ? "#1e2939" : "rgba(229,231,235,0.8)",
             },
             grey && styles.grey,
           ]}
@@ -220,11 +220,11 @@ function HomeRestaurantCard({ restaurant, index = 0, isOutOfService = false, isF
                 <View style={styles.star}>
                   <Star size={10} color="#ffffff" fill="#ffffff" strokeWidth={0} />
                 </View>
-                <Text style={[styles.rating, { color: isDark ? "#f3f4f6" : "#1f2937" }]}>
+                <Text style={[styles.rating, { color: isDark ? "#f3f4f6" : "#1e2939" }]}>
                   {Number(restaurant.rating) > 0 ? Number(restaurant.rating).toFixed(1) : "New"}
                 </Text>
                 {metaParts.length > 0 ? (
-                  <Text numberOfLines={1} style={[styles.meta, { color: isDark ? "#d1d5db" : "#4b5563" }]}>
+                  <Text numberOfLines={1} style={[styles.meta, { color: isDark ? "#d1d5dc" : "#4a5565" }]}>
                     • {metaParts.join(" • ")}
                   </Text>
                 ) : null}
@@ -234,11 +234,11 @@ function HomeRestaurantCard({ restaurant, index = 0, isOutOfService = false, isF
                   style={[
                     styles.statusPill,
                     availability.isOpen
-                      ? { backgroundColor: "#f0fdf4", borderColor: "#bbf7d0" }
+                      ? { backgroundColor: "#f0fdf4", borderColor: "#b9f8cf" }
                       : { backgroundColor: "#f3f4f6", borderColor: "#e5e7eb" },
                   ]}
                 >
-                  <Text style={[styles.statusText, { color: availability.isOpen ? "#15803d" : "#6b7280" }]}>
+                  <Text style={[styles.statusText, { color: availability.isOpen ? "#008236" : "#6a7282" }]}>
                     {availability.isOpen ? "OPEN NOW" : "OFFLINE"}
                   </Text>
                 </View>
@@ -249,7 +249,7 @@ function HomeRestaurantCard({ restaurant, index = 0, isOutOfService = false, isF
                   </View>
                 ) : null}
                 {minItemPrice > 0 ? (
-                  <Text style={[styles.itemsAt, { color: isDark ? "#d1d5db" : "#4b5563" }]}>• Items at ₹{minItemPrice}</Text>
+                  <Text style={[styles.itemsAt, { color: isDark ? "#d1d5dc" : "#4a5565" }]}>• Items at ₹{minItemPrice}</Text>
                 ) : null}
               </View>
             </View>
@@ -261,13 +261,13 @@ function HomeRestaurantCard({ restaurant, index = 0, isOutOfService = false, isF
                 style={[
                   styles.bookmark,
                   favorite
-                    ? { backgroundColor: "#ef4444", borderColor: "#ef4444" }
+                    ? { backgroundColor: "#fb2c36", borderColor: "#fb2c36" }
                     : { backgroundColor: isDark ? "#18181b" : "#ffffff", borderColor: isDark ? "#3f3f46" : "#e5e7eb" },
                 ]}
               >
                 <Bookmark
                   size={18}
-                  color={favorite ? "#ffffff" : isDark ? "#f3f4f6" : "#1f2937"}
+                  color={favorite ? "#ffffff" : isDark ? "#f3f4f6" : "#1e2939"}
                   fill={favorite ? "#ffffff" : "none"}
                 />
               </Pressable>
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   headline: { marginBottom: 2, fontSize: 13, fontWeight: "800", letterSpacing: 0.325 },
   name: { fontSize: 20, fontWeight: "700", lineHeight: 25, letterSpacing: -0.5 },
   metaRow: { marginTop: 6, flexDirection: "row", alignItems: "center", gap: 6, minWidth: 0 },
-  star: { width: 18, height: 18, borderRadius: 9, backgroundColor: "#15803d", alignItems: "center", justifyContent: "center" },
+  star: { width: 18, height: 18, borderRadius: 9, backgroundColor: "#008236", alignItems: "center", justifyContent: "center" },
   rating: { fontSize: 14, fontWeight: "600" },
   meta: { fontSize: 14, flexShrink: 1 },
   statusRow: { marginTop: 6, flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 },
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     boxShadow: "0px 1px 2px rgba(0,0,0,0.05)",
   },
-  popularText: { fontSize: 11, fontWeight: "700", color: "#15803d" },
+  popularText: { fontSize: 11, fontWeight: "700", color: "#008236" },
   plus: {
     position: "absolute",
     right: 8,
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   vegDot: { width: 6, height: 6, borderRadius: 3 },
   previewName: { flex: 1, fontSize: 14, fontWeight: "500", lineHeight: 19 },
   priceRow: { marginTop: 4, flexDirection: "row", alignItems: "center", gap: 6 },
-  strike: { fontSize: 13, color: "#9ca3af", textDecorationLine: "line-through" },
+  strike: { fontSize: 13, color: "#99a1af", textDecorationLine: "line-through" },
   finalPill: { borderRadius: 9999, paddingHorizontal: 8, paddingVertical: 2 },
   finalPrice: { fontSize: 14, fontWeight: "700" },
   plainPrice: { fontSize: 14, fontWeight: "500" },

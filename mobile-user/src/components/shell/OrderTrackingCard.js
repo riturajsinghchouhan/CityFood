@@ -365,7 +365,7 @@ function OrderTrackingCard({ hasBottomNav = true }) {
           pointerEvents="none"
         />
         <Pressable onPress={() => setDismissedKey(currentOrderKey)} style={styles.close} hitSlop={6} accessibilityLabel="Dismiss">
-          <X size={14} color="#fb923c" />
+          <X size={14} color="#ff8904" />
         </Pressable>
 
         <View style={styles.row}>
@@ -421,9 +421,9 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: "row", alignItems: "center", gap: 16, zIndex: 10 },
   info: { flex: 1, minWidth: 0, paddingRight: 16 },
-  name: { color: "#111827", fontWeight: "700", fontSize: 16, letterSpacing: -0.4 },
+  name: { color: "#101828", fontWeight: "700", fontSize: 16, letterSpacing: -0.4 },
   statusRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 },
-  status: { color: "#6b7280", fontWeight: "500", fontSize: 12, flexShrink: 1 },
+  status: { color: "#6a7282", fontWeight: "500", fontSize: 12, flexShrink: 1 },
   eta: {
     borderRadius: 12,
     paddingHorizontal: 16,
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#fed7aa",
+    borderColor: "#ffd6a7",
   },
   etaLabel: { color: "#fff7ed", fontSize: 10, fontWeight: "700", letterSpacing: 0.5, opacity: 0.95, lineHeight: 12, marginBottom: 2 },
   etaValue: { color: "#ffffff", fontSize: 16, fontWeight: "900", lineHeight: 20 },
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#fff7ed",
     borderWidth: 1,
-    borderColor: "#ffedd5",
+    borderColor: "#ffedd4",
     boxShadow: "0px 4px 15px rgba(235,89,14,0.15)",
   },
   steamRow: { position: "absolute", top: -12, flexDirection: "row", gap: 6 },

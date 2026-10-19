@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
   },
   noSlotsText: { textAlign: "center", fontSize: 14, color: "#7c8394" },
   slotCell: { borderRadius: 16, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 16, alignItems: "center" },
-  slotText: { fontSize: 14, fontWeight: "500", color: "#334155" },
+  slotText: { fontSize: 14, fontWeight: "500", color: "#314158" },
   slotOffer: { marginTop: 4, fontSize: 12, fontWeight: "500", color: "#2d5ea8" },
   infoCard: { borderRadius: 18, backgroundColor: "#ffffff", paddingHorizontal: 16, paddingVertical: 20 },
   infoText: { textAlign: "center", fontSize: 14, color: "#6f7687" },

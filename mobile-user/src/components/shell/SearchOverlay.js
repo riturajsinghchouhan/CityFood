@@ -199,7 +199,7 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
       <Entrance delay={100} from={{ y: -20 }} style={styles.recentBlock}>
         <View style={styles.recentTitleRow}>
           <Clock size={16} color={colors.primary} />
-          <Text style={[styles.recentTitle, { color: isDark ? "#d1d5db" : "#374151" }]}>Recent Searches</Text>
+          <Text style={[styles.recentTitle, { color: isDark ? "#d1d5dc" : "#364153" }]}>Recent Searches</Text>
         </View>
         <View style={styles.chips}>
           {recentSuggestions.slice(0, 8).map((suggestion, index) => (
@@ -209,20 +209,20 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
                 style={({ pressed }) => [
                   styles.chip,
                   {
-                    backgroundColor: isDark ? "rgba(124,45,18,0.2)" : pressed ? "#ffedd5" : "#fff7ed",
-                    borderColor: isDark ? "#9a3412" : "#fed7aa",
+                    backgroundColor: isDark ? "rgba(124,45,18,0.2)" : pressed ? "#ffedd4" : "#fff7ed",
+                    borderColor: isDark ? "#9f2d00" : "#ffd6a7",
                   },
                 ]}
               >
                 <Clock size={12} color={colors.primary} />
-                <Text style={[styles.chipText, { color: isDark ? "#d1d5db" : "#374151" }]}>{suggestion}</Text>
+                <Text style={[styles.chipText, { color: isDark ? "#d1d5dc" : "#364153" }]}>{suggestion}</Text>
               </Pressable>
             </Entrance>
           ))}
         </View>
       </Entrance>
       <Entrance delay={200} from={{}}>
-        <Text style={[styles.gridTitle, { color: isDark ? "#ffffff" : "#111827" }]}>
+        <Text style={[styles.gridTitle, { color: isDark ? "#ffffff" : "#101828" }]}>
           {searchValue.trim() === "" ? "All Dishes" : `Search Results (${filteredFoods.length})`}
         </Text>
       </Entrance>
@@ -233,15 +233,15 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
     <View style={styles.empty}>
       {loadingFoods ? (
         <>
-          <Spinner size={48} color={isDark ? "#4b5563" : "#d1d5db"} />
-          <Text style={[styles.emptyTitle, { color: isDark ? "#9ca3af" : "#4b5563" }]}>
+          <Spinner size={48} color={isDark ? "#4a5565" : "#d1d5dc"} />
+          <Text style={[styles.emptyTitle, { color: isDark ? "#99a1af" : "#4a5565" }]}>
             Loading dishes from database...
           </Text>
         </>
       ) : (
         <>
-          <Search size={48} color={isDark ? "#4b5563" : "#d1d5db"} />
-          <Text style={[styles.emptyTitle, { color: isDark ? "#9ca3af" : "#4b5563" }]}>
+          <Search size={48} color={isDark ? "#4a5565" : "#d1d5dc"} />
+          <Text style={[styles.emptyTitle, { color: isDark ? "#99a1af" : "#4a5565" }]}>
             {searchValue.trim() ? `No results found for "${searchValue}"` : "No dishes found in database"}
           </Text>
           <Text style={styles.emptySub}>
@@ -267,7 +267,7 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
             {
               paddingTop: insets.top + 16,
               backgroundColor: isDark ? "#1a1a1a" : "#ffffff",
-              borderBottomColor: isDark ? "#1f2937" : "#f3f4f6",
+              borderBottomColor: isDark ? "#1e2939" : "#f3f4f6",
             },
           ]}
         >
@@ -284,32 +284,32 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
                 onSubmitEditing={handleSearchSubmit}
                 returnKeyType="search"
                 placeholder="Search dishes or restaurants"
-                placeholderTextColor={isDark ? "#6b7280" : "#9ca3af"}
+                placeholderTextColor={isDark ? "#6a7282" : "#99a1af"}
                 selectionColor={colors.primary}
                 style={[
                   styles.input,
                   {
                     backgroundColor: isDark ? "#1a1a1a" : "#ffffff",
-                    borderColor: isDark ? "#1f2937" : "#e5e7eb",
-                    color: isDark ? "#ffffff" : "#111827",
+                    borderColor: isDark ? "#1e2939" : "#e5e7eb",
+                    color: isDark ? "#ffffff" : "#101828",
                   },
                 ]}
               />
               <View style={styles.micArea}>
-                <View style={[styles.micDivider, { backgroundColor: isDark ? "#374151" : "#e5e7eb" }]} />
+                <View style={[styles.micDivider, { backgroundColor: isDark ? "#364153" : "#e5e7eb" }]} />
                 {isListening ? (
                   <Pressable
                     onPress={stopListening}
                     style={[styles.micBtn, { backgroundColor: isDark ? "rgba(127,29,29,0.2)" : "#fef2f2" }]}
                   >
-                    <PulsingMic color="#ef4444" />
+                    <PulsingMic color="#fb2c36" />
                   </Pressable>
                 ) : (
                   <Pressable
                     onPress={startListening}
                     style={({ pressed }) => [
                       styles.micBtn,
-                      pressed && { backgroundColor: isDark ? "#1f2937" : "#f3f4f6", transform: [{ scale: 0.9 }] },
+                      pressed && { backgroundColor: isDark ? "#1e2939" : "#f3f4f6", transform: [{ scale: 0.9 }] },
                     ]}
                   >
                     <Mic size={20} color={primaryIcon} />
@@ -322,10 +322,10 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
               accessibilityLabel="Close search"
               style={({ pressed }) => [
                 styles.closeBtn,
-                pressed && { backgroundColor: isDark ? "#1f2937" : "#f3f4f6" },
+                pressed && { backgroundColor: isDark ? "#1e2939" : "#f3f4f6" },
               ]}
             >
-              <X size={20} color={isDark ? "#d1d5db" : "#374151"} />
+              <X size={20} color={isDark ? "#d1d5dc" : "#364153"} />
             </Pressable>
           </View>
         </View>
@@ -353,12 +353,12 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
                   {food.image ? (
                     <AppImage src={food.image} width={itemWidth} style={styles.foodImage} />
                   ) : (
-                    <View style={[styles.foodImage, styles.center, { backgroundColor: isDark ? "#1f2937" : "#f3f4f6" }]}>
-                      <Search size={20} color="#9ca3af" />
+                    <View style={[styles.foodImage, styles.center, { backgroundColor: isDark ? "#1e2939" : "#f3f4f6" }]}>
+                      <Search size={20} color="#99a1af" />
                     </View>
                   )}
                 </View>
-                <Text numberOfLines={2} style={[styles.foodName, { color: isDark ? "#e5e7eb" : "#1f2937" }]}>
+                <Text numberOfLines={2} style={[styles.foodName, { color: isDark ? "#e5e7eb" : "#1e2939" }]}>
                   {food.name}
                 </Text>
               </Pressable>
@@ -433,5 +433,5 @@ const styles = StyleSheet.create({
   foodName: { fontSize: 12, fontWeight: "600", textAlign: "center", paddingHorizontal: 4 },
   empty: { alignItems: "center", paddingVertical: 48 },
   emptyTitle: { fontSize: 16, fontWeight: "600", marginTop: 16, textAlign: "center" },
-  emptySub: { fontSize: 14, color: "#6b7280", marginTop: 8, textAlign: "center" },
+  emptySub: { fontSize: 14, color: "#6a7282", marginTop: 8, textAlign: "center" },
 });

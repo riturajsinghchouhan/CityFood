@@ -6,7 +6,7 @@ import { Animated, Pressable, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "../ui";
 
-const ORANGE = "#f97316";
+const ORANGE = "#ff6900";
 
 function useSpring(target) {
   const [value] = useState(() => new Animated.Value(target));

@@ -42,7 +42,7 @@ const FoodCard = memo(function FoodCard({ food, quantity, onAdd, onChange }) {
         )}
         {food.isRecommended || food.isPopular ? (
           <View style={[styles.popular, { backgroundColor: isDark ? "rgba(26,26,26,0.95)" : "rgba(255,255,255,0.95)" }]}>
-            <Text style={[styles.popularText, { color: isDark ? "#34d399" : "#059669" }]}>Popular</Text>
+            <Text style={[styles.popularText, { color: isDark ? "#00d492" : "#009966" }]}>Popular</Text>
           </View>
         ) : null}
         <View style={styles.action}>

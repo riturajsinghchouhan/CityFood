@@ -15,7 +15,7 @@ export default function PaymentSheet({ visible, onClose, selected, onSelect, wal
       description: "UPI, Cards, Netbanking",
       Icon: Zap,
       bg: p.isDark ? "rgba(6,78,59,0.4)" : "#ecfdf5",
-      fg: p.isDark ? "#34d399" : "#059669",
+      fg: p.isDark ? "#00d492" : "#009966",
       badge: "SECURE",
     },
     {
@@ -24,7 +24,7 @@ export default function PaymentSheet({ visible, onClose, selected, onSelect, wal
       description: "Pay from your wallet",
       Icon: Wallet,
       bg: p.isDark ? "rgba(30,58,138,0.4)" : tw.blue50,
-      fg: p.isDark ? "#60a5fa" : tw.blue600,
+      fg: p.isDark ? "#51a2ff" : tw.blue600,
       subInfo: `Bal: ${RUPEE}${walletBalance.toFixed(0)}`,
       disabled: walletBalance < total,
       disabledText: "Low Balance",
@@ -35,7 +35,7 @@ export default function PaymentSheet({ visible, onClose, selected, onSelect, wal
       description: "Pay when order arrives",
       Icon: Banknote,
       bg: p.isDark ? "rgba(124,45,18,0.4)" : tw.orange50,
-      fg: p.isDark ? "#fb923c" : p.colors.foreground,
+      fg: p.isDark ? "#ff8904" : p.colors.foreground,
       hidden: isCodHidden,
     },
   ].filter((o) => !o.hidden);
@@ -90,10 +90,10 @@ export default function PaymentSheet({ visible, onClose, selected, onSelect, wal
                         <View
                           style={[
                             styles.badge,
-                            { backgroundColor: active ? "rgba(255,255,255,0.2)" : p.isDark ? "rgba(6,78,59,0.3)" : "#d1fae5" },
+                            { backgroundColor: active ? "rgba(255,255,255,0.2)" : p.isDark ? "rgba(6,78,59,0.3)" : "#d0fae5" },
                           ]}
                         >
-                          <Text style={[styles.badgeText, { color: active ? "#ffffff" : p.isDark ? "#34d399" : "#047857" }]}>
+                          <Text style={[styles.badgeText, { color: active ? "#ffffff" : p.isDark ? "#00d492" : "#007a55" }]}>
                             {o.badge}
                           </Text>
                         </View>
@@ -108,7 +108,7 @@ export default function PaymentSheet({ visible, onClose, selected, onSelect, wal
                           <View
                             style={[
                               styles.dot,
-                              { backgroundColor: active ? "rgba(255,255,255,0.4)" : p.isDark ? "#c2410c" : "#fdba74" },
+                              { backgroundColor: active ? "rgba(255,255,255,0.4)" : p.isDark ? "#ca3500" : "#ffb86a" },
                             ]}
                           />
                           <Text style={[styles.subInfo, { color: active ? "#ffffff" : p.isDark ? tw.green500 : tw.green600 }]}>

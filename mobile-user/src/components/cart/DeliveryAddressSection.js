@@ -112,7 +112,7 @@ export default function DeliveryAddressSection({
                     <Text
                       style={[
                         styles.chipText,
-                        { color: exists ? (p.isDark ? tw.gray300 : "#334155") : tw.gray400 },
+                        { color: exists ? (p.isDark ? tw.gray300 : "#314158") : tw.gray400 },
                       ]}
                     >
                       {label}

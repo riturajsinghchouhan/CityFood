@@ -31,7 +31,7 @@ const sessionCategoriesCache = new Map();
 const SEARCH_HISTORY_KEY = "search:professional-history";
 const normalizeHistory = (list) => (Array.isArray(list) ? list.filter((i) => typeof i === "string").slice(0, 5) : []);
 
-const zinc = { 400: "#a1a1aa", 700: "#3f3f46", 800: "#27272a", 900: "#18181b", 950: "#09090b" };
+const zinc = { 400: "#9f9fa9", 700: "#3f3f46", 800: "#27272a", 900: "#18181b", 950: "#09090b" };
 
 const pickImage = (r) => r.matchedDishImage || r.profileImage || r.image || (Array.isArray(r.images) && r.images[0]) || null;
 
@@ -344,7 +344,7 @@ export default function SearchScreen() {
         return (
           <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
             <View style={[styles.emptyIcon, { backgroundColor: isDark ? zinc[900] : tw.slate100 }]}>
-              <Search size={32} color="#cbd5e1" />
+              <Search size={32} color="#cad5e2" />
             </View>
             <Text style={{ fontSize: 20, fontWeight: "700", marginBottom: 8, color: isDark ? "#ffffff" : tw.slate900, textAlign: "center" }}>
               {"We couldn't find any results"}
@@ -356,8 +356,8 @@ export default function SearchScreen() {
               variant="outline"
               title="Clear all filters"
               onPress={handleClear}
-              style={{ marginTop: 24, borderRadius: 12, borderColor: "#f43f5e" }}
-              textStyle={{ color: "#f43f5e" }}
+              style={{ marginTop: 24, borderRadius: 12, borderColor: "#ff2056" }}
+              textStyle={{ color: "#ff2056" }}
             />
           </View>
         );

@@ -177,7 +177,7 @@ export default function GourmetScreen() {
 
           {error && !loading ? (
             <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
-              <Text style={{ textAlign: "center", color: isDark ? "#f87171" : tw.red500 }}>{error}</Text>
+              <Text style={{ textAlign: "center", color: isDark ? "#ff6467" : tw.red500 }}>{error}</Text>
               <Button title="Retry" onPress={fetchList} style={{ marginTop: 16 }} />
             </View>
           ) : null}

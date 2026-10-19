@@ -46,7 +46,7 @@ export default function PaymentBar({
               <Text style={[styles.method, { color: p.isDark ? tw.gray100 : tw.gray800 }]}>{label}</Text>
               {method === "wallet" ? (
                 <View style={[styles.balPill, { backgroundColor: p.isDark ? "rgba(20,83,45,0.2)" : tw.green50 }]}>
-                  <Text style={[styles.balText, { color: p.isDark ? "#4ade80" : tw.green600 }]}>
+                  <Text style={[styles.balText, { color: p.isDark ? "#05df72" : tw.green600 }]}>
                     {RUPEE}
                     {walletBalance.toFixed(0)}
                   </Text>

@@ -84,7 +84,7 @@ export default function OffersScreen() {
 
           {error && !loading ? (
             <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 80 }}>
-              <Text style={{ textAlign: "center", color: isDark ? "#f87171" : tw.red500 }}>{error}</Text>
+              <Text style={{ textAlign: "center", color: isDark ? "#ff6467" : tw.red500 }}>{error}</Text>
               <Button title="Retry" onPress={fetchOffers} style={{ marginTop: 16 }} />
             </View>
           ) : null}
@@ -93,7 +93,7 @@ export default function OffersScreen() {
             <>
               {groups.map(([offerText, dishes]) => (
                 <View key={offerText}>
-                  <Text style={[styles.groupTitle, { color: isDark ? "#f87171" : tw.red500 }]}>{offerText}</Text>
+                  <Text style={[styles.groupTitle, { color: isDark ? "#ff6467" : tw.red500 }]}>{offerText}</Text>
                   <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
                     {(dishes || []).slice(0, 8).map((dish) => (
                       <Pressable key={dish.id} style={{ width: tileWidth }} onPress={() => router.push(`/restaurants/${dish.restaurantSlug}`)}>
@@ -149,8 +149,8 @@ export default function OffersScreen() {
                           <Text style={{ fontSize: 12, fontWeight: "600", color: "#ffffff" }}>{o.title || "Offer"}</Text>
                         </View>
                       </View>
-                      <Text style={{ fontSize: 14, color: isDark ? "#cbd5e1" : "#334155" }}>
-                        <Text style={{ fontSize: 14, fontWeight: "600", color: isDark ? "#cbd5e1" : "#334155" }}>Restaurant:</Text>{" "}
+                      <Text style={{ fontSize: 14, color: isDark ? "#cad5e2" : "#314158" }}>
+                        <Text style={{ fontSize: 14, fontWeight: "600", color: isDark ? "#cad5e2" : "#314158" }}>Restaurant:</Text>{" "}
                         {o.restaurantName || "All Restaurants"}
                       </Text>
                       {o.endDate ? (

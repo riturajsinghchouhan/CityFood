@@ -69,8 +69,8 @@ function AnimatedCheckmark() {
   return (
     <Animated.View style={{ alignSelf: "center", opacity: anim, transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }] }}>
       <Svg width={80} height={80} viewBox="0 0 80 80">
-        <Circle cx="40" cy="40" r="36" fill="none" stroke="#22c55e" strokeWidth={4} />
-        <Path d="M24 40 L35 51 L56 30" fill="none" stroke="#22c55e" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
+        <Circle cx="40" cy="40" r="36" fill="none" stroke="#00c950" strokeWidth={4} />
+        <Path d="M24 40 L35 51 L56 30" fill="none" stroke="#00c950" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
       </Svg>
     </Animated.View>
   );
@@ -125,10 +125,10 @@ class MapErrorBoundary extends Component {
         <View
           style={[
             styles.mapFallback,
-            { backgroundColor: isDark ? "#111827" : "#f3f4f6", borderColor: isDark ? "#1f2937" : "#e5e7eb", borderWidth: 1, borderRadius: 16 },
+            { backgroundColor: isDark ? "#101828" : "#f3f4f6", borderColor: isDark ? "#1e2939" : "#e5e7eb", borderWidth: 1, borderRadius: 16 },
           ]}
         >
-          <Text style={{ fontSize: 14, textAlign: "center", paddingHorizontal: 16, color: isDark ? "#9ca3af" : "#4b5563" }}>
+          <Text style={{ fontSize: 14, textAlign: "center", paddingHorizontal: 16, color: isDark ? "#99a1af" : "#4a5565" }}>
             Live map unavailable right now
           </Text>
         </View>
@@ -142,22 +142,22 @@ function SectionItem({ Icon, iconNode, title, subtitle, onPress, showArrow = tru
   return (
     <>
       <ScalePressable scaleTo={0.99} onPress={onPress} disabled={!onPress} style={styles.sectionItem}>
-        <View style={[styles.sectionIcon, { backgroundColor: isDark ? "#1f2937" : "#f3f4f6" }]}>
-          {iconNode || <Icon size={20} color={isDark ? "#9ca3af" : "#4b5563"} />}
+        <View style={[styles.sectionIcon, { backgroundColor: isDark ? "#1e2939" : "#f3f4f6" }]}>
+          {iconNode || <Icon size={20} color={isDark ? "#99a1af" : "#4a5565"} />}
         </View>
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: "500", color: isDark ? "#f3f4f6" : "#111827" }}>
+          <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: "500", color: isDark ? "#f3f4f6" : "#101828" }}>
             {title}
           </Text>
           {subtitle ? (
-            <Text numberOfLines={1} style={{ fontSize: 14, color: isDark ? "#9ca3af" : "#6b7280" }}>
+            <Text numberOfLines={1} style={{ fontSize: 14, color: isDark ? "#99a1af" : "#6a7282" }}>
               {subtitle}
             </Text>
           ) : null}
         </View>
-        {showArrow ? <ChevronRight size={20} color={isDark ? "#6b7280" : "#9ca3af"} /> : null}
+        {showArrow ? <ChevronRight size={20} color={isDark ? "#6a7282" : "#99a1af"} /> : null}
       </ScalePressable>
-      {last ? null : <DashedLine color={isDark ? "#1f2937" : "#e5e7eb"} />}
+      {last ? null : <DashedLine color={isDark ? "#1e2939" : "#e5e7eb"} />}
     </>
   );
 }
@@ -778,13 +778,13 @@ function OrderTrackingScreen() {
         <View style={{ padding: 16, paddingVertical: 80, alignItems: "center" }}>
           {loading ? (
             <>
-              <Spinner size={32} color={isDark ? "#9ca3af" : "#4b5563"} style={{ marginBottom: 16 }} />
-              <Text style={{ fontSize: 16, color: isDark ? "#9ca3af" : "#4b5563" }}>Loading order details...</Text>
+              <Spinner size={32} color={isDark ? "#99a1af" : "#4a5565"} style={{ marginBottom: 16 }} />
+              <Text style={{ fontSize: 16, color: isDark ? "#99a1af" : "#4a5565" }}>Loading order details...</Text>
             </>
           ) : (
             <>
-              <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 16, color: isDark ? "#f3f4f6" : "#111827" }}>Order Not Found</Text>
-              <Text style={{ fontSize: 16, marginBottom: 24, textAlign: "center", color: isDark ? "#9ca3af" : "#4b5563" }}>
+              <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 16, color: isDark ? "#f3f4f6" : "#101828" }}>Order Not Found</Text>
+              <Text style={{ fontSize: 16, marginBottom: 24, textAlign: "center", color: isDark ? "#99a1af" : "#4a5565" }}>
                 {error || "The order you're looking for doesn't exist."}
               </Text>
               <Button title="Back to Orders" onPress={() => goTo("/orders")} />
@@ -841,9 +841,9 @@ function OrderTrackingScreen() {
     return "Add delivery address";
   })();
 
-  const textMain = isDark ? "#f3f4f6" : "#111827";
-  const textSub = isDark ? "#9ca3af" : "#6b7280";
-  const dashColor = isDark ? "#1f2937" : "#e5e7eb";
+  const textMain = isDark ? "#f3f4f6" : "#101828";
+  const textSub = isDark ? "#99a1af" : "#6a7282";
+  const dashColor = isDark ? "#1e2939" : "#e5e7eb";
   const pillBg = "rgba(255,255,255,0.2)";
 
   return (
@@ -886,7 +886,7 @@ function OrderTrackingScreen() {
               {orderStatus === "preparing" ? (
                 <>
                   <View style={[styles.dotSmall, { backgroundColor: "#ffffff" }]} />
-                  <Text style={{ fontSize: 14, color: "#fed7aa" }}>On time</Text>
+                  <Text style={{ fontSize: 14, color: "#ffd6a7" }}>On time</Text>
                 </>
               ) : null}
               <RefreshButton refreshing={isRefreshing} onPress={handleRefresh} />
@@ -918,11 +918,11 @@ function OrderTrackingScreen() {
                 { backgroundColor: isDark ? "rgba(30,58,138,0.1)" : "#eff6ff", borderColor: isDark ? "rgba(30,58,138,0.3)" : "#dbeafe" },
               ]}
             >
-              <Text style={{ fontSize: 12, fontWeight: "600", letterSpacing: 0.6, color: isDark ? "#60a5fa" : "#1d4ed8" }}>DELIVERY OTP</Text>
-              <Text style={{ fontSize: 24, fontWeight: "800", letterSpacing: 2.4, marginTop: 4, color: isDark ? "#bfdbfe" : "#1e3a8a" }}>
+              <Text style={{ fontSize: 12, fontWeight: "600", letterSpacing: 0.6, color: isDark ? "#51a2ff" : "#1447e6" }}>DELIVERY OTP</Text>
+              <Text style={{ fontSize: 24, fontWeight: "800", letterSpacing: 2.4, marginTop: 4, color: isDark ? "#bedbff" : "#1c398e" }}>
                 {String(customerDeliveryOtp)}
               </Text>
-              <Text style={{ fontSize: 12, marginTop: 4, color: isDark ? "#60a5fa" : "#1d4ed8" }}>
+              <Text style={{ fontSize: 12, marginTop: 4, color: isDark ? "#51a2ff" : "#1447e6" }}>
                 Share this 4-digit OTP with your delivery partner at drop-off.
               </Text>
             </FadeIn>
@@ -932,27 +932,27 @@ function OrderTrackingScreen() {
             {scheduledEarly ? (
               <View style={styles.statusRow}>
                 <View style={[styles.statusIcon, { backgroundColor: "#eff6ff", borderColor: "#dbeafe" }]}>
-                  <Clock size={28} color="#2563eb" />
+                  <Clock size={28} color="#155dfc" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 16, fontWeight: "600", color: textMain }}>Order Scheduled</Text>
                   <Text style={{ fontSize: 14, marginTop: 4, color: textSub }}>{scheduledDateFormatted}</Text>
-                  <Text style={{ fontSize: 12, marginTop: 4, color: isDark ? "#60a5fa" : "#2563eb" }}>
+                  <Text style={{ fontSize: 12, marginTop: 4, color: isDark ? "#51a2ff" : "#155dfc" }}>
                     We&apos;ll notify you when the restaurant starts preparing
                   </Text>
                 </View>
               </View>
             ) : (
               <View style={styles.statusRow}>
-                <View style={[styles.statusIcon, { backgroundColor: iconBg, borderColor: isDark ? "#1f2937" : "#f3f4f6" }]}>
+                <View style={[styles.statusIcon, { backgroundColor: iconBg, borderColor: isDark ? "#1e2939" : "#f3f4f6" }]}>
                   {currentStatus.iconType === "rider" ? (
                     <RiderBikeIcon size={56} />
                   ) : currentStatus.iconType === "cancelled" ? (
-                    <X size={40} color="#ef4444" />
+                    <X size={40} color="#fb2c36" />
                   ) : currentStatus.iconType === "delivered" ? (
-                    <Check size={40} color="#22c55e" />
+                    <Check size={40} color="#00c950" />
                   ) : (
-                    <Receipt size={40} color="#f97316" />
+                    <Receipt size={40} color="#ff6900" />
                   )}
                 </View>
                 <View style={{ flex: 1 }}>
@@ -962,10 +962,10 @@ function OrderTrackingScreen() {
                     <View
                       style={[
                         styles.deadBox,
-                        { backgroundColor: isDark ? "rgba(127,29,29,0.2)" : "#fef2f2", borderColor: isDark ? "rgba(127,29,29,0.3)" : "#fee2e2" },
+                        { backgroundColor: isDark ? "rgba(127,29,29,0.2)" : "#fef2f2", borderColor: isDark ? "rgba(127,29,29,0.3)" : "#ffe2e2" },
                       ]}
                     >
-                      <Text style={{ fontSize: 14, fontWeight: "500", marginBottom: 8, color: isDark ? "#fca5a5" : "#b91c1c" }}>
+                      <Text style={{ fontSize: 14, fontWeight: "500", marginBottom: 8, color: isDark ? "#ffa2a2" : "#c10007" }}>
                         If your money was deducted, it will be automatically refunded. Please reach out to support for instant help.
                       </Text>
                       <Pressable onPress={() => Linking.openURL("tel:+919755633147").catch(() => {})} style={styles.supportBtn}>
@@ -988,7 +988,7 @@ function OrderTrackingScreen() {
                 <Text style={{ fontSize: 20, fontWeight: "700", color: textMain }}>Enjoyed your food?</Text>
                 <Text style={{ fontSize: 14, marginTop: 8, marginBottom: 24, maxWidth: 280, textAlign: "center", color: textSub }}>
                   Rate your experience with{" "}
-                  <Text style={{ fontSize: 14, fontWeight: "600", color: isDark ? "#d1d5db" : "#374151" }}>{order?.restaurant}</Text> and help us
+                  <Text style={{ fontSize: 14, fontWeight: "600", color: isDark ? "#d1d5dc" : "#364153" }}>{order?.restaurant}</Text> and help us
                   improve!
                 </Text>
                 <Pressable onPress={handleOpenRating} style={[styles.rateBtn, { backgroundColor: colors.primary }]}>
@@ -999,14 +999,14 @@ function OrderTrackingScreen() {
           ) : null}
 
           {orderStatus === "delivered" && isOrderRated ? (
-            <FadeIn style={[styles.card, { backgroundColor: cardBg, padding: 20, borderWidth: 1, borderColor: isDark ? "#1f2937" : "#f3f4f6" }]}>
+            <FadeIn style={[styles.card, { backgroundColor: cardBg, padding: 20, borderWidth: 1, borderColor: isDark ? "#1e2939" : "#f3f4f6" }]}>
               <View style={[styles.feedbackHead, { borderBottomColor: isDark ? "rgba(31,41,55,0.5)" : "#f9fafb" }]}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#22c55e" }} />
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#00c950" }} />
                   <Text style={{ fontSize: 14, fontWeight: "700", color: textMain }}>Your Feedback</Text>
                 </View>
                 <Pressable onPress={handleOpenRating} hitSlop={8}>
-                  <Text style={{ fontSize: 10, fontWeight: "700", letterSpacing: 1, color: isDark ? "#fb923c" : colors.primary }}>EDIT RATING</Text>
+                  <Text style={{ fontSize: 10, fontWeight: "700", letterSpacing: 1, color: isDark ? "#ff8904" : colors.primary }}>EDIT RATING</Text>
                 </Pressable>
               </View>
               <View style={{ gap: 16 }}>
@@ -1018,7 +1018,7 @@ function OrderTrackingScreen() {
                   .map(([label, comment, value]) => (
                     <View key={label} style={styles.feedbackRow}>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#d1d5db" : "#374151" }}>{label}</Text>
+                        <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#d1d5dc" : "#364153" }}>{label}</Text>
                         {comment ? (
                           <Text numberOfLines={1} style={{ fontSize: 10, fontStyle: "italic", marginTop: 2, color: textSub }}>
                             &quot;{comment}&quot;
@@ -1030,8 +1030,8 @@ function OrderTrackingScreen() {
                           <Star
                             key={star}
                             size={14}
-                            color={star <= value ? "#facc15" : isDark ? "#1f2937" : "#e5e7eb"}
-                            fill={star <= value ? "#facc15" : "transparent"}
+                            color={star <= value ? "#fdc700" : isDark ? "#1e2939" : "#e5e7eb"}
+                            fill={star <= value ? "#fdc700" : "transparent"}
                           />
                         ))}
                       </View>
@@ -1063,7 +1063,7 @@ function OrderTrackingScreen() {
                   </Text>
                 </View>
                 <ScalePressable scaleTo={0.9} onPress={handleCallRider} style={[styles.callBtn, { backgroundColor: "#eff6ff" }]}>
-                  <Phone size={20} color="#2563eb" />
+                  <Phone size={20} color="#155dfc" />
                 </ScalePressable>
               </View>
               <DashedLine color={dashColor} />
@@ -1074,12 +1074,12 @@ function OrderTrackingScreen() {
                     { backgroundColor: isDark ? "rgba(30,58,138,0.1)" : "rgba(239,246,255,0.5)", borderColor: isDark ? "rgba(30,58,138,0.2)" : "#dbeafe" },
                   ]}
                 >
-                  <MessageSquare size={16} color="#3b82f6" style={{ marginTop: 2 }} />
+                  <MessageSquare size={16} color="#2b7fff" style={{ marginTop: 2 }} />
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10, fontWeight: "700", letterSpacing: 0.5, marginBottom: 2, color: isDark ? "#60a5fa" : "#2563eb" }}>
+                    <Text style={{ fontSize: 10, fontWeight: "700", letterSpacing: 0.5, marginBottom: 2, color: isDark ? "#51a2ff" : "#155dfc" }}>
                       INSTRUCTION FOR RIDER
                     </Text>
-                    <Text style={{ fontSize: 12, fontWeight: "500", color: isDark ? "#d1d5db" : "#374151" }}>&quot;{order.note}&quot;</Text>
+                    <Text style={{ fontSize: 12, fontWeight: "500", color: isDark ? "#d1d5dc" : "#364153" }}>&quot;{order.note}&quot;</Text>
                   </View>
                 </View>
               ) : null}
@@ -1091,7 +1091,7 @@ function OrderTrackingScreen() {
               delay={0.65}
               style={[styles.yellow, { backgroundColor: isDark ? "rgba(113,63,18,0.1)" : "#fefce8", borderColor: isDark ? "rgba(113,63,18,0.3)" : "#e5e7eb" }]}
             >
-              <Text style={{ fontSize: 14, fontWeight: "500", textAlign: "center", color: isDark ? "#facc15" : "#854d0e" }}>
+              <Text style={{ fontSize: 14, fontWeight: "500", textAlign: "center", color: isDark ? "#fdc700" : "#894b00" }}>
                 All your delivery details in one place 🥡
               </Text>
             </FadeIn>
@@ -1130,7 +1130,7 @@ function OrderTrackingScreen() {
 
           <FadeIn delay={0.75} style={[styles.card, { backgroundColor: cardBg, overflow: "hidden" }]}>
             <View style={styles.partnerRow}>
-              <View style={[styles.restaurantIcon, { backgroundColor: "#ffedd5" }]}>
+              <View style={[styles.restaurantIcon, { backgroundColor: "#ffedd4" }]}>
                 <RestaurantPinIcon size={28} withDoors />
               </View>
               <View style={{ flex: 1 }}>
@@ -1144,21 +1144,21 @@ function OrderTrackingScreen() {
             <DashedLine color={dashColor} />
             <Pressable onPress={() => setShowOrderDetails(true)} style={{ padding: 16 }}>
               <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
-                <Receipt size={20} color="#6b7280" style={{ marginTop: 2 }} />
+                <Receipt size={20} color="#6a7282" style={{ marginTop: 2 }} />
                 <View style={{ flex: 1, gap: 4 }}>
                   {order?.items?.map((item, index) => (
                     <View key={index} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                       <View style={styles.greenBox}>
-                        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#16a34a" }} />
+                        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#00a63e" }} />
                       </View>
-                      <Text style={{ fontSize: 14, flexShrink: 1, color: isDark ? "#9ca3af" : "#4b5563" }}>
+                      <Text style={{ fontSize: 14, flexShrink: 1, color: isDark ? "#99a1af" : "#4a5565" }}>
                         {item.quantity} x {item.name}
                         {item.variantName ? ` (${item.variantName})` : ""}
                       </Text>
                     </View>
                   ))}
                 </View>
-                <ChevronRight size={20} color="#9ca3af" />
+                <ChevronRight size={20} color="#99a1af" />
               </View>
             </Pressable>
             <DashedLine color={dashColor} />
@@ -1169,7 +1169,7 @@ function OrderTrackingScreen() {
               <Pressable onPress={handleCancelOrder} style={styles.cancelBtn}>
                 <Text style={{ fontSize: 14, fontWeight: "600", color: "#dc2626" }}>Cancel Order ({cancelSecondsRemaining}s)</Text>
               </Pressable>
-              <Text style={{ fontSize: 10, textAlign: "center", paddingHorizontal: 16, color: "#9ca3af" }}>
+              <Text style={{ fontSize: 10, textAlign: "center", paddingHorizontal: 16, color: "#99a1af" }}>
                 You can cancel your order for free within the next {cancelSecondsRemaining} seconds.
               </Text>
             </FadeIn>
@@ -1220,7 +1220,7 @@ function OrderTrackingScreen() {
           <Text style={{ fontSize: 24, fontWeight: "700", marginTop: 24, textAlign: "center", color: textMain }}>
             {isScheduledOrder ? "Order Scheduled!" : "Order Confirmed!"}
           </Text>
-          <Text style={{ fontSize: 16, marginTop: 8, textAlign: "center", color: isDark ? "#d1d5db" : "#4b5563" }}>
+          <Text style={{ fontSize: 16, marginTop: 8, textAlign: "center", color: isDark ? "#d1d5dc" : "#4a5565" }}>
             {isScheduledOrder ? `Scheduled for ${scheduledDateFormatted}` : "Your order has been placed successfully"}
           </Text>
         </View>
@@ -1293,12 +1293,12 @@ const styles = StyleSheet.create({
   yellow: { borderRadius: 12, padding: 16, borderWidth: 1 },
   sectionItem: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
   sectionIcon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", overflow: "hidden" },
-  greenBox: { width: 16, height: 16, borderRadius: 4, borderWidth: 1, borderColor: "#16a34a", alignItems: "center", justifyContent: "center" },
+  greenBox: { width: 16, height: 16, borderRadius: 4, borderWidth: 1, borderColor: "#00a63e", alignItems: "center", justifyContent: "center" },
   cancelBtn: {
     height: 48,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#fee2e2",
+    borderColor: "#ffe2e2",
     backgroundColor: "#ffffff",
     alignItems: "center",
     justifyContent: "center",

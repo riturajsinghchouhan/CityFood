@@ -103,11 +103,11 @@ export function FilterSheet({ visible, onClose, filters, setFilters, vegMode, ve
         style={[
           styles.option,
           active
-            ? { borderColor: p.isDark ? "#60a5fa" : "#3b82f6", backgroundColor: p.isDark ? "rgba(30,58,138,0.3)" : tw.blue50 }
+            ? { borderColor: p.isDark ? "#51a2ff" : "#2b7fff", backgroundColor: p.isDark ? "rgba(30,58,138,0.3)" : tw.blue50 }
             : { borderColor: p.optionBorder, backgroundColor: p.optionBg },
         ]}
       >
-        <Text style={{ color: active ? (p.isDark ? "#60a5fa" : "#1d4ed8") : p.isDark ? tw.gray300 : tw.gray700 }}>{label}</Text>
+        <Text style={{ color: active ? (p.isDark ? "#51a2ff" : "#1447e6") : p.isDark ? tw.gray300 : tw.gray700 }}>{label}</Text>
       </Pressable>
     );
   };
@@ -117,7 +117,7 @@ export function FilterSheet({ visible, onClose, filters, setFilters, vegMode, ve
     const activeStyle = isVeg
       ? { borderColor: p.isDark ? tw.green500 : tw.green600, backgroundColor: p.isDark ? "rgba(20,83,45,0.3)" : tw.green50 }
       : { borderColor: tw.red600, backgroundColor: p.isDark ? "rgba(127,29,29,0.3)" : tw.red50 };
-    const activeText = isVeg ? (p.isDark ? "#4ade80" : tw.green700) : p.isDark ? tw.gray300 : tw.red600;
+    const activeText = isVeg ? (p.isDark ? "#05df72" : tw.green700) : p.isDark ? tw.gray300 : tw.red600;
     return (
       <Pressable
         onPress={() => setFilters((prev) => ({ ...prev, vegNonVeg: prev.vegNonVeg === value ? null : value }))}
@@ -163,7 +163,7 @@ export function FilterSheet({ visible, onClose, filters, setFilters, vegMode, ve
           onPress={() => setFilters({ sortBy: null, vegNonVeg: null, highlyReordered: false, spicy: false })}
           hitSlop={6}
         >
-          <Text style={{ fontSize: 14, fontWeight: "500", color: p.isDark ? "#f87171" : tw.red600 }}>Clear All</Text>
+          <Text style={{ fontSize: 14, fontWeight: "500", color: p.isDark ? "#ff6467" : tw.red600 }}>Clear All</Text>
         </Pressable>
         <Pressable onPress={onClose} style={({ pressed }) => [styles.applyBtn, { backgroundColor: p.colors.primary, opacity: pressed ? 0.9 : 1 }]}>
           <Text style={{ color: "#ffffff", fontWeight: "700" }}>
@@ -242,7 +242,7 @@ export function ItemDetailSheet({
   }
 
   const roundBtn = {
-    borderColor: isFavorite ? (p.isDark ? "#f87171" : tw.red500) : p.isDark ? tw.gray800 : "#ffffff",
+    borderColor: isFavorite ? (p.isDark ? "#ff6467" : tw.red500) : p.isDark ? tw.gray800 : "#ffffff",
     backgroundColor: isFavorite ? (p.isDark ? "rgba(127,29,29,0.3)" : tw.red50) : p.isDark ? "rgba(26,26,26,0.9)" : "rgba(255,255,255,0.9)",
   };
 
@@ -265,8 +265,8 @@ export function ItemDetailSheet({
           <Pressable onPress={onBookmark} style={[styles.roundBtn, roundBtn]}>
             <Bookmark
               size={20}
-              color={isFavorite ? (p.isDark ? "#f87171" : tw.red500) : p.isDark ? tw.gray300 : tw.gray600}
-              fill={isFavorite ? (p.isDark ? "#f87171" : tw.red500) : "transparent"}
+              color={isFavorite ? (p.isDark ? "#ff6467" : tw.red500) : p.isDark ? tw.gray300 : tw.gray600}
+              fill={isFavorite ? (p.isDark ? "#ff6467" : tw.red500) : "transparent"}
             />
           </Pressable>
           {/* The web share button here has no handler. */}
@@ -299,7 +299,7 @@ export function ItemDetailSheet({
         {isRecommendedItem(item) ? (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 16 }}>
             <View style={{ flex: 1, height: 2, borderRadius: 999, overflow: "hidden", backgroundColor: p.isDark ? tw.gray700 : tw.gray200 }}>
-              <View style={{ height: "100%", width: "50%", borderRadius: 999, backgroundColor: p.isDark ? "#4ade80" : tw.green500 }} />
+              <View style={{ height: "100%", width: "50%", borderRadius: 999, backgroundColor: p.isDark ? "#05df72" : tw.green500 }} />
             </View>
             <Text style={{ fontSize: 12, fontWeight: "500", color: p.isDark ? tw.gray400 : tw.gray600 }}>highly reordered</Text>
           </View>
@@ -320,7 +320,7 @@ export function ItemDetailSheet({
                     style={[
                       styles.variantChip,
                       active
-                        ? { borderColor: p.isDark ? "#f87171" : tw.red500, backgroundColor: p.isDark ? "rgba(127,29,29,0.3)" : tw.red50 }
+                        ? { borderColor: p.isDark ? "#ff6467" : tw.red500, backgroundColor: p.isDark ? "rgba(127,29,29,0.3)" : tw.red50 }
                         : { borderColor: p.isDark ? tw.gray700 : tw.gray200, backgroundColor: p.isDark ? "#2a2a2a" : "#ffffff" },
                     ]}
                   >
@@ -328,7 +328,7 @@ export function ItemDetailSheet({
                       style={{
                         fontSize: 14,
                         fontWeight: "500",
-                        color: active ? (p.isDark ? "#fecaca" : tw.red600) : p.isDark ? tw.gray300 : tw.gray700,
+                        color: active ? (p.isDark ? "#ffc9c9" : tw.red600) : p.isDark ? tw.gray300 : tw.gray700,
                       }}
                     >
                       {v.name} · {RUPEE}
@@ -418,7 +418,7 @@ export function OffersSheet({ visible, onClose, restaurant }) {
                       }
                       style={styles.couponRow}
                     >
-                      <Percent size={20} color={p.isDark ? "#60a5fa" : tw.blue600} />
+                      <Percent size={20} color={p.isDark ? "#51a2ff" : tw.blue600} />
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 14, fontWeight: "500", marginBottom: 4, color: p.title }}>{coupon?.title || "Restaurant coupon"}</Text>
                         <Text style={{ fontSize: 12, color: p.muted }}>Use code {coupon?.code || "N/A"}</Text>
@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
   detailFooter: { borderTopWidth: 1, paddingHorizontal: 16, paddingVertical: 16, flexDirection: "row", alignItems: "center", gap: 16 },
   qtyBox: { flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 2, borderRadius: 8, paddingHorizontal: 12, height: 44 },
   addItemBtn: { flex: 1, height: 44, borderRadius: 8, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
-  strike: { fontSize: 14, color: "#fecaca", textDecorationLine: "line-through" },
+  strike: { fontSize: 14, color: "#ffc9c9", textDecorationLine: "line-through" },
   addPrice: { fontSize: 16, fontWeight: "700", color: "#ffffff" },
   sheetHeader: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 16, borderBottomWidth: 1 },
   coupon: { borderWidth: 1, borderRadius: 8, overflow: "hidden", boxShadow: "0px 1px 2px rgba(0,0,0,0.05)" },

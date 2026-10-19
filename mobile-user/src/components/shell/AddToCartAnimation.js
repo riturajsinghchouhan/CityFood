@@ -232,10 +232,10 @@ const styles = StyleSheet.create({
   },
   thumbImg: { width: "100%", height: "100%", borderRadius: THUMB / 2 },
   thumbFallback: { alignItems: "center", justifyContent: "center", backgroundColor: "#e5e5e5" },
-  thumbLetter: { fontSize: 12, fontWeight: "600", color: "#a3a3a3" },
+  thumbLetter: { fontSize: 12, fontWeight: "600", color: "#a1a1a1" },
   pillWrap: { position: "absolute", left: 0, right: 0, alignItems: "center", paddingHorizontal: 16, zIndex: 9999 },
   pill: {
-    backgroundColor: "#f97316",
+    backgroundColor: "#ff6900",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.2)",
     borderRadius: 9999,

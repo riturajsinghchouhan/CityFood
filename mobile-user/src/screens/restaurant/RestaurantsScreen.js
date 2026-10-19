@@ -71,15 +71,15 @@ function RestaurantRow({ restaurant }) {
               </Text>
               <View style={[styles.ratingChip, { backgroundColor: isDark ? "rgba(113,63,18,0.3)" : "#fefce8" }]}>
                 <Star size={12} color={tw.yellow400} fill={tw.yellow400} />
-                <Text style={{ fontSize: 12, fontWeight: "700", color: isDark ? tw.yellow400 : "#a16207" }}>{restaurant.rating.toFixed(1)}</Text>
+                <Text style={{ fontSize: 12, fontWeight: "700", color: isDark ? tw.yellow400 : "#a65f00" }}>{restaurant.rating.toFixed(1)}</Text>
               </View>
             </View>
             {!restaurant.isBanned ? (
               <Pressable onPress={toggle} hitSlop={6} style={styles.heart}>
                 <Heart
                   size={16}
-                  color={favorite ? (isDark ? "#f87171" : tw.red500) : isDark ? tw.gray500 : tw.gray400}
-                  fill={favorite ? (isDark ? "#f87171" : tw.red500) : "transparent"}
+                  color={favorite ? (isDark ? "#ff6467" : tw.red500) : isDark ? tw.gray500 : tw.gray400}
+                  fill={favorite ? (isDark ? "#ff6467" : tw.red500) : "transparent"}
                 />
               </Pressable>
             ) : null}
@@ -135,7 +135,7 @@ function EndOfList() {
         </View>
         <LinearGradient colors={line} start={{ x: 1, y: 0 }} end={{ x: 0, y: 0 }} style={{ height: 1, flex: 1 }} />
       </View>
-      <Text style={{ fontSize: 11, fontWeight: "600", letterSpacing: 1.1, marginTop: 12, color: isDark ? "#71717a" : tw.gray400 }}>
+      <Text style={{ fontSize: 11, fontWeight: "600", letterSpacing: 1.1, marginTop: 12, color: isDark ? "#71717b" : tw.gray400 }}>
         {"THAT'S ALL FOR NOW"}
       </Text>
     </View>

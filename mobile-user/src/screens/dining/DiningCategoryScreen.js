@@ -130,18 +130,18 @@ function CategoryRestaurantCard({ restaurant, category, favorite, onToggleFavori
                 : { backgroundColor: isDark ? "rgba(76,5,25,0.4)" : "#fff1f2" },
             ]}
           >
-            <Clock size={14} color={open ? (isDark ? "#6ee7b7" : "#047857") : isDark ? "#fda4af" : "#be123c"} />
+            <Clock size={14} color={open ? (isDark ? "#5ee9b5" : "#007a55") : isDark ? "#ffa1ad" : "#c70036"} />
             <Text
               style={[
                 styles.pillText,
-                { color: open ? (isDark ? "#6ee7b7" : "#047857") : isDark ? "#fda4af" : "#be123c" },
+                { color: open ? (isDark ? "#5ee9b5" : "#007a55") : isDark ? "#ffa1ad" : "#c70036" },
               ]}
             >
               {open ? "Open now" : "Closed now"}
             </Text>
           </View>
           <View style={[styles.timingPill, { backgroundColor: isDark ? "#2a1d12" : "#fff4e7" }]}>
-            <Text style={[styles.pillText, { color: isDark ? "#fdba74" : "#a25b1f" }]}>
+            <Text style={[styles.pillText, { color: isDark ? "#ffb86a" : "#a25b1f" }]}>
               {formatTimingLabel(restaurant.availability)}
             </Text>
           </View>
@@ -241,7 +241,7 @@ export default function DiningCategoryScreen() {
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      <Text style={[styles.heroEyebrow, { color: isDark ? "#fdba74" : "#c07a3a" }]}>DINING CATEGORY</Text>
+      <Text style={[styles.heroEyebrow, { color: isDark ? "#ffb86a" : "#c07a3a" }]}>DINING CATEGORY</Text>
       <Text style={[styles.heroTitle, { color: isDark ? "#ffffff" : "#23180f" }]}>{heading}</Text>
       <Text style={[styles.heroBody, { color: isDark ? tw.gray300 : "#6b5641" }]}>
         Explore all restaurants linked to this dining category, check their timings, preview the menu, and jump
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
     borderRadius: 16,
-    backgroundColor: "#059669",
+    backgroundColor: "#009966",
     paddingHorizontal: 10,
     paddingVertical: 6,
   },

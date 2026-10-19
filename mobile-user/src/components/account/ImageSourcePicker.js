@@ -54,7 +54,7 @@ export default function ImageSourcePicker({
         <ScalePressable scaleTo={0.98} onPress={handleOpenCamera} style={styles.option}>
           <Text style={styles.label}>Use Camera</Text>
           <View style={[styles.iconBox, { backgroundColor: tw.orange50 }]}>
-            <Camera size={20} color="#ea580c" />
+            <Camera size={20} color="#f54900" />
           </View>
         </ScalePressable>
         <ScalePressable scaleTo={0.98} onPress={handlePickFromDevice} style={styles.option}>

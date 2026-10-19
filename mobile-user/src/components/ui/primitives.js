@@ -85,7 +85,7 @@ export function Skeleton({ style }) {
   return (
     <Animated.View
       style={[
-        { backgroundColor: colors.dark ? "#1f2937" : "#e5e7eb", borderRadius: radius.md, opacity },
+        { backgroundColor: colors.dark ? "#1e2939" : "#e5e7eb", borderRadius: radius.md, opacity },
         style,
       ]}
     />
@@ -143,7 +143,7 @@ export function Switch({ value, onValueChange, disabled }) {
 
 // Veg / non-veg marker used on menu items (green or red square with dot).
 export function VegMark({ isVeg, size = 14 }) {
-  const color = isVeg ? "#16a34a" : "#dc2626";
+  const color = isVeg ? "#00a63e" : "#dc2626";
   return (
     <View style={[styles.vegBox, { width: size, height: size, borderColor: color }]}>
       <View style={{ width: size / 2, height: size / 2, borderRadius: size, backgroundColor: color }} />

@@ -540,7 +540,7 @@ export function Under250Skeleton() {
                   <View style={{ height: 20, width: "25%", borderRadius: 4, backgroundColor: tint }} />
                   <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
                     <View style={{ height: 24, width: "33%", borderRadius: 4, backgroundColor: tint }} />
-                    <View style={{ height: 32, width: 80, borderRadius: 999, backgroundColor: isDark ? "rgba(154,52,18,0.4)" : "#fed7aa" }} />
+                    <View style={{ height: 32, width: 80, borderRadius: 999, backgroundColor: isDark ? "rgba(154,52,18,0.4)" : "#ffd6a7" }} />
                   </View>
                 </View>
               </View>
@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     backgroundColor: tw.green50,
     borderWidth: 1,
-    borderColor: "#bbf7d0",
+    borderColor: "#b9f8cf",
     paddingHorizontal: 4,
     paddingVertical: 2,
     borderRadius: 4,

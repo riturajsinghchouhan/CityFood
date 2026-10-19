@@ -90,19 +90,19 @@ function UserOrderDetailsScreen() {
 
   const page = isDark ? "#0a0a0a" : "#f9fafb";
   const card = isDark ? "#121212" : "#ffffff";
-  const cardBorder = isDark ? "#1f2937" : "#e5e7eb";
+  const cardBorder = isDark ? "#1e2939" : "#e5e7eb";
   const t = {
-    title: isDark ? "#f3f4f6" : "#1f2937",
-    sub: isDark ? "#9ca3af" : "#6b7280",
-    body: isDark ? "#d1d5db" : "#374151",
-    value: isDark ? "#e5e7eb" : "#1f2937",
+    title: isDark ? "#f3f4f6" : "#1e2939",
+    sub: isDark ? "#99a1af" : "#6a7282",
+    body: isDark ? "#d1d5dc" : "#364153",
+    value: isDark ? "#e5e7eb" : "#1e2939",
   };
 
   if (loading) {
     return (
       <Screen background={page}>
         <View style={styles.center}>
-          <Text style={{ fontSize: 14, color: isDark ? "#9ca3af" : "#4b5563" }}>Loading order details...</Text>
+          <Text style={{ fontSize: 14, color: isDark ? "#99a1af" : "#4a5565" }}>Loading order details...</Text>
         </View>
       </Screen>
     );
@@ -112,7 +112,7 @@ function UserOrderDetailsScreen() {
     return (
       <Screen background={page}>
         <View style={[styles.center, { gap: 12 }]}>
-          <Text style={{ fontSize: 14, fontWeight: "500", color: isDark ? "#d1d5db" : "#374151" }}>Order not found</Text>
+          <Text style={{ fontSize: 14, fontWeight: "500", color: isDark ? "#d1d5dc" : "#364153" }}>Order not found</Text>
           <ScalePressable scaleTo={0.95} onPress={() => goTo("/orders")} style={[styles.smallBtn, { backgroundColor: colors.primary }]}>
             <Text style={{ fontSize: 14, fontWeight: "600", color: "#ffffff" }}>Back to Orders</Text>
           </ScalePressable>
@@ -268,7 +268,7 @@ function UserOrderDetailsScreen() {
     <Screen background={page}>
       <View style={[styles.header, { backgroundColor: card, borderBottomColor: cardBorder }]}>
         <Pressable onPress={goBack} hitSlop={8} style={{ padding: 4, borderRadius: 999 }}>
-          <ArrowLeft size={24} color={isDark ? "#d1d5db" : "#374151"} />
+          <ArrowLeft size={24} color={isDark ? "#d1d5dc" : "#364153"} />
         </Pressable>
         <Text style={{ fontSize: 18, fontWeight: "600", color: t.title }}>Order Details</Text>
       </View>
@@ -276,8 +276,8 @@ function UserOrderDetailsScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 96 + insets.bottom }}>
         <View style={{ padding: 16, gap: 16 }}>
           <View style={[cardStyle, { flexDirection: "row", alignItems: "center", gap: 12 }]}>
-            <View style={{ backgroundColor: isDark ? "#1f2937" : "#f3f4f6", padding: 8, borderRadius: 8, alignSelf: "flex-start" }}>
-              <ShoppingBag size={24} color={isDark ? "#9ca3af" : "#4b5563"} />
+            <View style={{ backgroundColor: isDark ? "#1e2939" : "#f3f4f6", padding: 8, borderRadius: 8, alignSelf: "flex-start" }}>
+              <ShoppingBag size={24} color={isDark ? "#99a1af" : "#4a5565"} />
             </View>
             <View style={{ flex: 1, justifyContent: "center", minHeight: 40 }}>
               <Text style={{ fontSize: 16, fontWeight: "600", color: t.title }}>
@@ -291,14 +291,14 @@ function UserOrderDetailsScreen() {
                 <View
                   style={[
                     styles.cancelBox,
-                    { backgroundColor: isDark ? "rgba(127,29,29,0.1)" : "#fef2f2", borderColor: isDark ? "rgba(127,29,29,0.3)" : "#fee2e2" },
+                    { backgroundColor: isDark ? "rgba(127,29,29,0.1)" : "#fef2f2", borderColor: isDark ? "rgba(127,29,29,0.3)" : "#ffe2e2" },
                   ]}
                 >
-                  <Text style={{ fontSize: 14, fontWeight: "700", marginBottom: 4, color: isDark ? "#f87171" : "#b91c1c" }}>Cancellation Reason:</Text>
-                  <Text style={{ fontSize: 14, fontWeight: "500", color: isDark ? "#fca5a5" : "#dc2626" }}>
+                  <Text style={{ fontSize: 14, fontWeight: "700", marginBottom: 4, color: isDark ? "#ff6467" : "#c10007" }}>Cancellation Reason:</Text>
+                  <Text style={{ fontSize: 14, fontWeight: "500", color: isDark ? "#ffa2a2" : "#dc2626" }}>
                     {order.cancellationReason || "The restaurant was unable to fulfill this order."}
                   </Text>
-                  <Text style={{ fontSize: 10, marginTop: 8, color: isDark ? "#9ca3af" : "#6b7280" }}>
+                  <Text style={{ fontSize: 10, marginTop: 8, color: isDark ? "#99a1af" : "#6a7282" }}>
                     Refund will be initiated to your source payment method.
                   </Text>
                 </View>
@@ -323,7 +323,7 @@ function UserOrderDetailsScreen() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 16 }}>
               <Text style={{ fontSize: 12, fontWeight: "500", letterSpacing: 0.3, color: t.sub }}>ORDER ID: #{String(orderIdDisplay).toUpperCase()}</Text>
               <Pressable onPress={handleCopyOrderId} hitSlop={8}>
-                <Copy size={12} color={isDark ? "#6b7280" : "#9ca3af"} />
+                <Copy size={12} color={isDark ? "#6a7282" : "#99a1af"} />
               </Pressable>
             </View>
 
@@ -332,28 +332,28 @@ function UserOrderDetailsScreen() {
                 style={[
                   styles.chip,
                   sendsCutlery
-                    ? { backgroundColor: isDark ? "rgba(6,78,59,0.2)" : "#ecfdf5", borderColor: isDark ? "#065f46" : "#a7f3d0" }
-                    : { backgroundColor: isDark ? "rgba(124,45,18,0.2)" : "#fff7ed", borderColor: isDark ? "#9a3412" : "#fed7aa" },
+                    ? { backgroundColor: isDark ? "rgba(6,78,59,0.2)" : "#ecfdf5", borderColor: isDark ? "#006045" : "#a4f4cf" }
+                    : { backgroundColor: isDark ? "rgba(124,45,18,0.2)" : "#fff7ed", borderColor: isDark ? "#9f2d00" : "#ffd6a7" },
                 ]}
               >
                 <Text
                   style={{
                     fontSize: 12,
                     fontWeight: "600",
-                    color: sendsCutlery ? (isDark ? "#34d399" : "#047857") : isDark ? "#fb923c" : "#c2410c",
+                    color: sendsCutlery ? (isDark ? "#00d492" : "#007a55") : isDark ? "#ff8904" : "#ca3500",
                   }}
                 >
                   {sendsCutlery ? "Send cutlery" : "Don't send cutlery"}
                 </Text>
               </View>
               {order.note ? (
-                <View style={[styles.chip, { backgroundColor: isDark ? "rgba(30,58,138,0.2)" : "#eff6ff", borderColor: isDark ? "#1e40af" : "#bfdbfe" }]}>
-                  <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#60a5fa" : "#1d4ed8" }}>Note: {order.note}</Text>
+                <View style={[styles.chip, { backgroundColor: isDark ? "rgba(30,58,138,0.2)" : "#eff6ff", borderColor: isDark ? "#193cb8" : "#bedbff" }]}>
+                  <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#51a2ff" : "#1447e6" }}>Note: {order.note}</Text>
                 </View>
               ) : null}
             </View>
 
-            <DashedLine color={isDark ? "#1f2937" : "#e5e7eb"} style={{ marginVertical: 12 }} />
+            <DashedLine color={isDark ? "#1e2939" : "#e5e7eb"} style={{ marginVertical: 12 }} />
 
             {items.map((item, idx) => {
               const discounted = Number(item.price) || 0;
@@ -364,11 +364,11 @@ function UserOrderDetailsScreen() {
                 <View key={idx} style={[styles.itemRow, idx > 0 && { marginTop: 16 }]}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 12, flex: 1 }}>
                     {item.image ? (
-                      <AppImage src={item.image} width={64} style={[styles.itemImage, { borderColor: isDark ? "#1f2937" : "#f3f4f6" }]} placeholderType="none" />
+                      <AppImage src={item.image} width={64} style={[styles.itemImage, { borderColor: isDark ? "#1e2939" : "#f3f4f6" }]} placeholderType="none" />
                     ) : null}
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
-                      <View style={[styles.vegBox, { borderColor: veg ? "#16a34a" : "#dc2626" }]}>
-                        <View style={{ flex: 1, alignSelf: "stretch", borderRadius: 999, backgroundColor: veg ? "#16a34a" : "#dc2626" }} />
+                      <View style={[styles.vegBox, { borderColor: veg ? "#00a63e" : "#dc2626" }]}>
+                        <View style={{ flex: 1, alignSelf: "stretch", borderRadius: 999, backgroundColor: veg ? "#00a63e" : "#dc2626" }} />
                       </View>
                       <Text style={{ flex: 1, fontSize: 14, fontWeight: "500", color: t.body }}>
                         {item.quantity || item.qty || 1} x {item.name}
@@ -378,11 +378,11 @@ function UserOrderDetailsScreen() {
                   </View>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                     {hasDiscount ? (
-                      <Text style={{ fontSize: 12, textDecorationLine: "line-through", color: isDark ? "#6b7280" : "#9ca3af" }}>
+                      <Text style={{ fontSize: 12, textDecorationLine: "line-through", color: isDark ? "#6a7282" : "#99a1af" }}>
                         ₹{original.toFixed(2)}
                       </Text>
                     ) : null}
-                    <Text style={{ fontSize: 14, fontWeight: "500", color: hasDiscount ? "#16a34a" : t.value }}>₹{discounted.toFixed(2)}</Text>
+                    <Text style={{ fontSize: 14, fontWeight: "500", color: hasDiscount ? "#00a63e" : t.value }}>₹{discounted.toFixed(2)}</Text>
                   </View>
                 </View>
               );
@@ -390,9 +390,9 @@ function UserOrderDetailsScreen() {
           </View>
 
           <View style={[cardStyle, { padding: 0, overflow: "hidden" }]}>
-            <View style={[styles.between, { padding: 16, borderBottomWidth: 1, borderBottomColor: isDark ? "#1f2937" : "#f3f4f6" }]}>
+            <View style={[styles.between, { padding: 16, borderBottomWidth: 1, borderBottomColor: isDark ? "#1e2939" : "#f3f4f6" }]}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <FileText size={20} color={isDark ? "#9ca3af" : "#4b5563"} />
+                <FileText size={20} color={isDark ? "#99a1af" : "#4a5565"} />
                 <Text style={{ fontSize: 16, fontWeight: "600", color: t.title }}>Bill Summary</Text>
               </View>
               <Pressable onPress={handleDownloadSummary} style={[styles.dlBtn, { backgroundColor: colors.primary + "1A" }]}>
@@ -404,7 +404,7 @@ function UserOrderDetailsScreen() {
                 <Text style={{ fontSize: 14, color: t.sub }}>Item total</Text>
                 <Text style={{ fontSize: 14 }}>
                   {pricing.originalItemTotal ? (
-                    <Text style={{ fontSize: 14, textDecorationLine: "line-through", color: isDark ? "#6b7280" : "#9ca3af" }}>
+                    <Text style={{ fontSize: 14, textDecorationLine: "line-through", color: isDark ? "#6a7282" : "#99a1af" }}>
                       ₹{Number(pricing.originalItemTotal).toFixed(2)}{" "}
                     </Text>
                   ) : null}
@@ -416,7 +416,7 @@ function UserOrderDetailsScreen() {
                 <Text style={{ fontSize: 14, color: t.value }}>₹{Number(pricing.tax || 0).toFixed(2)}</Text>
               </View>
               <View style={styles.between}>
-                <Text style={{ fontSize: 14, fontWeight: "500", color: isDark ? "#6b7280" : "#9ca3af" }}>Delivery fee</Text>
+                <Text style={{ fontSize: 14, fontWeight: "500", color: isDark ? "#6a7282" : "#99a1af" }}>Delivery fee</Text>
                 {pricing.deliveryFee === 0 ? (
                   <View style={[styles.freeTag, { borderColor: colors.primary }]}>
                     <Text style={{ fontSize: 10, fontWeight: "700", color: colors.primary }}>FREE</Text>
@@ -430,7 +430,7 @@ function UserOrderDetailsScreen() {
                 <Text style={{ fontSize: 14, color: t.sub }}>Platform fee</Text>
                 <Text style={{ fontSize: 14, color: t.value }}>₹{Number(pricing.platformFee || 0).toFixed(2)}</Text>
               </View>
-              <View style={[styles.between, styles.paidRow, { borderTopColor: isDark ? "#1f2937" : "#f3f4f6" }]}>
+              <View style={[styles.between, styles.paidRow, { borderTopColor: isDark ? "#1e2939" : "#f3f4f6" }]}>
                 <Text style={{ fontSize: 14, fontWeight: "700", color: t.title }}>Paid</Text>
                 <Text style={{ fontSize: 14, fontWeight: "700", color: t.title }}>₹{Number(pricing.total || 0).toFixed(2)}</Text>
               </View>
@@ -454,8 +454,8 @@ function UserOrderDetailsScreen() {
 
           <View style={[cardStyle, { gap: 20 }]}>
             <View style={{ flexDirection: "row", gap: 12 }}>
-              <View style={[styles.avatar, { backgroundColor: isDark ? "#1f2937" : "#e5e7eb" }]}>
-                <User size={20} color={isDark ? "#9ca3af" : "#6b7280"} />
+              <View style={[styles.avatar, { backgroundColor: isDark ? "#1e2939" : "#e5e7eb" }]}>
+                <User size={20} color={isDark ? "#99a1af" : "#6a7282"} />
               </View>
               <View>
                 <Text style={{ fontSize: 14, fontWeight: "600", color: t.value }}>{userName || "Customer"}</Text>
@@ -469,7 +469,7 @@ function UserOrderDetailsScreen() {
             ].map(([Icon, label, value]) => (
               <View key={label} style={{ flexDirection: "row", gap: 12 }}>
                 <View style={{ marginTop: 2 }}>
-                  <Icon size={20} color={isDark ? "#9ca3af" : "#6b7280"} />
+                  <Icon size={20} color={isDark ? "#99a1af" : "#6a7282"} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 14, fontWeight: "600", color: t.value }}>{label}</Text>
@@ -494,7 +494,7 @@ function UserOrderDetailsScreen() {
       <View
         style={[
           styles.bottomBar,
-          { paddingBottom: 16 + insets.bottom, backgroundColor: card, borderTopColor: isDark ? "#1f2937" : "#e5e7eb" },
+          { paddingBottom: 16 + insets.bottom, backgroundColor: card, borderTopColor: isDark ? "#1e2939" : "#e5e7eb" },
         ]}
       >
         <View style={{ flex: 1 }}>

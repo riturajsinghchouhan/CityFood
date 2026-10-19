@@ -306,15 +306,15 @@ Order again from this restaurant in the ${companyName} app.`;
   const c = {
     page: isDark ? "#0a0a0a" : "#f9fafb",
     bar: isDark ? "#121212" : "#ffffff",
-    border: isDark ? "#1f2937" : "#e5e7eb",
+    border: isDark ? "#1e2939" : "#e5e7eb",
   };
 
   const header = (
     <View style={[styles.header, { backgroundColor: c.bar, borderBottomColor: c.border }]}>
       <Pressable onPress={() => router.navigate("/")} hitSlop={8}>
-        <ArrowLeft size={24} color={isDark ? "#d1d5db" : "#374151"} />
+        <ArrowLeft size={24} color={isDark ? "#d1d5dc" : "#364153"} />
       </Pressable>
-      <Text style={[styles.title, { color: isDark ? "#f3f4f6" : "#1f2937" }]}>Your Orders</Text>
+      <Text style={[styles.title, { color: isDark ? "#f3f4f6" : "#1e2939" }]}>Your Orders</Text>
     </View>
   );
 
@@ -329,9 +329,9 @@ Order again from this restaurant in the ${companyName} app.`;
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 placeholder="Search by restaurant or dish"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor="#99a1af"
                 selectionColor={colors.primary}
-                style={[styles.searchInput, { color: isDark ? "#d1d5db" : "#4b5563" }]}
+                style={[styles.searchInput, { color: isDark ? "#d1d5dc" : "#4a5565" }]}
               />
             </View>
           </View>
@@ -345,7 +345,7 @@ Order again from this restaurant in the ${companyName} app.`;
               ["past", "Order History"],
             ].map(([key, label]) => (
               <Pressable key={key} onPress={() => setActiveTab(key)} style={styles.tab}>
-                <Text style={[styles.tabText, { color: activeTab === key ? colors.primary : "#6b7280" }]}>{label}</Text>
+                <Text style={[styles.tabText, { color: activeTab === key ? colors.primary : "#6a7282" }]}>{label}</Text>
                 {activeTab === key ? <View style={[styles.tabBar, { backgroundColor: colors.primary }]} /> : null}
               </Pressable>
             ))}
@@ -355,8 +355,8 @@ Order again from this restaurant in the ${companyName} app.`;
       if (item.kind === "empty") {
         return (
           <View style={styles.cardWrap}>
-            <View style={[styles.emptyCard, { backgroundColor: c.bar, borderColor: isDark ? "#1f2937" : "#f3f4f6" }]}>
-              <Text style={{ fontSize: 14, textAlign: "center", color: isDark ? "#9ca3af" : "#4b5563" }}>
+            <View style={[styles.emptyCard, { backgroundColor: c.bar, borderColor: isDark ? "#1e2939" : "#f3f4f6" }]}>
+              <Text style={{ fontSize: 14, textAlign: "center", color: isDark ? "#99a1af" : "#4a5565" }}>
                 No orders found matching your search
               </Text>
             </View>
@@ -409,7 +409,7 @@ Order again from this restaurant in the ${companyName} app.`;
       <Screen background={c.page}>
         {header}
         <View style={{ paddingHorizontal: 16, paddingVertical: 32, alignItems: "center" }}>
-          <Text style={{ fontSize: 14, color: isDark ? "#9ca3af" : "#4b5563" }}>You haven&apos;t placed any orders yet</Text>
+          <Text style={{ fontSize: 14, color: isDark ? "#99a1af" : "#4a5565" }}>You haven&apos;t placed any orders yet</Text>
           <Pressable onPress={() => router.navigate("/")} style={{ marginTop: 16 }}>
             <Text style={{ fontSize: 14, color: colors.primary, fontWeight: "500" }}>Start Ordering</Text>
           </Pressable>
@@ -430,7 +430,7 @@ Order again from this restaurant in the ${companyName} app.`;
         contentContainerStyle={{ paddingBottom: 16 }}
         ListFooterComponent={
           <View style={styles.brandWrap}>
-            <Text style={[styles.brand, { color: isDark ? "#1f2937" : "#e5e7eb" }]}>CITYFOOD</Text>
+            <Text style={[styles.brand, { color: isDark ? "#1e2939" : "#e5e7eb" }]}>CITYFOOD</Text>
           </View>
         }
       />

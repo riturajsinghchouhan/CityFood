@@ -12,7 +12,7 @@ const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1604908176997-125188eb
 const ERROR_IMAGE = "https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?auto=format&fit=crop&w=100&q=80";
 
 function VegBox({ isVeg }) {
-  const color = isVeg ? "#16a34a" : "#dc2626";
+  const color = isVeg ? "#00a63e" : "#dc2626";
   return (
     <View style={[styles.vegBox, { borderColor: color }]}>
       <View style={{ flex: 1, alignSelf: "stretch", borderRadius: 999, backgroundColor: color }} />
@@ -31,12 +31,12 @@ function OrderListCard({ order, countdown, menuOpen, onToggleMenu, onShare, onVi
   const { colors, isDark } = useTheme();
   const c = {
     card: isDark ? "#121212" : "#ffffff",
-    border: isDark ? "#1f2937" : "#f3f4f6",
-    title: isDark ? "#f3f4f6" : "#1f2937",
-    muted: isDark ? "#9ca3af" : "#6b7280",
-    strong: isDark ? "#d1d5db" : "#374151",
-    body: isDark ? "#e5e7eb" : "#1f2937",
-    faint: isDark ? "#6b7280" : "#9ca3af",
+    border: isDark ? "#1e2939" : "#f3f4f6",
+    title: isDark ? "#f3f4f6" : "#1e2939",
+    muted: isDark ? "#99a1af" : "#6a7282",
+    strong: isDark ? "#d1d5dc" : "#364153",
+    body: isDark ? "#e5e7eb" : "#1e2939",
+    faint: isDark ? "#6a7282" : "#99a1af",
   };
 
   const isCodOrWallet = ["cash", "cod", "wallet"].includes(order.payment?.method) || ["cash", "cod", "wallet"].includes(order.paymentMethod);
@@ -53,19 +53,19 @@ function OrderListCard({ order, countdown, menuOpen, onToggleMenu, onShare, onVi
   const payStatus = order.payment?.status;
   const paidLike = payStatus === "completed" || (isDelivered && isCodOrWallet);
   const badge = paidLike
-    ? { bg: isDark ? "rgba(20,83,45,0.3)" : "#dcfce7", fg: isDark ? "#4ade80" : "#15803d" }
+    ? { bg: isDark ? "rgba(20,83,45,0.3)" : "#dcfce7", fg: isDark ? "#05df72" : "#008236" }
     : payStatus === "failed"
-      ? { bg: isDark ? "rgba(127,29,29,0.3)" : "#fee2e2", fg: isDark ? "#f87171" : "#b91c1c" }
+      ? { bg: isDark ? "rgba(127,29,29,0.3)" : "#ffe2e2", fg: isDark ? "#ff6467" : "#c10007" }
       : payStatus === "pending" || payStatus === "cod_pending"
-        ? { bg: isDark ? "rgba(113,63,18,0.3)" : "#fef9c3", fg: isDark ? "#facc15" : "#a16207" }
-        : { bg: isDark ? "#1f2937" : "#f3f4f6", fg: isDark ? "#d1d5db" : "#374151" };
+        ? { bg: isDark ? "rgba(113,63,18,0.3)" : "#fef9c2", fg: isDark ? "#fdc700" : "#a65f00" }
+        : { bg: isDark ? "#1e2939" : "#f3f4f6", fg: isDark ? "#d1d5dc" : "#364153" };
 
   const redIcon = (
-    <View style={[styles.alertCircle, { backgroundColor: isDark ? "rgba(127,29,29,0.3)" : "#fee2e2" }]}>
-      <AlertCircle size={16} color={isDark ? "#f87171" : "#ef4444"} />
+    <View style={[styles.alertCircle, { backgroundColor: isDark ? "rgba(127,29,29,0.3)" : "#ffe2e2" }]}>
+      <AlertCircle size={16} color={isDark ? "#ff6467" : "#fb2c36"} />
     </View>
   );
-  const red = isDark ? "#f87171" : "#ef4444";
+  const red = isDark ? "#ff6467" : "#fb2c36";
 
   let footerLeft;
   if (isRestaurantCancelled) {
@@ -76,11 +76,11 @@ function OrderListCard({ order, countdown, menuOpen, onToggleMenu, onShare, onVi
           <Text style={[styles.xsSemibold, { color: red }]}>Restaurant Cancelled</Text>
         </View>
         {order.cancellationReason ? (
-          <Text style={[styles.xs, { color: isDark ? "#f87171" : "#dc2626", fontWeight: "500", marginLeft: 28, marginBottom: 4 }]}>
+          <Text style={[styles.xs, { color: isDark ? "#ff6467" : "#dc2626", fontWeight: "500", marginLeft: 28, marginBottom: 4 }]}>
             Reason: {order.cancellationReason}
           </Text>
         ) : null}
-        <Text style={[styles.xs, { color: isDark ? "#9ca3af" : "#4b5563", marginLeft: 28 }]}>Refund will be processed in 24-48 hours</Text>
+        <Text style={[styles.xs, { color: isDark ? "#99a1af" : "#4a5565", marginLeft: 28 }]}>Refund will be processed in 24-48 hours</Text>
       </View>
     );
   } else if (isDead) {
@@ -90,7 +90,7 @@ function OrderListCard({ order, countdown, menuOpen, onToggleMenu, onShare, onVi
           {redIcon}
           <Text style={[styles.xsSemibold, { color: red }]}>Order Delivery Failed</Text>
         </View>
-        <Text style={{ fontSize: 10, lineHeight: 13, color: isDark ? "#9ca3af" : "#4b5563", marginLeft: 28 }}>
+        <Text style={{ fontSize: 10, lineHeight: 13, color: isDark ? "#99a1af" : "#4a5565", marginLeft: 28 }}>
           We apologize, but your order could not be completed.
         </Text>
         <Pressable
@@ -99,12 +99,12 @@ function OrderListCard({ order, countdown, menuOpen, onToggleMenu, onShare, onVi
             styles.supportBtn,
             {
               backgroundColor: isDark ? "rgba(127,29,29,0.1)" : "#fef2f2",
-              borderColor: isDark ? "rgba(127,29,29,0.3)" : "#fee2e2",
+              borderColor: isDark ? "rgba(127,29,29,0.3)" : "#ffe2e2",
             },
           ]}
         >
-          <Phone size={12} color={isDark ? "#f87171" : "#dc2626"} />
-          <Text style={{ fontSize: 10, fontWeight: "500", color: isDark ? "#f87171" : "#dc2626" }}>Support / Refund</Text>
+          <Phone size={12} color={isDark ? "#ff6467" : "#dc2626"} />
+          <Text style={{ fontSize: 10, fontWeight: "500", color: isDark ? "#ff6467" : "#dc2626" }}>Support / Refund</Text>
         </Pressable>
       </View>
     );
@@ -119,12 +119,12 @@ function OrderListCard({ order, countdown, menuOpen, onToggleMenu, onShare, onVi
     footerLeft = (
       <View style={[styles.rowCenter, { flexWrap: "wrap" }]}>
         <Text style={{ fontSize: 14, color: c.body }}>You rated</Text>
-        <View style={[styles.ratePill, { backgroundColor: "#facc15" }]}>
+        <View style={[styles.ratePill, { backgroundColor: "#fdc700" }]}>
           <Text style={styles.ratePillText}>R {order.restaurantRating}</Text>
           <Star size={8} color="#ffffff" fill="#ffffff" />
         </View>
         {order.deliveryPartnerId ? (
-          <View style={[styles.ratePill, { backgroundColor: "#3b82f6" }]}>
+          <View style={[styles.ratePill, { backgroundColor: "#2b7fff" }]}>
             <Text style={styles.ratePillText}>D {order.deliveryPartnerRating}</Text>
             <Star size={8} color="#ffffff" fill="#ffffff" />
           </View>
@@ -153,7 +153,7 @@ function OrderListCard({ order, countdown, menuOpen, onToggleMenu, onShare, onVi
             : "";
     footerLeft = (
       <View>
-        <Text style={[styles.xs, { color: "#6b7280" }]}>{label}</Text>
+        <Text style={[styles.xs, { color: "#6a7282" }]}>{label}</Text>
         {countdown > 0 ? (
           <View style={[styles.rowCenter, { gap: 4, marginTop: 4 }]}>
             <Clock size={12} color={colors.primary} />
@@ -182,8 +182,8 @@ function OrderListCard({ order, countdown, menuOpen, onToggleMenu, onShare, onVi
               {location}
             </Text>
             {order.deliveryPartnerName ? (
-              <Text style={[styles.xs, { color: "#4b5563", marginTop: 4 }]}>
-                <Text style={[styles.xs, { color: "#4b5563", fontWeight: "500" }]}>Delivery:</Text> {order.deliveryPartnerName}
+              <Text style={[styles.xs, { color: "#4a5565", marginTop: 4 }]}>
+                <Text style={[styles.xs, { color: "#4a5565", fontWeight: "500" }]}>Delivery:</Text> {order.deliveryPartnerName}
                 {order.deliveryPartnerPhone ? ` | ${order.deliveryPartnerPhone}` : ""}
               </Text>
             ) : null}
@@ -195,22 +195,22 @@ function OrderListCard({ order, countdown, menuOpen, onToggleMenu, onShare, onVi
           </View>
         </View>
         <Pressable onPress={() => onToggleMenu(order.id)} hitSlop={6} style={styles.moreBtn}>
-          <MoreVertical size={20} color="#9ca3af" />
+          <MoreVertical size={20} color="#99a1af" />
         </Pressable>
       </View>
 
       {menuOpen ? (
         <View style={[styles.menu, { backgroundColor: isDark ? "#1a1a1a" : "#ffffff", borderColor: c.border }]}>
           <Pressable onPress={() => onShare(order)} style={styles.menuItem}>
-            <Text style={[styles.xs, { color: isDark ? "#e5e7eb" : "#1f2937" }]}>Share restaurant</Text>
+            <Text style={[styles.xs, { color: isDark ? "#e5e7eb" : "#1e2939" }]}>Share restaurant</Text>
           </Pressable>
           <Pressable onPress={() => onViewDetails(order)} style={styles.menuItem}>
-            <Text style={[styles.xs, { color: isDark ? "#e5e7eb" : "#1f2937" }]}>Order details</Text>
+            <Text style={[styles.xs, { color: isDark ? "#e5e7eb" : "#1e2939" }]}>Order details</Text>
           </Pressable>
         </View>
       ) : null}
 
-      <DashedLine color={isDark ? "#1f2937" : "#e5e7eb"} style={styles.dashed} />
+      <DashedLine color={isDark ? "#1e2939" : "#e5e7eb"} style={styles.dashed} />
 
       <View style={styles.items}>
         {order.items && order.items.length > 0 ? (
@@ -233,7 +233,7 @@ function OrderListCard({ order, countdown, menuOpen, onToggleMenu, onShare, onVi
                     </Text>
                   ) : null}
                 </View>
-                <Text style={[styles.xs, { fontWeight: "600", color: isDark ? "#f3f4f6" : "#1f2937" }]}>
+                <Text style={[styles.xs, { fontWeight: "600", color: isDark ? "#f3f4f6" : "#1e2939" }]}>
                   {"₹"}
                   {(quantity * price).toFixed(2)}
                 </Text>
@@ -241,23 +241,23 @@ function OrderListCard({ order, countdown, menuOpen, onToggleMenu, onShare, onVi
             );
           })
         ) : (
-          <Text style={{ fontSize: 14, color: "#6b7280" }}>No items found</Text>
+          <Text style={{ fontSize: 14, color: "#6a7282" }}>No items found</Text>
         )}
       </View>
 
       <View style={[styles.summary, { backgroundColor: isDark ? "#1a1a1a" : "#f9fafb" }]}>
         {order.pricing?.discount > 0 ? (
           <View style={[styles.between, { marginBottom: 4 }]}>
-            <Text style={{ fontSize: 11, color: "#16a34a" }}>Discount Applied</Text>
-            <Text style={{ fontSize: 11, color: "#16a34a", fontWeight: "500" }}>
+            <Text style={{ fontSize: 11, color: "#00a63e" }}>Discount Applied</Text>
+            <Text style={{ fontSize: 11, color: "#00a63e", fontWeight: "500" }}>
               -{"₹"}
               {Number(order.pricing.discount).toFixed(2)}
             </Text>
           </View>
         ) : null}
         <View style={styles.between}>
-          <Text style={[styles.xs, { fontWeight: "600", color: isDark ? "#e5e7eb" : "#1f2937" }]}>Total Bill</Text>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: isDark ? "#f3f4f6" : "#111827" }}>
+          <Text style={[styles.xs, { fontWeight: "600", color: isDark ? "#e5e7eb" : "#1e2939" }]}>Total Bill</Text>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: isDark ? "#f3f4f6" : "#101828" }}>
             {"₹"}
             {Number(order.total).toFixed(2)}
           </Text>
@@ -273,7 +273,7 @@ function OrderListCard({ order, countdown, menuOpen, onToggleMenu, onShare, onVi
           {order.payment ? (
             <View style={[styles.rowCenter, { gap: 0, marginTop: 4, flexWrap: "wrap" }]}>
               <Text style={[styles.xs, { color: c.muted }]}>Payment: </Text>
-              <Text style={[styles.xs, { fontWeight: "500", color: isDark ? "#e5e7eb" : "#1f2937", textTransform: "capitalize" }]}>
+              <Text style={[styles.xs, { fontWeight: "500", color: isDark ? "#e5e7eb" : "#1e2939", textTransform: "capitalize" }]}>
                 {paymentLabel(order.payment.method)}
               </Text>
               {payStatus ? (
@@ -284,20 +284,20 @@ function OrderListCard({ order, countdown, menuOpen, onToggleMenu, onShare, onVi
             </View>
           ) : null}
           {isDelivered && !paymentFailed ? (
-            <Text style={[styles.xs, { fontWeight: "500", color: "#16a34a", marginTop: 4 }]}>Delivered</Text>
+            <Text style={[styles.xs, { fontWeight: "500", color: "#00a63e", marginTop: 4 }]}>Delivered</Text>
           ) : null}
           {isRestaurantCancelled ? (
             <View style={{ gap: 2 }}>
-              <Text style={[styles.xs, { fontWeight: "500", color: "#ef4444", marginTop: 4 }]}>Restaurant Cancelled</Text>
+              <Text style={[styles.xs, { fontWeight: "500", color: "#fb2c36", marginTop: 4 }]}>Restaurant Cancelled</Text>
               {order.cancellationReason ? (
-                <Text style={{ fontSize: 10, color: "#f87171", fontStyle: "italic" }}>Reason: {order.cancellationReason}</Text>
+                <Text style={{ fontSize: 10, color: "#ff6467", fontStyle: "italic" }}>Reason: {order.cancellationReason}</Text>
               ) : null}
             </View>
           ) : null}
-          {isUserCancelled ? <Text style={[styles.xs, { fontWeight: "500", color: "#6b7280", marginTop: 4 }]}>Cancelled by you</Text> : null}
-          {isDead ? <Text style={[styles.xs, { fontWeight: "500", color: "#ef4444", marginTop: 4 }]}>Delivery Failed</Text> : null}
+          {isUserCancelled ? <Text style={[styles.xs, { fontWeight: "500", color: "#6a7282", marginTop: 4 }]}>Cancelled by you</Text> : null}
+          {isDead ? <Text style={[styles.xs, { fontWeight: "500", color: "#fb2c36", marginTop: 4 }]}>Delivery Failed</Text> : null}
           {isCancelled && !isRestaurantCancelled && !isUserCancelled && !isDead ? (
-            <Text style={[styles.xs, { fontWeight: "500", color: "#6b7280", marginTop: 4 }]}>Cancelled</Text>
+            <Text style={[styles.xs, { fontWeight: "500", color: "#6a7282", marginTop: 4 }]}>Cancelled</Text>
           ) : null}
         </View>
         <Pressable onPress={() => onOpen(order, isDelivered || isCancelled)} hitSlop={6} style={[styles.rowCenter, { gap: 4, marginLeft: 16 }]}>

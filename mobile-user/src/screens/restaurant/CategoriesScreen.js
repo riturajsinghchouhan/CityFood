@@ -109,12 +109,12 @@ export default function CategoriesScreen() {
   const searchBar = (
     <View style={{ paddingVertical: 24 }}>
       <View style={{ justifyContent: "center" }}>
-        <Search size={20} color={focused ? colors.primary : isDark ? tw.gray500 : "#a3a3a3"} style={{ position: "absolute", left: 16, zIndex: 1 }} />
+        <Search size={20} color={focused ? colors.primary : isDark ? tw.gray500 : "#a1a1a1"} style={{ position: "absolute", left: 16, zIndex: 1 }} />
         <TextInput
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholder="Search specialties, cuisines..."
-          placeholderTextColor={isDark ? tw.gray600 : "#a3a3a3"}
+          placeholderTextColor={isDark ? tw.gray600 : "#a1a1a1"}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           selectionColor={colors.primary}

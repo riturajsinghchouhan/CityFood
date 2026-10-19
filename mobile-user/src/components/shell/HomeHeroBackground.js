@@ -78,6 +78,6 @@ const styles = StyleSheet.create({
     boxShadow: "0px 10px 15px -3px rgba(0,0,0,0.1), 0px 4px 6px -4px rgba(0,0,0,0.1)",
     zIndex: 0,
   },
-  media: { backgroundColor: "#0f172a" },
+  media: { backgroundColor: "#0f172b" },
   wash: { backgroundColor: "rgba(0,0,0,0.2)", zIndex: 3 },
 });

@@ -31,8 +31,8 @@ export function RestaurantPinIcon({ size = 48, withDoors = false }) {
 
 export function CustomerPinIcon({ size = 48 }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="#10B981">
-      <Path d={PIN_PATH} fill="#10B981" />
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="#00BC7D">
+      <Path d={PIN_PATH} fill="#00BC7D" />
       <Circle cx="12" cy="9" r="3" fill="#FFFFFF" />
     </Svg>
   );

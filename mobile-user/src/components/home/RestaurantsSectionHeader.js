@@ -119,7 +119,7 @@ export function OutOfRadiusState({ message }) {
       >
         <View style={styles.stage}>
           <Glow color={colors.primary} duration={4000} from={1} to={1.4} opacityFrom={0.15} opacityTo={0.35} size={176} />
-          <Glow color="#fb7185" duration={5000} delay={1000} from={1.3} to={1} opacityFrom={0.1} opacityTo={0.25} size={176} />
+          <Glow color="#ff637e" duration={5000} delay={1000} from={1.3} to={1} opacityFrom={0.1} opacityTo={0.25} size={176} />
           <Floating style={styles.pizza} duration={4000} y={-15} rotate={15} scale={1.1}>
             <Pizza size={48} color="rgba(251,146,60,0.4)" strokeWidth={1} />
           </Floating>

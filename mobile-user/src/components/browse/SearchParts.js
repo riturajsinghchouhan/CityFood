@@ -11,7 +11,7 @@ import { shadow, tw } from "../../theme/tokens";
 
 const metaText = (isDark) => ({ fontSize: 12, fontWeight: "700", letterSpacing: -0.3, color: isDark ? zinc[400] : tw.gray500 });
 
-const zinc = { 400: "#a1a1aa", 700: "#3f3f46", 800: "#27272a", 900: "#18181b", 950: "#09090b" };
+const zinc = { 400: "#9f9fa9", 700: "#3f3f46", 800: "#27272a", 900: "#18181b", 950: "#09090b" };
 
 function useLoop(make, deps) {
   useEffect(() => {
@@ -303,7 +303,7 @@ export function DishResultSheet({ dish, imageUrl, onClose, onViewAndAdd }) {
           <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ padding: 20 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginBottom: 16 }}>
               <View style={[styles.infoChip, chip]}>
-                <Star size={14} color="#eab308" fill="#eab308" />
+                <Star size={14} color="#f0b100" fill="#f0b100" />
                 <Text style={chipText}>{String(dish.rating || "New").toUpperCase()}</Text>
               </View>
               <View style={[styles.infoChip, chip]}>

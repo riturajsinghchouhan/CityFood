@@ -105,7 +105,7 @@ export function SavingsCongrats({ visible, amount, percentage, items }) {
         end={{ x: 1, y: 1 }}
         style={styles.center}
       >
-        <FallingConfetti count={40} colors={["#22c55e", "#10b981", "#34d399", "#6ee7b7"]} size={8} round minDur={2.5} spread={1.5} maxDelay={1} />
+        <FallingConfetti count={40} colors={["#00c950", "#00bc7d", "#00d492", "#5ee9b5"]} size={8} round minDur={2.5} spread={1.5} maxDelay={1} />
         <View style={styles.content}>
           <Animated.View
             style={{
@@ -113,14 +113,14 @@ export function SavingsCongrats({ visible, amount, percentage, items }) {
               transform: [{ translateY: bounce.interpolate({ inputRange: [0, 1], outputRange: [0, -25] }) }],
             }}
           >
-            <LinearGradient colors={[tw.yellow400, "#eab308"]} style={styles.trophy}>
+            <LinearGradient colors={[tw.yellow400, "#f0b100"]} style={styles.trophy}>
               <Text style={{ fontSize: 48, lineHeight: 60 }}>{"\u{1F389}"}</Text>
             </LinearGradient>
           </Animated.View>
           <Text style={[styles.congrats, { color: p.white900 }]}>Congratulations!</Text>
           <View style={{ alignItems: "center" }}>
             <Text style={[styles.savedLabel, { color: p.isDark ? tw.gray300 : tw.gray600 }]}>You saved approx</Text>
-            <Text style={[styles.savedAmount, { color: p.isDark ? "#4ade80" : tw.green600 }]}>
+            <Text style={[styles.savedAmount, { color: p.isDark ? "#05df72" : tw.green600 }]}>
               {RUPEE}
               {amount.toFixed(0)}
             </Text>
@@ -130,7 +130,7 @@ export function SavingsCongrats({ visible, amount, percentage, items }) {
             <View
               style={[
                 styles.itemsBox,
-                { backgroundColor: p.card, borderColor: p.isDark ? "rgba(20,83,45,0.5)" : "#bbf7d0" },
+                { backgroundColor: p.card, borderColor: p.isDark ? "rgba(20,83,45,0.5)" : "#b9f8cf" },
               ]}
             >
               <Text style={[styles.itemsTitle, { color: p.t700 }]}>Savings on your items:</Text>
@@ -138,7 +138,7 @@ export function SavingsCongrats({ visible, amount, percentage, items }) {
                 {items.slice(0, 3).map((item, idx) => (
                   <View key={idx} style={styles.itemRow}>
                     <Text style={[styles.itemText, { color: p.t600, flex: 1 }]}>{item.name}</Text>
-                    <Text style={[styles.itemText, { fontWeight: "600", color: p.isDark ? "#4ade80" : tw.green600 }]}>
+                    <Text style={[styles.itemText, { fontWeight: "600", color: p.isDark ? "#05df72" : tw.green600 }]}>
                       -{RUPEE}
                       {item.savings.toFixed(0)}
                     </Text>
@@ -181,14 +181,14 @@ function SuccessBody({ addressCity, addressText, savingsAmount, platformSavings,
           style={[
             styles.ring,
             {
-              borderColor: p.isDark ? "#4ade80" : tw.green500,
+              borderColor: p.isDark ? "#05df72" : tw.green500,
               opacity: ring.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.3, 0, 0] }),
               transform: [{ scale: ring.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.3, 1] }) }],
             },
           ]}
         />
         <LinearGradient
-          colors={p.isDark ? [tw.green500, "#10b981"] : [tw.green500, tw.green600]}
+          colors={p.isDark ? [tw.green500, "#00bc7d"] : [tw.green500, tw.green600]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.checkCircle}
@@ -212,7 +212,7 @@ function SuccessBody({ addressCity, addressText, savingsAmount, platformSavings,
             style={[
               styles.sparkle,
               {
-                backgroundColor: p.isDark ? "#fde047" : tw.yellow400,
+                backgroundColor: p.isDark ? "#ffdf20" : tw.yellow400,
                 opacity: sparkles.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
                 transform: [
                   { rotate: `${i * 60}deg` },
@@ -227,7 +227,7 @@ function SuccessBody({ addressCity, addressText, savingsAmount, platformSavings,
 
       <Animated.View style={[{ alignItems: "center" }, slideUp(location)]}>
         <View style={styles.cityRow}>
-          <MapPin size={20} color={p.isDark ? "#f87171" : tw.red500} fill={p.isDark ? "#f87171" : tw.red500} />
+          <MapPin size={20} color={p.isDark ? "#ff6467" : tw.red500} fill={p.isDark ? "#ff6467" : tw.red500} />
           <Text style={[styles.city, { color: p.white900 }]}>{addressCity}</Text>
         </View>
         <Text style={[styles.addrText, { color: p.isDark ? tw.gray400 : tw.gray500 }]}>{addressText}</Text>
@@ -298,7 +298,7 @@ export function OrderSuccess({ visible, onTrack, ...rest }) {
       <View style={[styles.center, { backgroundColor: p.isDark ? "#0a0a0a" : "#ffffff" }]}>
         <FallingConfetti
           count={50}
-          colors={["#7e3866", "#3b82f6", "#f59e0b", "#ef4444", "#55254b", "#ec4899"]}
+          colors={["#7e3866", "#2b7fff", "#fe9a00", "#fb2c36", "#55254b", "#f6339a"]}
           size={12}
           minDur={2}
           spread={2}

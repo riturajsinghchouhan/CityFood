@@ -13,14 +13,14 @@ import { tw } from "../../theme/tokens";
 
 // Web gradient classes. Two of them use an invalid "to-#55254b" class, so they fade to transparent.
 const GRADIENTS = [
-  ["#f87171", "#dc2626"],
-  ["#fb923c", "rgba(251,146,60,0)"],
-  ["#a855f7", "#db2777"],
-  ["#4ade80", "#059669"],
-  ["#fb923c", "#ef4444"],
-  ["#fbbf24", "#ca8a04"],
-  ["#f472b6", "#e11d48"],
-  ["#fbbf24", "rgba(251,191,36,0)"],
+  ["#ff6467", "#dc2626"],
+  ["#ff8904", "rgba(251,146,60,0)"],
+  ["#ad46ff", "#e60076"],
+  ["#05df72", "#009966"],
+  ["#ff8904", "#fb2c36"],
+  ["#ffb900", "#d08700"],
+  ["#fb64b6", "#ec003f"],
+  ["#ffb900", "rgba(251,191,36,0)"],
 ];
 
 function Illustration() {
@@ -30,7 +30,7 @@ function Illustration() {
       <View style={{ width: 128, height: 96 }}>
         <View style={[styles.miniCard, { left: 0, top: 8, transform: [{ rotate: "-12deg" }] }]}>
           <View style={styles.miniInner}>
-            <View style={{ width: 32, height: 32, borderRadius: 999, backgroundColor: "#fbbf24", alignItems: "center", justifyContent: "center" }}>
+            <View style={{ width: 32, height: 32, borderRadius: 999, backgroundColor: "#ffb900", alignItems: "center", justifyContent: "center" }}>
               <UtensilsCrossed size={16} color="#ffffff" />
             </View>
           </View>
@@ -45,7 +45,7 @@ function Illustration() {
           <Svg width="100%" height={8} style={{ position: "absolute", top: -2, left: 0, right: 0 }}>
             <Defs>
               <Pattern id="awning" width={8} height={8} patternUnits="userSpaceOnUse">
-                <Rect x={0} y={0} width={4} height={8} fill="#fb923c" />
+                <Rect x={0} y={0} width={4} height={8} fill="#ff8904" />
                 <Rect x={4} y={0} width={4} height={8} fill="#ffffff" />
               </Pattern>
             </Defs>

@@ -19,7 +19,7 @@ export default function NoteSection({
       <View style={[p.cardStyle, styles.row]}>
         <Pressable onPress={onToggleNoteInput} style={[styles.pill, { flex: 1, borderColor: p.border }]}>
           <Utensils size={16} color={p.t600} />
-          <Text numberOfLines={1} style={[styles.pillText, { color: p.isDark ? "#d1d5db" : "#4b5563", flex: 1 }]}>
+          <Text numberOfLines={1} style={[styles.pillText, { color: p.isDark ? "#d1d5dc" : "#4a5565", flex: 1 }]}>
             {restaurantNote || "Add note for restaurant"}
           </Text>
         </Pressable>
@@ -33,7 +33,7 @@ export default function NoteSection({
           ]}
         >
           <Utensils size={16} color={sendCutlery ? p.t600 : p.primary} />
-          <Text style={[styles.pillText, { color: sendCutlery ? (p.isDark ? "#d1d5db" : "#4b5563") : p.primary }]}>
+          <Text style={[styles.pillText, { color: sendCutlery ? (p.isDark ? "#d1d5dc" : "#4a5565") : p.primary }]}>
             {sendCutlery ? "Send cutlery" : "Don't send"}
           </Text>
         </Pressable>

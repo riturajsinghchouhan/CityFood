@@ -11,15 +11,15 @@ function BotanicalLeaf({ size, rotate = 0, opacity = 0.85 }) {
     <Svg width={size} height={size} viewBox="0 0 64 64" style={{ transform: [{ rotate: `${rotate}deg` }], opacity }}>
       <Defs>
         <LinearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0%" stopColor="#4ADE80" />
-          <Stop offset="50%" stopColor="#22C55E" />
-          <Stop offset="100%" stopColor="#15803D" />
+          <Stop offset="0%" stopColor="#05DF72" />
+          <Stop offset="50%" stopColor="#00C950" />
+          <Stop offset="100%" stopColor="#008236" />
         </LinearGradient>
       </Defs>
       <Path d="M12 52 C 16 32, 34 16, 56 10 C 52 30, 36 48, 12 52 Z" fill={`url(#${gradId})`} />
-      <Path d="M14 50 Q 32 30 52 14" stroke="#166534" strokeWidth={1.5} strokeLinecap="round" opacity={0.6} fill="none" />
-      <Path d="M26 38 Q 32 34 36 36" stroke="#166534" strokeWidth={1} strokeLinecap="round" opacity={0.4} fill="none" />
-      <Path d="M36 28 Q 42 24 46 26" stroke="#166534" strokeWidth={1} strokeLinecap="round" opacity={0.4} fill="none" />
+      <Path d="M14 50 Q 32 30 52 14" stroke="#016630" strokeWidth={1.5} strokeLinecap="round" opacity={0.6} fill="none" />
+      <Path d="M26 38 Q 32 34 36 36" stroke="#016630" strokeWidth={1} strokeLinecap="round" opacity={0.4} fill="none" />
+      <Path d="M36 28 Q 42 24 46 26" stroke="#016630" strokeWidth={1} strokeLinecap="round" opacity={0.4} fill="none" />
     </Svg>
   );
 }
@@ -97,8 +97,8 @@ export default function LoginDecor() {
       </View>
 
       <FloatingLeaf delay={0} duration={4.5} offset={6} style={{ top: 72, left: 12 }} size={40} rotate={-35} opacity={0.9} />
-      <View style={[styles.abs, styles.drop, { top: 100, left: 48, backgroundColor: "#EF4444", transform: [{ rotate: "45deg" }] }]} />
-      <View style={[styles.abs, styles.drop, { top: 108, left: 32, backgroundColor: "#22C55E", transform: [{ rotate: "-30deg" }] }]} />
+      <View style={[styles.abs, styles.drop, { top: 100, left: 48, backgroundColor: "#FB2C36", transform: [{ rotate: "45deg" }] }]} />
+      <View style={[styles.abs, styles.drop, { top: 108, left: 32, backgroundColor: "#00C950", transform: [{ rotate: "-30deg" }] }]} />
       <FloatingLeaf delay={1} duration={5} offset={8} style={{ top: 208, right: 16 }} size={32} rotate={35} opacity={0.85} />
       <FloatingLeaf delay={2} duration={4} offset={7} style={{ bottom: 350, left: 12 }} size={36} rotate={-15} opacity={0.9} />
       <FloatingLeaf delay={1.5} duration={5.5} offset={6} style={{ bottom: 400, right: 12 }} size={40} rotate={45} opacity={0.9} />

@@ -75,18 +75,18 @@ export default function ShareRestaurantModal({ visible, payload, onClose }) {
     }
   };
 
-  const border = isDark ? "#1f2937" : "#e5e7eb";
-  const labelColor = isDark ? "#e5e7eb" : "#374151";
+  const border = isDark ? "#1e2939" : "#e5e7eb";
+  const labelColor = isDark ? "#e5e7eb" : "#364153";
   const targets = [
-    { key: "whatsapp", label: "WhatsApp", Icon: MessageCircle, color: "#16a34a" },
-    { key: "telegram", label: "Telegram", Icon: Send, color: "#0ea5e9" },
-    { key: "email", label: "Email", Icon: Mail, color: "#f43f5e" },
-    { key: "sms", label: "SMS", Icon: MessagesSquare, color: "#8b5cf6" },
-    { key: "facebook", label: "Facebook", Icon: Share2, color: "#2563eb" },
-    { key: "x", label: "X", Icon: Link2, color: isDark ? "#f3f4f6" : "#111827" },
-    { key: "linkedin", label: "LinkedIn", Icon: Share2, color: "#1d4ed8" },
+    { key: "whatsapp", label: "WhatsApp", Icon: MessageCircle, color: "#00a63e" },
+    { key: "telegram", label: "Telegram", Icon: Send, color: "#00a6f4" },
+    { key: "email", label: "Email", Icon: Mail, color: "#ff2056" },
+    { key: "sms", label: "SMS", Icon: MessagesSquare, color: "#8e51ff" },
+    { key: "facebook", label: "Facebook", Icon: Share2, color: "#155dfc" },
+    { key: "x", label: "X", Icon: Link2, color: isDark ? "#f3f4f6" : "#101828" },
+    { key: "linkedin", label: "LinkedIn", Icon: Share2, color: "#1447e6" },
   ].map((t) => ({ ...t, onPress: () => openTarget(t.key) }));
-  targets.push({ key: "copy", label: "Copy link", Icon: Copy, color: isDark ? "#9ca3af" : "#4b5563", onPress: copyLink });
+  targets.push({ key: "copy", label: "Copy link", Icon: Copy, color: isDark ? "#99a1af" : "#4a5565", onPress: copyLink });
   // grid-cols-3
   const rows = [];
   for (let i = 0; i < targets.length; i += 3) {
@@ -98,16 +98,16 @@ export default function ShareRestaurantModal({ visible, payload, onClose }) {
   return (
     <Modal transparent visible statusBarTranslucent navigationBarTranslucent animationType="fade" onRequestClose={onClose}>
       <View style={[styles.backdrop, { paddingBottom: 16 + insets.bottom }]}>
-        <View style={[styles.card, { backgroundColor: isDark ? "#121212" : "#ffffff", borderColor: isDark ? "#1f2937" : "transparent" }]}>
-          <View style={[styles.head, { borderBottomColor: isDark ? "#1f2937" : "#f3f4f6" }]}>
+        <View style={[styles.card, { backgroundColor: isDark ? "#121212" : "#ffffff", borderColor: isDark ? "#1e2939" : "transparent" }]}>
+          <View style={[styles.head, { borderBottomColor: isDark ? "#1e2939" : "#f3f4f6" }]}>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 16, fontWeight: "600", color: isDark ? "#f3f4f6" : "#111827" }}>Share restaurant</Text>
-              <Text style={{ fontSize: 12, marginTop: 2, color: isDark ? "#9ca3af" : "#6b7280" }}>
+              <Text style={{ fontSize: 16, fontWeight: "600", color: isDark ? "#f3f4f6" : "#101828" }}>Share restaurant</Text>
+              <Text style={{ fontSize: 12, marginTop: 2, color: isDark ? "#99a1af" : "#6a7282" }}>
                 Choose an app to share this restaurant
               </Text>
             </View>
             <Pressable onPress={onClose} accessibilityLabel="Close share modal" hitSlop={8} style={styles.close}>
-              <X size={16} color="#6b7280" />
+              <X size={16} color="#6a7282" />
             </Pressable>
           </View>
           <View style={styles.body}>

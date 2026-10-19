@@ -16,19 +16,19 @@ const STATUS_META = {
     label: "Credited",
     Icon: CircleCheck,
     light: { bg: tw.green100, fg: tw.green700 },
-    dark: { bg: "rgba(20,83,45,0.2)", fg: "#86efac" },
+    dark: { bg: "rgba(20,83,45,0.2)", fg: "#7bf1a8" },
   },
   pending: {
     label: "Pending",
     Icon: Clock3,
-    light: { bg: "#fef3c7", fg: "#b45309" },
-    dark: { bg: "rgba(120,53,15,0.2)", fg: "#fcd34d" },
+    light: { bg: "#fef3c6", fg: "#bb4d00" },
+    dark: { bg: "rgba(120,53,15,0.2)", fg: "#ffd230" },
   },
   rejected: {
     label: "Rejected",
     Icon: CircleX,
-    light: { bg: tw.red100, fg: "#b91c1c" },
-    dark: { bg: "rgba(127,29,29,0.2)", fg: "#fca5a5" },
+    light: { bg: tw.red100, fg: "#c10007" },
+    dark: { bg: "rgba(127,29,29,0.2)", fg: "#ffa2a2" },
   },
 };
 
@@ -146,7 +146,7 @@ export default function ReferEarnScreen() {
           </View>
           <View style={[styles.tile, { backgroundColor: tileBg }]}>
             <Text style={[styles.tileLabel, { color: muted }]}>Referral earnings</Text>
-            <Text style={[styles.tileValue, { color: isDark ? "#4ade80" : tw.green600 }]}>
+            <Text style={[styles.tileValue, { color: isDark ? "#05df72" : tw.green600 }]}>
               {"₹"}
               {stats.totalReferralEarnings}
             </Text>

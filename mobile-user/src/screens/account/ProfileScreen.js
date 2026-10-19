@@ -300,7 +300,7 @@ export default function ProfileScreen() {
             label={`${companyName} Money`}
             onPress={() => router.push("/wallet")}
             right={
-              <Text style={[styles.balance, { color: isDark ? "#4ade80" : tw.green600 }]}>
+              <Text style={[styles.balance, { color: isDark ? "#05df72" : tw.green600 }]}>
                 {"₹"}
                 {Number(walletBalance || 0).toFixed(0)}
               </Text>
@@ -317,7 +317,7 @@ export default function ProfileScreen() {
               </View>
               {referralReward > 0 ? (
                 <View style={[styles.earnBadge, { backgroundColor: isDark ? "rgba(20,83,45,0.2)" : tw.green100 }]}>
-                  <Text style={[styles.earnText, { color: isDark ? "#86efac" : tw.green700 }]}>
+                  <Text style={[styles.earnText, { color: isDark ? "#7bf1a8" : tw.green700 }]}>
                     Earn {"₹"}
                     {referralReward}
                   </Text>
@@ -419,7 +419,7 @@ export default function ProfileScreen() {
                 <View style={styles.rowGap12}>
                   <View style={[styles.chip, { backgroundColor: isDark ? "rgba(30,58,138,0.2)" : tw.blue50 }]}>
                     <Pulse active={isTestingNotification}>
-                      <Bell size={20} color="#3b82f6" />
+                      <Bell size={20} color="#2b7fff" />
                     </Pulse>
                   </View>
                   <Text style={[styles.rowLabel, { color: labelColor }]}>
@@ -452,7 +452,7 @@ export default function ProfileScreen() {
               iconColor={tw.red500}
               label="Delete Account"
               labelColor={tw.red500}
-              chevronColor="#fca5a5"
+              chevronColor="#ffa2a2"
               onPress={() => {
                 setDeleteStep(1);
                 setDeleteCaptcha("");
@@ -524,7 +524,7 @@ export default function ProfileScreen() {
               setAppearanceOpen(false);
             }}
             {...appearanceOption(lightSelected)}
-            leading={<Sun size={20} color={isDark ? tw.yellow400 : "#eab308"} />}
+            leading={<Sun size={20} color={isDark ? tw.yellow400 : "#f0b100"} />}
             title="Light"
             description="Default light theme"
           />
@@ -598,7 +598,7 @@ export default function ProfileScreen() {
                 },
               ]}
             >
-              <Text style={[styles.warnTitle, { color: isDark ? "#f87171" : tw.red600 }]}>
+              <Text style={[styles.warnTitle, { color: isDark ? "#ff6467" : tw.red600 }]}>
                 ⚠️ This action is permanent and cannot be undone!
               </Text>
               <View style={styles.warnList}>

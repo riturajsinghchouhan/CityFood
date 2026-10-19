@@ -269,7 +269,7 @@ export default function LoginScreen() {
 
             <View style={styles.topBar}>
               <ScalePressable scaleTo={0.95} onPress={() => router.push("/support")} style={styles.supportPill}>
-                <Headphones size={16} color="#F97316" strokeWidth={2.5} />
+                <Headphones size={16} color="#FF6900" strokeWidth={2.5} />
                 <Text style={styles.supportText}>SUPPORT</Text>
               </ScalePressable>
             </View>
@@ -313,7 +313,7 @@ export default function LoginScreen() {
                     <View
                       style={[
                         styles.phonePill,
-                        phoneFocused && { borderColor: "#fca5a5", boxShadow: "0px 8px 30px rgba(229,46,46,0.12)" },
+                        phoneFocused && { borderColor: "#ffa2a2", boxShadow: "0px 8px 30px rgba(229,46,46,0.12)" },
                       ]}
                     >
                       <View style={styles.country}>
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     gap: 8,
     boxShadow: "0px 2px 10px rgba(0,0,0,0.06)",
   },
-  supportText: { color: "#1E293B", fontWeight: "800", fontSize: 12, letterSpacing: 0.6 },
+  supportText: { color: "#1D293D", fontWeight: "800", fontSize: 12, letterSpacing: 0.6 },
   main: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24, paddingTop: 4, paddingBottom: 16, zIndex: 20 },
   logoWrap: {
     width: 176,
@@ -537,10 +537,10 @@ const styles = StyleSheet.create({
   h1: { fontSize: 34, fontWeight: "800", letterSpacing: -1.02, lineHeight: 38, textAlign: "center" },
   h1Row: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 2 },
   emoji: { fontSize: 32, lineHeight: 38 },
-  subtitle: { color: "#6B7280", fontWeight: "500", fontSize: 15, marginTop: 8, textAlign: "center" },
+  subtitle: { color: "#6A7282", fontWeight: "500", fontSize: 15, marginTop: 8, textAlign: "center" },
   h1Otp: { fontSize: 30, fontWeight: "800", letterSpacing: -0.75, color: GREEN, textAlign: "center" },
   sentRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 6 },
-  subtitleSmall: { color: "#6B7280", fontWeight: "500", fontSize: 15 },
+  subtitleSmall: { color: "#6A7282", fontWeight: "500", fontSize: 15 },
   strong: { fontWeight: "700" },
   editBtn: { padding: 4, borderRadius: 999 },
   form: { width: "100%", maxWidth: 360 },
@@ -558,12 +558,12 @@ const styles = StyleSheet.create({
     boxShadow: "0px 4px 22px rgba(0,0,0,0.06)",
   },
   country: { flexDirection: "row", alignItems: "center", gap: 4 },
-  countryText: { fontWeight: "700", color: "#111827", fontSize: 15, letterSpacing: 0.375 },
+  countryText: { fontWeight: "700", color: "#101828", fontSize: 15, letterSpacing: 0.375 },
   vDivider: { height: 24, width: 1, backgroundColor: tw.gray200, marginHorizontal: 12 },
   phoneIcon: { marginRight: 10 },
   phoneInputRow: { flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center" },
   prefix: { fontWeight: "600", color: tw.gray700, fontSize: 15, marginRight: 6 },
-  phoneInput: { flex: 1, color: "#111827", fontSize: 16, letterSpacing: 0.8, padding: 0, height: 40 },
+  phoneInput: { flex: 1, color: "#101828", fontSize: 16, letterSpacing: 0.8, padding: 0, height: 40 },
   redButton: {
     width: "100%",
     height: 56,
@@ -579,7 +579,7 @@ const styles = StyleSheet.create({
   mt16: { marginTop: 16 },
   mt12: { marginTop: 12 },
   disabled: { opacity: 0.6 },
-  terms: { fontSize: 12, color: "#6B7280", textAlign: "center", marginTop: 16 },
+  terms: { fontSize: 12, color: "#6A7282", textAlign: "center", marginTop: 16 },
   termsLink: { fontSize: 12, color: GREEN, fontWeight: "700", textDecorationLine: "underline" },
   otpRow: { flexDirection: "row", justifyContent: "space-between", gap: 10, width: "100%", marginBottom: 16 },
   otpBox: {
@@ -587,7 +587,7 @@ const styles = StyleSheet.create({
     height: 56,
     fontSize: 24,
     fontFamily: fontFamilyByWeight["700"],
-    color: "#111827",
+    color: "#101828",
     backgroundColor: "#ffffff",
     borderWidth: 1,
     borderColor: tw.gray200,

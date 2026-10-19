@@ -31,7 +31,7 @@ function Radio({ selected }) {
         styles.radio,
         selected
           ? { borderColor: isDark ? tw.green500 : tw.green600, backgroundColor: isDark ? tw.green500 : tw.green600 }
-          : { borderColor: isDark ? "#4b5563" : tw.gray300, backgroundColor: isDark ? "#2a2a2a" : "#ffffff" },
+          : { borderColor: isDark ? "#4a5565" : tw.gray300, backgroundColor: isDark ? "#2a2a2a" : "#ffffff" },
       ]}
     >
       {selected ? <View style={styles.radioDot} /> : null}
@@ -149,12 +149,12 @@ export function ApplyingVegOverlay({ visible }) {
     anim.start();
     return () => anim.stop();
   }, [visible, badge, text]);
-  const green = isDark ? "#4ade80" : tw.green600;
+  const green = isDark ? "#05df72" : tw.green600;
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={() => {}}>
       <View style={[styles.full, { backgroundColor: isDark ? "#0a0a0a" : "#ffffff" }]}>
         {visible
-          ? Array.from({ length: 8 }, (_, i) => <Ripple key={i} i={i} color={isDark ? tw.green600 : "#86efac"} />)
+          ? Array.from({ length: 8 }, (_, i) => <Ripple key={i} i={i} color={isDark ? tw.green600 : "#7bf1a8"} />)
           : null}
         <Animated.View
           style={[
@@ -191,7 +191,7 @@ function Spinner() {
   const outer = useLoop(1500, { linear: true });
   const inner = useLoop(1000, { linear: true });
   const { isDark } = useTheme();
-  const pink = isDark ? "#f472b6" : "#ec4899";
+  const pink = isDark ? "#fb64b6" : "#f6339a";
   return (
     <View style={styles.spinner}>
       <Animated.View

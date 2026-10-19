@@ -89,7 +89,7 @@ export default function AppImage({
 
   const source = isLocal ? src : failed && fallback ? fallback : uri;
   const showPlaceholder = placeholderType !== "none" && (!source || !loaded || (failed && !fallback));
-  const phColor = colors.dark ? "#52525b" : "#cfcac2";
+  const phColor = colors.dark ? "#52525c" : "#cfcac2";
 
   return (
     <View style={[styles.wrap, { backgroundColor: colors.dark ? "#18181b" : "#f5f3f0" }, style]}>

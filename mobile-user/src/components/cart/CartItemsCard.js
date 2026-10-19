@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     backgroundColor: tw.green50,
     borderWidth: 1,
-    borderColor: "#bbf7d0",
+    borderColor: "#b9f8cf",
     paddingHorizontal: 4,
     paddingVertical: 2,
     borderRadius: 4,

@@ -43,9 +43,9 @@ const formatDate = (dateString) => {
 };
 
 function txColor(type, isDark) {
-  if (type === "addition") return isDark ? "#4ade80" : tw.green600;
-  if (type === "deduction") return isDark ? "#f87171" : tw.red600;
-  if (type === "refund") return isDark ? "#60a5fa" : tw.blue600;
+  if (type === "addition") return isDark ? "#05df72" : tw.green600;
+  if (type === "deduction") return isDark ? "#ff6467" : tw.red600;
+  if (type === "refund") return isDark ? "#51a2ff" : tw.blue600;
   return isDark ? tw.gray400 : tw.gray600;
 }
 
@@ -114,7 +114,7 @@ export default function WalletScreen() {
       <View style={styles.balanceBlock}>
         <View style={styles.iconOuter}>
           <LinearGradient
-            colors={["#ef4444", "#dc2626", "#b91c1c"]}
+            colors={["#fb2c36", "#dc2626", "#c10007"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.iconGradient}
@@ -133,7 +133,7 @@ export default function WalletScreen() {
           </View>
           <View style={styles.mb8}>
             <Text style={[styles.smallLabel, { color: muted }]}>Referral Earnings</Text>
-            <Text style={[styles.referral, { color: isDark ? "#4ade80" : tw.green600 }]}>
+            <Text style={[styles.referral, { color: isDark ? "#05df72" : tw.green600 }]}>
               {formatAmount(referralEarnings)}
             </Text>
           </View>
@@ -169,7 +169,7 @@ export default function WalletScreen() {
                 <Text
                   style={[
                     styles.filterText,
-                    { color: isSelected ? (isDark ? "#4ade80" : tw.green600) : isDark ? tw.gray300 : tw.gray600 },
+                    { color: isSelected ? (isDark ? "#05df72" : tw.green600) : isDark ? tw.gray300 : tw.gray600 },
                   ]}
                 >
                   {filter.label}
@@ -220,7 +220,7 @@ export default function WalletScreen() {
             {item.description}
           </Text>
           {isReferralTx(item) ? (
-            <Text style={[styles.txTag, { color: isDark ? "#4ade80" : tw.green600 }]}>Referral reward</Text>
+            <Text style={[styles.txTag, { color: isDark ? "#05df72" : tw.green600 }]}>Referral reward</Text>
           ) : null}
           <Text style={[styles.txDate, { color: muted }]}>{formatDate(item.date || item.createdAt)}</Text>
         </View>
@@ -257,11 +257,11 @@ export default function WalletScreen() {
               styles.errorBox,
               {
                 backgroundColor: isDark ? "rgba(127,29,29,0.2)" : tw.red50,
-                borderColor: isDark ? "#991b1b" : "#fecaca",
+                borderColor: isDark ? "#9f0712" : "#ffc9c9",
               },
             ]}
           >
-            <Text style={[styles.errorText, { color: isDark ? "#f87171" : tw.red600 }]}>{error}</Text>
+            <Text style={[styles.errorText, { color: isDark ? "#ff6467" : tw.red600 }]}>{error}</Text>
           </View>
         </View>
       ) : (

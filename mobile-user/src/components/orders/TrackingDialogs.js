@@ -13,7 +13,7 @@ function DialogTitleRow({ children, onClose, style }) {
     <View style={[styles.titleRow, style]}>
       <View style={{ flex: 1 }}>{children}</View>
       <Pressable onPress={onClose} hitSlop={8} style={styles.closeX}>
-        <X size={16} color="#9ca3af" />
+        <X size={16} color="#99a1af" />
       </Pressable>
     </View>
   );
@@ -21,7 +21,7 @@ function DialogTitleRow({ children, onClose, style }) {
 
 function Radio({ checked, color }) {
   return (
-    <View style={[styles.radio, { borderColor: checked ? color : "#9ca3af" }]}>
+    <View style={[styles.radio, { borderColor: checked ? color : "#99a1af" }]}>
       {checked ? <View style={[styles.radioDot, { backgroundColor: color }]} /> : null}
     </View>
   );
@@ -34,12 +34,12 @@ export function CancelOrderDialog({ visible, order, reason, onReason, refundDest
   return (
     <Dialog visible={visible} onClose={onClose} style={{ backgroundColor: "#ffffff", borderColor: "#e5e7eb" }}>
       <DialogTitleRow onClose={onClose}>
-        <Text style={{ fontSize: 20, fontWeight: "700", color: "#111827" }}>Cancel Order</Text>
+        <Text style={{ fontSize: 20, fontWeight: "700", color: "#101828" }}>Cancel Order</Text>
       </DialogTitleRow>
       <View style={{ paddingVertical: 24, paddingHorizontal: 8, gap: 20 }}>
         {showRefund ? (
           <View style={styles.refundBox}>
-            <Text style={{ fontSize: 14, fontWeight: "600", color: "#111827" }}>Refund preference</Text>
+            <Text style={{ fontSize: 14, fontWeight: "600", color: "#101828" }}>Refund preference</Text>
             {[
               ["source", "Refund to original payment method (5-7 working days)"],
               ["wallet", "Refund to wallet (instant credit)"],
@@ -51,7 +51,7 @@ export function CancelOrderDialog({ visible, order, reason, onReason, refundDest
                 style={styles.refundOption}
               >
                 <Radio checked={refundDestination === value} color={colors.primary} />
-                <Text style={{ flex: 1, fontSize: 14, color: "#374151" }}>{label}</Text>
+                <Text style={{ flex: 1, fontSize: 14, color: "#364153" }}>{label}</Text>
               </Pressable>
             ))}
           </View>
@@ -62,12 +62,12 @@ export function CancelOrderDialog({ visible, order, reason, onReason, refundDest
           onChangeText={onReason}
           editable={!cancelling}
           placeholder="e.g., Changed my mind, Wrong address, etc."
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor="#99a1af"
           style={[styles.cancelInput, cancelling && { backgroundColor: "#f3f4f6", borderColor: "#e5e7eb" }]}
         />
         <View style={{ flexDirection: "row", gap: 12, paddingTop: 8 }}>
           <Pressable disabled={cancelling} onPress={onClose} style={[styles.btn, styles.outlineBtn, { opacity: cancelling ? 0.5 : 1 }]}>
-            <Text style={{ fontSize: 14, fontWeight: "500", color: "#111827" }}>Cancel</Text>
+            <Text style={{ fontSize: 14, fontWeight: "500", color: "#101828" }}>Cancel</Text>
           </Pressable>
           <Pressable
             disabled={confirmDisabled}
@@ -96,9 +96,9 @@ export function OrderDetailsDialog({ visible, order, onClose }) {
   const { isDark } = useTheme();
   const cancelled = order?.status?.toLowerCase().includes("cancel");
   const totalQty = order?.items?.reduce((acc, it) => acc + (Number(it.quantity) || 1), 0) || order?.items?.length || 0;
-  const tone = { label: isDark ? "#d1d5db" : "#4b5563", value: isDark ? "#f3f4f6" : "#111827" };
+  const tone = { label: isDark ? "#d1d5dc" : "#4a5565", value: isDark ? "#f3f4f6" : "#101828" };
   const strip = isDark ? "rgba(31,41,55,0.4)" : "rgba(249,250,251,0.8)";
-  const line = isDark ? "#1f2937" : "#f3f4f6";
+  const line = isDark ? "#1e2939" : "#f3f4f6";
   return (
     <Dialog
       visible={visible}
@@ -107,9 +107,9 @@ export function OrderDetailsDialog({ visible, order, onClose }) {
     >
       <DialogTitleRow onClose={onClose} style={[styles.detailsHead, { borderBottomColor: line }]}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: isDark ? "#ffffff" : "#111827" }}>Order Details</Text>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: isDark ? "#ffffff" : "#101828" }}>Order Details</Text>
           {order?.orderId ? (
-            <Text style={{ fontSize: 12, color: isDark ? "#6b7280" : "#9ca3af", fontFamily: "monospace" }}>
+            <Text style={{ fontSize: 12, color: isDark ? "#6a7282" : "#99a1af", fontFamily: "monospace" }}>
               #{String(order.orderId).slice(-6)}
             </Text>
           ) : null}
@@ -119,8 +119,8 @@ export function OrderDetailsDialog({ visible, order, onClose }) {
       <ScrollView style={{ maxHeight: 520 }} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 14, gap: 12 }}>
         <View style={[styles.metaStrip, { backgroundColor: strip, borderColor: line }]}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexShrink: 1 }}>
-            <Clock size={14} color="#9ca3af" />
-            <Text numberOfLines={1} style={{ fontSize: 12, fontWeight: "500", color: isDark ? "#d1d5db" : "#4b5563" }}>
+            <Clock size={14} color="#99a1af" />
+            <Text numberOfLines={1} style={{ fontSize: 12, fontWeight: "500", color: isDark ? "#d1d5dc" : "#4a5565" }}>
               {order?.createdAt ? dayjs(order.createdAt).format("D MMM YYYY, h:mm a") : "N/A"}
             </Text>
           </View>
@@ -128,8 +128,8 @@ export function OrderDetailsDialog({ visible, order, onClose }) {
             style={[
               styles.statusPill,
               cancelled
-                ? { backgroundColor: isDark ? "rgba(76,5,25,0.4)" : "#fff1f2", borderColor: isDark ? "rgba(159,18,57,0.4)" : "#fecdd3" }
-                : { backgroundColor: isDark ? "rgba(2,44,34,0.4)" : "#ecfdf5", borderColor: isDark ? "rgba(6,95,70,0.4)" : "#a7f3d0" },
+                ? { backgroundColor: isDark ? "rgba(76,5,25,0.4)" : "#fff1f2", borderColor: isDark ? "rgba(159,18,57,0.4)" : "#ffccd3" }
+                : { backgroundColor: isDark ? "rgba(2,44,34,0.4)" : "#ecfdf5", borderColor: isDark ? "rgba(6,95,70,0.4)" : "#a4f4cf" },
             ]}
           >
             <Text
@@ -138,7 +138,7 @@ export function OrderDetailsDialog({ visible, order, onClose }) {
                 fontWeight: "700",
                 letterSpacing: 0.5,
                 textTransform: "uppercase",
-                color: cancelled ? (isDark ? "#fb7185" : "#be123c") : isDark ? "#34d399" : "#047857",
+                color: cancelled ? (isDark ? "#ff637e" : "#c70036") : isDark ? "#00d492" : "#007a55",
               }}
             >
               {order?.status?.replace(/_/g, " ") || "CREATED"}
@@ -148,12 +148,12 @@ export function OrderDetailsDialog({ visible, order, onClose }) {
 
         {order?.note ? (
           <View style={[styles.noteBox, { backgroundColor: isDark ? "rgba(69,26,3,0.2)" : "rgba(255,251,235,0.7)", borderColor: isDark ? "rgba(146,64,14,0.4)" : "rgba(253,230,138,0.6)" }]}>
-            <MessageSquare size={14} color={isDark ? "#fbbf24" : "#d97706"} style={{ marginTop: 2 }} />
+            <MessageSquare size={14} color={isDark ? "#ffb900" : "#e17100"} style={{ marginTop: 2 }} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 10, fontWeight: "700", letterSpacing: 0.5, color: isDark ? "#fcd34d" : "#92400e" }}>
+              <Text style={{ fontSize: 10, fontWeight: "700", letterSpacing: 0.5, color: isDark ? "#ffd230" : "#973c00" }}>
                 DELIVERY INSTRUCTIONS
               </Text>
-              <Text style={{ fontSize: 12, fontWeight: "500", marginTop: 2, textTransform: "capitalize", color: isDark ? "#d1d5db" : "#374151" }}>
+              <Text style={{ fontSize: 12, fontWeight: "500", marginTop: 2, textTransform: "capitalize", color: isDark ? "#d1d5dc" : "#364153" }}>
                 {order.note}
               </Text>
             </View>
@@ -164,7 +164,7 @@ export function OrderDetailsDialog({ visible, order, onClose }) {
           <Text style={styles.sectionLabel}>ORDER ITEMS ({totalQty})</Text>
           {order?.items?.map((item, index) => {
             const isVeg = item?.isVeg !== false && item?.foodType !== "non-veg" && item?.foodType !== "non_veg";
-            const vegColor = isVeg ? "#059669" : "#e11d48";
+            const vegColor = isVeg ? "#009966" : "#ec003f";
             return (
               <View
                 key={index}
@@ -176,19 +176,19 @@ export function OrderDetailsDialog({ visible, order, onClose }) {
                   </View>
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
-                      <Text numberOfLines={1} style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#f3f4f6" : "#111827" }}>
+                      <Text numberOfLines={1} style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#f3f4f6" : "#101828" }}>
                         {item.name}
                       </Text>
-                      <Text style={{ fontSize: 11, fontWeight: "500", color: isDark ? "#9ca3af" : "#6b7280" }}>× {item.quantity}</Text>
+                      <Text style={{ fontSize: 11, fontWeight: "500", color: isDark ? "#99a1af" : "#6a7282" }}>× {item.quantity}</Text>
                     </View>
                     {item.variantName ? (
-                      <Text numberOfLines={1} style={{ fontSize: 11, color: isDark ? "#6b7280" : "#9ca3af" }}>
+                      <Text numberOfLines={1} style={{ fontSize: 11, color: isDark ? "#6a7282" : "#99a1af" }}>
                         {item.variantName}
                       </Text>
                     ) : null}
                   </View>
                 </View>
-                <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#f3f4f6" : "#111827" }}>
+                <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#f3f4f6" : "#101828" }}>
                   ₹{((item?.price || 0) * (item?.quantity || 0)).toFixed(2)}
                 </Text>
               </View>
@@ -206,7 +206,7 @@ export function OrderDetailsDialog({ visible, order, onClose }) {
             color={tone}
             valueNode={
               Number(order?.deliveryFee || 0) === 0 ? (
-                <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#34d399" : "#059669" }}>FREE</Text>
+                <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#00d492" : "#009966" }}>FREE</Text>
               ) : null
             }
             value={`₹${money(order?.deliveryFee)}`}
@@ -216,22 +216,22 @@ export function OrderDetailsDialog({ visible, order, onClose }) {
             <BillRow
               label="Discount Applied"
               value={`-₹${money(order.discount)}`}
-              color={{ label: isDark ? "#34d399" : "#059669", value: isDark ? "#34d399" : "#059669" }}
+              color={{ label: isDark ? "#00d492" : "#009966", value: isDark ? "#00d492" : "#009966" }}
             />
           ) : null}
           <View style={[styles.billRow, styles.billTotal, { borderTopColor: isDark ? "rgba(55,65,81,0.6)" : "#e5e7eb" }]}>
-            <Text style={{ fontSize: 12, fontWeight: "700", color: isDark ? "#ffffff" : "#111827" }}>Total Amount</Text>
-            <Text style={{ fontSize: 14, fontWeight: "800", color: isDark ? "#ffffff" : "#111827" }}>₹{money(order?.totalAmount)}</Text>
+            <Text style={{ fontSize: 12, fontWeight: "700", color: isDark ? "#ffffff" : "#101828" }}>Total Amount</Text>
+            <Text style={{ fontSize: 14, fontWeight: "800", color: isDark ? "#ffffff" : "#101828" }}>₹{money(order?.totalAmount)}</Text>
           </View>
         </View>
 
         {order?.paymentMethod ? (
           <View style={[styles.billRow, { paddingHorizontal: 4 }]}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <CreditCard size={14} color="#9ca3af" />
-              <Text style={{ fontSize: 12, color: isDark ? "#9ca3af" : "#6b7280" }}>Payment Method</Text>
+              <CreditCard size={14} color="#99a1af" />
+              <Text style={{ fontSize: 12, color: isDark ? "#99a1af" : "#6a7282" }}>Payment Method</Text>
             </View>
-            <Text style={{ fontSize: 12, fontWeight: "600", letterSpacing: 0.5, textTransform: "uppercase", color: isDark ? "#e5e7eb" : "#1f2937" }}>
+            <Text style={{ fontSize: 12, fontWeight: "600", letterSpacing: 0.5, textTransform: "uppercase", color: isDark ? "#e5e7eb" : "#1e2939" }}>
               {order.paymentMethod}
             </Text>
           </View>
@@ -239,8 +239,8 @@ export function OrderDetailsDialog({ visible, order, onClose }) {
       </ScrollView>
 
       <View style={[styles.detailsFoot, { borderTopColor: line, backgroundColor: isDark ? "rgba(17,24,39,0.5)" : "rgba(249,250,251,0.5)" }]}>
-        <Pressable onPress={onClose} style={[styles.okBtn, { backgroundColor: isDark ? "#ffffff" : "#111827" }]}>
-          <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#111827" : "#ffffff" }}>Okay</Text>
+        <Pressable onPress={onClose} style={[styles.okBtn, { backgroundColor: isDark ? "#ffffff" : "#101828" }]}>
+          <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#101828" : "#ffffff" }}>Okay</Text>
         </Pressable>
       </View>
     </Dialog>
@@ -256,7 +256,7 @@ export function InstructionsDialog({ visible, value, onChange, saving, onSave, o
         <Text style={{ fontSize: 20, fontWeight: "700", color: colors.secondary }}>Delivery Instructions</Text>
       </DialogTitleRow>
       <View style={{ gap: 16 }}>
-        <Text style={{ fontSize: 14, color: "#6b7280" }}>
+        <Text style={{ fontSize: 14, color: "#6a7282" }}>
           Add instructions for the delivery partner to help them find your address or know where to leave your order.
         </Text>
         <TextInput
@@ -264,12 +264,12 @@ export function InstructionsDialog({ visible, value, onChange, saving, onSave, o
           value={value}
           onChangeText={onChange}
           placeholder="E.g. Ring the doorbell, leave at the front desk..."
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor="#99a1af"
           selectionColor={colors.primary}
-          style={[styles.textarea, { minHeight: 120, fontSize: 16, backgroundColor: "#f9fafb", borderColor: "#e5e7eb", color: "#111827" }]}
+          style={[styles.textarea, { minHeight: 120, fontSize: 16, backgroundColor: "#f9fafb", borderColor: "#e5e7eb", color: "#101828" }]}
         />
         <Pressable disabled={saving} onPress={onSave} style={{ opacity: saving ? 0.5 : 1 }}>
-          <LinearGradient colors={[colors.primary, "#f59e0b"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.bigBtn}>
+          <LinearGradient colors={[colors.primary, "#fe9a00"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.bigBtn}>
             {saving ? <Spinner size={20} /> : <Text style={{ fontSize: 14, fontWeight: "700", color: "#ffffff" }}>Save Instructions</Text>}
           </LinearGradient>
         </Pressable>
@@ -285,7 +285,7 @@ function StarPicker({ value, onChange, prefix, isDark }) {
         const on = star <= (value || 0);
         return (
           <ScalePressable key={`${prefix}-${star}`} scaleTo={0.9} onPress={() => onChange(star)} style={{ padding: 4 }}>
-            <Star size={40} color={on ? "#facc15" : isDark ? "#1f2937" : "#e5e7eb"} fill={on ? "#facc15" : "transparent"} />
+            <Star size={40} color={on ? "#fdc700" : isDark ? "#1e2939" : "#e5e7eb"} fill={on ? "#fdc700" : "transparent"} />
           </ScalePressable>
         );
       })}
@@ -317,18 +317,18 @@ export function TrackingRatingDialog({
       minHeight: 80,
       fontSize: 14,
       backgroundColor: isDark ? "rgba(31,41,55,0.5)" : "#f9fafb",
-      borderColor: isDark ? "#1f2937" : "#f3f4f6",
-      color: isDark ? "#f3f4f6" : "#111827",
+      borderColor: isDark ? "#1e2939" : "#f3f4f6",
+      color: isDark ? "#f3f4f6" : "#101828",
     },
   ];
-  const q = { fontSize: 14, fontWeight: "600", color: isDark ? "#e5e7eb" : "#1f2937" };
+  const q = { fontSize: 14, fontWeight: "600", color: isDark ? "#e5e7eb" : "#1e2939" };
   return (
     <Dialog visible={visible} onClose={onClose} style={[styles.roundDialog, { backgroundColor: isDark ? "#1a1a1a" : "#ffffff" }]}>
       <ScrollView style={{ maxHeight: 600 }} keyboardShouldPersistTaps="handled">
         <DialogTitleRow onClose={onClose} style={{ marginBottom: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Star size={24} color={colors.primary} fill={colors.primary} />
-            <Text style={{ fontSize: 20, fontWeight: "700", color: isDark ? "#ffffff" : "#111827" }}>Rate your Experience</Text>
+            <Text style={{ fontSize: 20, fontWeight: "700", color: isDark ? "#ffffff" : "#101828" }}>Rate your Experience</Text>
           </View>
         </DialogTitleRow>
         <View style={{ gap: 24, paddingVertical: 8 }}>
@@ -336,32 +336,32 @@ export function TrackingRatingDialog({
             <View style={styles.rateHead}>
               <Text style={q}>How was the food?</Text>
               <View style={[styles.tag, { backgroundColor: isDark ? "rgba(67,20,7,0.3)" : "#fff7ed" }]}>
-                <Text style={{ fontSize: 12, fontWeight: "500", color: isDark ? "#fb923c" : "#ea580c" }}>Restaurant</Text>
+                <Text style={{ fontSize: 12, fontWeight: "500", color: isDark ? "#ff8904" : "#f54900" }}>Restaurant</Text>
               </View>
             </View>
             <StarPicker value={restaurantRating} onChange={onRestaurantRating} prefix="res" isDark={isDark} />
             <TextInput
               multiline
               placeholder="Write a quick review for the food (optional)"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor="#99a1af"
               value={restaurantText}
               onChangeText={onRestaurantText}
               style={area}
             />
           </View>
           {hasDeliveryPartner ? (
-            <View style={{ gap: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: isDark ? "#1f2937" : "#f3f4f6" }}>
+            <View style={{ gap: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: isDark ? "#1e2939" : "#f3f4f6" }}>
               <View style={styles.rateHead}>
                 <Text style={q}>How was the delivery?</Text>
                 <View style={[styles.tag, { backgroundColor: isDark ? "rgba(23,37,84,0.3)" : "#eff6ff" }]}>
-                  <Text style={{ fontSize: 12, fontWeight: "500", color: isDark ? "#60a5fa" : "#2563eb" }}>Delivery</Text>
+                  <Text style={{ fontSize: 12, fontWeight: "500", color: isDark ? "#51a2ff" : "#155dfc" }}>Delivery</Text>
                 </View>
               </View>
               <StarPicker value={deliveryRating} onChange={onDeliveryRating} prefix="del" isDark={isDark} />
               <TextInput
                 multiline
                 placeholder={`How was ${order?.deliveryPartnerName || "the rider"}? (optional)`}
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor="#99a1af"
                 value={deliveryText}
                 onChangeText={onDeliveryText}
                 style={area}
@@ -376,7 +376,7 @@ export function TrackingRatingDialog({
             {submitting ? <Spinner size={20} /> : <Text style={{ fontSize: 14, fontWeight: "700", color: "#ffffff" }}>Submit Feedback</Text>}
           </Pressable>
           <Pressable onPress={onClose} style={{ paddingVertical: 8, marginTop: -16 }}>
-            <Text style={{ fontSize: 14, fontWeight: "500", textAlign: "center", color: isDark ? "#6b7280" : "#9ca3af" }}>Maybe later</Text>
+            <Text style={{ fontSize: 14, fontWeight: "500", textAlign: "center", color: isDark ? "#6a7282" : "#99a1af" }}>Maybe later</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -404,12 +404,12 @@ const styles = StyleSheet.create({
   cancelInput: {
     minHeight: 100,
     borderWidth: 2,
-    borderColor: "#d1d5db",
+    borderColor: "#d1d5dc",
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 14,
-    color: "#111827",
+    color: "#101828",
     textAlignVertical: "top",
     ...inputFont,
   },
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
   },
   statusPill: { paddingHorizontal: 10, paddingVertical: 2, borderRadius: 999, borderWidth: 1 },
   noteBox: { flexDirection: "row", alignItems: "flex-start", gap: 10, borderRadius: 12, borderWidth: 1, padding: 10 },
-  sectionLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5, color: "#6b7280" },
+  sectionLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5, color: "#6a7282" },
   itemRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingBottom: 6 },
   vegBox: { width: 14, height: 14, borderRadius: 4, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   vegDot: { width: 6, height: 6, borderRadius: 3 },

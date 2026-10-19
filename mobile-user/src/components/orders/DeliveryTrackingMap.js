@@ -380,14 +380,14 @@ export default function DeliveryTrackingMap({
     };
   }, [fullRoutePath, displayRiderLocation]);
 
-  const remainingColor = isOrderPickedUp ? "#3b82f6" : "#22c55e";
+  const remainingColor = isOrderPickedUp ? "#2b7fff" : "#00c950";
   const center = isOrderPickedUp ? customerCoords || { lat: 0, lng: 0 } : restaurantCoords || { lat: 0, lng: 0 };
   const [initialCamera] = useState(() => ({ center: toLatLng(center), zoom: 15, heading: 0, pitch: 0 }));
 
   if (!GOOGLE_MAPS_API_KEY) {
     return (
       <View style={[styles.message, { backgroundColor: "#f9fafb", borderColor: "#e5e7eb" }]}>
-        <Text style={{ fontSize: 14, color: "#4b5563", textAlign: "center" }}>Loading map configuration...</Text>
+        <Text style={{ fontSize: 14, color: "#4a5565", textAlign: "center" }}>Loading map configuration...</Text>
       </View>
     );
   }
@@ -437,7 +437,7 @@ export default function DeliveryTrackingMap({
           <PinMarker
             key={`c|${customerUri}|${isOrderPickedUp}`}
             coordinate={toLatLng(customerCoords)}
-            borderColor="#22c55e"
+            borderColor="#00c950"
             pulseColor="rgba(34,197,94,0.5)"
             pulse={isOrderPickedUp}
             uri={customerUri}

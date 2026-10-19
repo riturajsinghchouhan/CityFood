@@ -161,7 +161,7 @@ export default function FestBanner({ isVegMode = false }) {
           style={[styles.offerPill, { transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.05] }) }] }]}
         >
           {isVegMode ? (
-            <Leaf size={14} color="#34d399" fill="#34d399" />
+            <Leaf size={14} color="#00d492" fill="#00d492" />
           ) : (
             <Animated.View style={{ transform: [{ translateY: bounce.interpolate({ inputRange: [0, 1], outputRange: [0, -3] }) }] }}>
               <Flame size={14} color={YELLOW} fill={YELLOW} />

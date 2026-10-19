@@ -1131,7 +1131,7 @@ export default function CartScreen() {
       >
         {savings > 0 ? (
           <View style={[styles.savings, { backgroundColor: p.isDark ? "rgba(30,58,138,0.2)" : "#dbeafe" }]}>
-            <Text style={{ fontSize: 14, fontWeight: "500", color: p.isDark ? "#bfdbfe" : "#1e40af" }}>
+            <Text style={{ fontSize: 14, fontWeight: "500", color: p.isDark ? "#bedbff" : "#193cb8" }}>
               Saved {RUPEE}
               {savings} on this order
             </Text>

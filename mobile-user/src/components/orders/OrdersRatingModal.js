@@ -13,7 +13,7 @@ function StarRow({ value, onChange, keyPrefix }) {
         const active = (value || 0) >= num;
         return (
           <ScalePressable key={`${keyPrefix}-${num}`} scaleTo={0.95} onPress={() => onChange(num)} style={{ padding: 8 }}>
-            <Star size={40} color={active ? "#facc15" : "#d1d5db"} fill={active ? "#facc15" : "transparent"} />
+            <Star size={40} color={active ? "#fdc700" : "#d1d5dc"} fill={active ? "#fdc700" : "transparent"} />
           </ScalePressable>
         );
       })}
@@ -41,18 +41,18 @@ export default function OrdersRatingModal({
   const inputStyle = [
     styles.textarea,
     {
-      borderColor: isDark ? "#1f2937" : "#e5e7eb",
+      borderColor: isDark ? "#1e2939" : "#e5e7eb",
       backgroundColor: isDark ? "#1a1a1a" : "#ffffff",
-      color: isDark ? "#e5e7eb" : "#1f2937",
+      color: isDark ? "#e5e7eb" : "#1e2939",
     },
   ];
-  const labelStyle = [styles.label, { color: isDark ? "#f3f4f6" : "#111827" }];
+  const labelStyle = [styles.label, { color: isDark ? "#f3f4f6" : "#101828" }];
 
   return (
     <Dialog
       visible={Boolean(order)}
       onClose={onClose}
-      style={[styles.dialog, { backgroundColor: isDark ? "#121212" : "#ffffff", borderColor: isDark ? "#1f2937" : "transparent" }]}
+      style={[styles.dialog, { backgroundColor: isDark ? "#121212" : "#ffffff", borderColor: isDark ? "#1e2939" : "transparent" }]}
     >
       <LinearGradient colors={[colors.primary, colors.secondary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.header}>
         <View style={styles.headerRow}>
@@ -77,7 +77,7 @@ export default function OrdersRatingModal({
             value={restaurantText}
             onChangeText={onRestaurantText}
             placeholder="Restaurant feedback (optional)"
-            placeholderTextColor={isDark ? "#6b7280" : "#9ca3af"}
+            placeholderTextColor={isDark ? "#6a7282" : "#99a1af"}
             selectionColor={colors.primary}
             style={inputStyle}
           />
@@ -93,7 +93,7 @@ export default function OrdersRatingModal({
               value={deliveryText}
               onChangeText={onDeliveryText}
               placeholder="Delivery partner feedback (optional)"
-              placeholderTextColor={isDark ? "#6b7280" : "#9ca3af"}
+              placeholderTextColor={isDark ? "#6a7282" : "#99a1af"}
               selectionColor={colors.primary}
               style={inputStyle}
             />
@@ -151,5 +151,5 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   submitText: { fontSize: 16, fontWeight: "700", color: "#ffffff" },
-  hint: { fontSize: 12, textAlign: "center", color: "#ef4444", marginTop: 8 },
+  hint: { fontSize: 12, textAlign: "center", color: "#fb2c36", marginTop: 8 },
 });

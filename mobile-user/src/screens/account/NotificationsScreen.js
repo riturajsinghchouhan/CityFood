@@ -140,7 +140,7 @@ export default function NotificationsScreen() {
           unread
             ? {
                 backgroundColor: isDark ? "rgba(127,29,29,0.2)" : "rgba(254,242,242,0.5)",
-                borderColor: isDark ? "#991b1b" : "#fecaca",
+                borderColor: isDark ? "#9f0712" : "#ffc9c9",
               }
             : { backgroundColor: isDark ? tw.gray800 : "#ffffff", borderColor: isDark ? tw.gray700 : tw.gray200 },
         ]}

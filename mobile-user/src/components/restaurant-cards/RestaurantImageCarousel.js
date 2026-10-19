@@ -304,15 +304,15 @@ function RestaurantImageCarousel({ restaurant, priority = false, autoPlay = fals
       {currentSlide?.isRecommended && currentSlide?.foodType ? (
         <View
           pointerEvents="none"
-          style={[styles.vegMark, { borderColor: currentSlide.foodType === "Veg" ? "#16a34a" : "#dc2626" }]}
+          style={[styles.vegMark, { borderColor: currentSlide.foodType === "Veg" ? "#00a63e" : "#dc2626" }]}
         >
-          <View style={[styles.vegDot, { backgroundColor: currentSlide.foodType === "Veg" ? "#16a34a" : "#dc2626" }]} />
+          <View style={[styles.vegDot, { backgroundColor: currentSlide.foodType === "Veg" ? "#00a63e" : "#dc2626" }]} />
         </View>
       ) : null}
 
       {currentSlide?.isRecommended && currentSlide?.name ? (
         <View pointerEvents="none" style={[styles.tag, { left: currentSlide.foodType ? 48 : 12 }]}>
-          <Sparkles size={12} color="#fbbf24" fill="#fbbf24" />
+          <Sparkles size={12} color="#ffb900" fill="#ffb900" />
           <Text numberOfLines={1} style={styles.tagName}>
             {currentSlide.name}
           </Text>
@@ -384,9 +384,9 @@ const styles = StyleSheet.create({
     borderColor: "rgba(251,191,36,0.4)",
   },
   tagName: { color: "#ffffff", fontSize: 11, fontWeight: "700", maxWidth: 140 },
-  tagPrice: { color: "#fcd34d", fontSize: 11, fontWeight: "800", marginLeft: 2 },
+  tagPrice: { color: "#ffd230", fontSize: 11, fontWeight: "800", marginLeft: 2 },
   unavailable: { zIndex: 2, alignItems: "center", justifyContent: "center", backgroundColor: "#f3f4f6" },
-  unavailableText: { fontSize: 12, color: "#6b7280" },
+  unavailableText: { fontSize: 12, color: "#6a7282" },
   dots: { position: "absolute", bottom: 0, alignSelf: "center", flexDirection: "row", alignItems: "center", zIndex: 10 },
   dotHit: { width: 40, height: 40, marginHorizontal: -4, alignItems: "center", justifyContent: "center" },
   dot: { height: 6, borderRadius: 3 },

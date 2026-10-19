@@ -19,7 +19,7 @@ export function RestaurantGridFooter() {
   const { logo } = useAppSettings();
   const [failed, setFailed] = useState(false);
   const source = logo && !failed ? { uri: logo } : localLogo;
-  const line = isDark ? ["rgba(39,39,42,0)", "#27272a", "#3f3f46"] : ["rgba(229,231,235,0)", "#e5e7eb", "#d1d5db"];
+  const line = isDark ? ["rgba(39,39,42,0)", "#27272a", "#3f3f46"] : ["rgba(229,231,235,0)", "#e5e7eb", "#d1d5dc"];
   return (
     <View style={styles.footer}>
       <View style={styles.footerRow}>
@@ -38,7 +38,7 @@ export function RestaurantGridFooter() {
         </View>
         <LinearGradient colors={line} start={{ x: 1, y: 0 }} end={{ x: 0, y: 0 }} style={styles.line} />
       </View>
-      <Text style={[styles.footerText, { color: isDark ? "#71717a" : "#9ca3af" }]}>THAT&apos;S ALL FOR NOW</Text>
+      <Text style={[styles.footerText, { color: isDark ? "#71717b" : "#99a1af" }]}>THAT&apos;S ALL FOR NOW</Text>
     </View>
   );
 }

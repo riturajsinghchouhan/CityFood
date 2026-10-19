@@ -40,7 +40,7 @@ function Spinner() {
   const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] });
   return (
     <Animated.View style={{ transform: [{ rotate }] }}>
-      <Loader2 size={32} color="#2563eb" />
+      <Loader2 size={32} color="#155dfc" />
     </Animated.View>
   );
 }
@@ -147,7 +147,7 @@ export default function AppIntroSplash({ onComplete }) {
         <Pressable onPress={handleAdClick} style={[styles.visitWrap, { bottom: 64 + insets.bottom }]}>
           {({ pressed }) => (
             <LinearGradient
-              colors={["#f97316", "#f59e0b"]}
+              colors={["#ff6900", "#fe9a00"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={[styles.visit, { transform: [{ scale: pressed ? 0.95 : 1 }] }]}

@@ -96,7 +96,7 @@ export function SheetHandle() {
   const { colors } = useTheme();
   return (
     <View style={styles.handleWrap}>
-      <View style={[styles.handle, { backgroundColor: colors.dark ? "#374151" : "#d1d5db" }]} />
+      <View style={[styles.handle, { backgroundColor: colors.dark ? "#364153" : "#d1d5dc" }]} />
     </View>
   );
 }

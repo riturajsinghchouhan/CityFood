@@ -41,7 +41,7 @@ export function OutOfZoneScreen({ onChangeLocation }) {
           onPress={handlePress}
           style={({ pressed }) => [
             styles.button,
-            { backgroundColor: pressed ? "#b91c1c" : "#dc2626", transform: [{ scale: pressed ? 0.95 : 1 }] },
+            { backgroundColor: pressed ? "#c10007" : "#dc2626", transform: [{ scale: pressed ? 0.95 : 1 }] },
           ]}
         >
           <Text style={styles.buttonText}>Change Location</Text>

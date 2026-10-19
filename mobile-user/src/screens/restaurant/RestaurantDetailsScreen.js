@@ -55,7 +55,7 @@ import {
 } from "./lib";
 import useRestaurantDetails from "./useRestaurantDetails";
 
-const EMERALD = "#059669";
+const EMERALD = "#009966";
 const PAGE_SIZE = 20;
 const DEFAULT_FILTERS = { sortBy: null, vegNonVeg: null, highlyReordered: false, spicy: false };
 
@@ -826,7 +826,7 @@ function RestaurantDetailsContent() {
                 {restaurant.distance || "1.2 km"} | {restaurant.location || "Location"}
               </Text>
             </View>
-            <View style={[styles.statusPill, { backgroundColor: isRestaurantOffline ? "#e11d48" : EMERALD }]}>
+            <View style={[styles.statusPill, { backgroundColor: isRestaurantOffline ? "#ec003f" : EMERALD }]}>
               <Text style={{ fontSize: 12, fontWeight: "600", color: "#ffffff" }}>{isRestaurantOffline ? "Offline" : "Open now"}</Text>
             </View>
           </View>
@@ -838,7 +838,7 @@ function RestaurantDetailsContent() {
 
         {isRestaurantOffline ? (
           <View style={styles.offlineBanner}>
-            <Text style={{ fontSize: 14, color: "#be123c" }}>This restaurant is currently offline. Orders are unavailable right now.</Text>
+            <Text style={{ fontSize: 14, color: "#c70036" }}>This restaurant is currently offline. Orders are unavailable right now.</Text>
           </View>
         ) : null}
 
@@ -847,13 +847,13 @@ function RestaurantDetailsContent() {
             colors={isDark ? ["rgba(5,46,22,0.2)", "rgba(2,44,34,0.2)"] : [tw.green50, "#ecfdf5"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={[styles.discountCard, { borderColor: isDark ? "rgba(20,83,45,0.3)" : "#bbf7d0" }]}
+            style={[styles.discountCard, { borderColor: isDark ? "rgba(20,83,45,0.3)" : "#b9f8cf" }]}
           >
             <View style={[styles.iconBox, { backgroundColor: isDark ? "rgba(20,83,45,0.4)" : tw.green100 }]}>
-              <Tag size={20} color={isDark ? "#4ade80" : tw.green600} />
+              <Tag size={20} color={isDark ? "#05df72" : tw.green600} />
             </View>
             <View>
-              <Text style={{ fontSize: 14, fontWeight: "900", letterSpacing: 0.35, color: isDark ? "#4ade80" : tw.green800 }}>
+              <Text style={{ fontSize: 14, fontWeight: "900", letterSpacing: 0.35, color: isDark ? "#05df72" : tw.green800 }}>
                 FLAT {restaurant.discount}% OFF
               </Text>
               <Text style={{ fontSize: 12, fontWeight: "500", marginTop: 2, color: isDark ? tw.green500 : tw.green600 }}>
@@ -869,7 +869,7 @@ function RestaurantDetailsContent() {
         >
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
             <View style={[styles.iconBox, { backgroundColor: isDark ? "rgba(124,45,18,0.3)" : tw.orange100 }]}>
-              <Percent size={20} color={isDark ? "#fb923c" : "#ea580c"} />
+              <Percent size={20} color={isDark ? "#ff8904" : "#f54900"} />
             </View>
             <View style={{ flex: 1, minWidth: 0, justifyContent: "center", alignSelf: "center" }}>
               <View style={{ height: 20, overflow: "hidden" }}>
@@ -881,8 +881,8 @@ function RestaurantDetailsContent() {
             </View>
             <View style={{ alignItems: "flex-end", gap: 4 }}>
               <View style={[styles.ratingPill, { backgroundColor: isDark ? "rgba(2,44,34,0.3)" : "#ecfdf5" }]}>
-                <Star size={12} color={isDark ? "#34d399" : "#047857"} fill={isDark ? "#34d399" : "#047857"} />
-                <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#34d399" : "#047857" }}>{ratingLabel}</Text>
+                <Star size={12} color={isDark ? "#00d492" : "#007a55"} fill={isDark ? "#00d492" : "#007a55"} />
+                <Text style={{ fontSize: 12, fontWeight: "600", color: isDark ? "#00d492" : "#007a55" }}>{ratingLabel}</Text>
               </View>
               <Text style={{ fontSize: 10, color: isDark ? tw.gray500 : tw.gray400 }}>{reviewsLabel}</Text>
             </View>
@@ -901,7 +901,7 @@ function RestaurantDetailsContent() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={{ borderBottomWidth: 1, borderBottomColor: isDark ? "#111827" : tw.gray100 }}
+            style={{ borderBottomWidth: 1, borderBottomColor: isDark ? "#101828" : tw.gray100 }}
             contentContainerStyle={{ gap: 8, paddingTop: 8, paddingBottom: 10, paddingHorizontal: 16 }}
           >
             <Pressable
@@ -933,7 +933,7 @@ function RestaurantDetailsContent() {
                   style={{
                     fontSize: 14,
                     fontWeight: filters.vegNonVeg === "veg" ? "700" : "500",
-                    color: filters.vegNonVeg === "veg" ? (isDark ? "#4ade80" : tw.green700) : strong,
+                    color: filters.vegNonVeg === "veg" ? (isDark ? "#05df72" : tw.green700) : strong,
                   }}
                 >
                   Veg
@@ -953,7 +953,7 @@ function RestaurantDetailsContent() {
                 ]}
               >
                 <View style={[styles.dot, { backgroundColor: tw.red600 }]} />
-                <Text style={{ fontSize: 14, fontWeight: "500", color: filters.vegNonVeg === "non-veg" ? (isDark ? "#f87171" : tw.red600) : strong }}>
+                <Text style={{ fontSize: 14, fontWeight: "500", color: filters.vegNonVeg === "non-veg" ? (isDark ? "#ff6467" : tw.red600) : strong }}>
                   Non-veg
                 </Text>
                 {filters.vegNonVeg === "non-veg" ? <X size={12} color={isDark ? tw.gray400 : tw.gray600} /> : null}
@@ -1049,7 +1049,7 @@ function RestaurantDetailsContent() {
         <View style={{ flex: 1, gap: 4 }}>
           <Text style={{ fontSize: 18, fontWeight: "700", color: strong }}>{title}</Text>
           {!s.isRec && s.section.subtitle ? (
-            <Text style={{ fontSize: 14, color: isDark ? "#60a5fa" : tw.blue600, textDecorationLine: "underline" }}>{s.section.subtitle}</Text>
+            <Text style={{ fontSize: 14, color: isDark ? "#51a2ff" : tw.blue600, textDecorationLine: "underline" }}>{s.section.subtitle}</Text>
           ) : null}
         </View>
         <Pressable hitSlop={8} onPress={() => toggleSection(s.originalIndex)} style={{ padding: 4 }}>
@@ -1253,7 +1253,7 @@ const styles = StyleSheet.create({
   offlineMenuBadge: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2, backgroundColor: tw.gray400 },
   ratingPill: { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   statusPill: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-  offlineBanner: { borderRadius: 8, borderWidth: 1, borderColor: "#fecdd3", backgroundColor: "#fff1f2", paddingHorizontal: 12, paddingVertical: 8 },
+  offlineBanner: { borderRadius: 8, borderWidth: 1, borderColor: "#ffccd3", backgroundColor: "#fff1f2", paddingHorizontal: 12, paddingVertical: 8 },
   discountCard: {
     borderRadius: 16,
     borderWidth: 1,
