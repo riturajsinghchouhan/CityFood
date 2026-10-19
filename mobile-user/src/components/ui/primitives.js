@@ -1,5 +1,5 @@
 // Small shadcn-style primitives from Frontend/src/modules/Food/components/ui.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Animated, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { useTheme } from "../../theme/ThemeContext";
 import { fontFamilyByWeight, radius, shadow } from "../../theme/tokens";
@@ -71,7 +71,7 @@ export function Divider({ style }) {
 // skeleton.tsx: bg-accent animate-pulse rounded-md.
 export function Skeleton({ style }) {
   const { colors } = useTheme();
-  const opacity = useRef(new Animated.Value(1)).current;
+  const opacity = useState(() => new Animated.Value(1))[0];
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
@@ -94,7 +94,7 @@ export function Skeleton({ style }) {
 
 // framer-motion whileTap={{ scale }} -> pressable scale.
 export function ScalePressable({ scaleTo = 0.97, style, children, onPressIn, onPressOut, ...props }) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const scale = useState(() => new Animated.Value(1))[0];
   const to = (v) => Animated.spring(scale, { toValue: v, useNativeDriver: true, speed: 50, bounciness: 0 }).start();
   return (
     <Pressable
@@ -116,7 +116,7 @@ export function ScalePressable({ scaleTo = 0.97, style, children, onPressIn, onP
 // switch.tsx look (h-5 w-9 rounded-full, primary when checked).
 export function Switch({ value, onValueChange, disabled }) {
   const { colors } = useTheme();
-  const x = useRef(new Animated.Value(value ? 1 : 0)).current;
+  const x = useState(() => new Animated.Value(value ? 1 : 0))[0];
   useEffect(() => {
     Animated.timing(x, { toValue: value ? 1 : 0, duration: 150, useNativeDriver: true }).start();
   }, [value, x]);
@@ -153,16 +153,18 @@ export function VegMark({ isVeg, size = 14 }) {
 
 // useDelayedLoading: only show a loader if loading lasts longer than `delay` ms.
 export function useDelayedLoading(loading, delay = 300) {
-  const [show, setShow] = useState(false);
+  const [elapsed, setElapsed] = useState(false);
+  const [prevLoading, setPrevLoading] = useState(loading);
+  if (loading !== prevLoading) {
+    setPrevLoading(loading);
+    setElapsed(false);
+  }
   useEffect(() => {
-    if (!loading) {
-      setShow(false);
-      return undefined;
-    }
-    const t = setTimeout(() => setShow(true), delay);
+    if (!loading) return undefined;
+    const t = setTimeout(() => setElapsed(true), delay);
     return () => clearTimeout(t);
   }, [loading, delay]);
-  return show;
+  return loading && elapsed;
 }
 
 export const inputFont = { fontFamily: fontFamilyByWeight["400"] };

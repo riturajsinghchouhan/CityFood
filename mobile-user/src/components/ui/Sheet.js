@@ -1,6 +1,6 @@
 // Web modals are mostly bottom sheets (fixed inset-0 bg-black/50 + rounded-t-3xl panel)
 // or centered Radix dialogs. Both are RN Modals with the same look; Android back closes them.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -16,10 +16,11 @@ import { radius, shadow } from "../../theme/tokens";
 
 function useModalAnimation(visible) {
   const [mounted, setMounted] = useState(visible);
-  const anim = useRef(new Animated.Value(0)).current;
+  const [anim] = useState(() => new Animated.Value(0));
+  // Mount as soon as it becomes visible; unmount after the close animation finishes.
+  if (visible && !mounted) setMounted(true);
   useEffect(() => {
     if (visible) {
-      setMounted(true);
       Animated.timing(anim, { toValue: 1, duration: 250, useNativeDriver: true }).start();
     } else {
       Animated.timing(anim, { toValue: 0, duration: 200, useNativeDriver: true }).start(({ finished }) => {

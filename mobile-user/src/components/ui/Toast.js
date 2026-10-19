@@ -1,7 +1,7 @@
 // Native stand-in for sonner (<Toaster position="top-center" richColors offset="80px" />).
 // Same call API as web: toast(msg), toast.success/error/info/warning/loading(msg, {description, duration, id}),
 // toast.dismiss(id).
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Animated, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react-native";
@@ -51,7 +51,7 @@ const RICH = {
 const ICONS = { success: CircleCheck, error: CircleAlert, info: Info, warning: TriangleAlert };
 
 function ToastItem({ item }) {
-  const anim = useRef(new Animated.Value(0)).current;
+  const anim = useState(() => new Animated.Value(0))[0];
   useEffect(() => {
     Animated.timing(anim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
     if (!Number.isFinite(item.duration)) return undefined;

@@ -1,24 +1,25 @@
 // canvas-confetti replacement for the order-placed and booking-success bursts.
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Animated, Dimensions, Easing, StyleSheet, View } from "react-native";
 
 const COLORS = ["#26ccff", "#a25afd", "#ff5e7e", "#88ff5a", "#fcff42", "#ffa62d", "#ff36ff"];
 
+function makePieces(count, width, height) {
+  return Array.from({ length: count }, (_, i) => ({
+    key: i,
+    color: COLORS[i % COLORS.length],
+    dx: (Math.random() - 0.5) * width * 1.2,
+    peak: -(height * (0.25 + Math.random() * 0.25)),
+    spin: (Math.random() - 0.5) * 1440,
+    size: 6 + Math.random() * 6,
+  }));
+}
+
 export default function Confetti({ count = 80, duration = 2600, onDone }) {
   const { width, height } = Dimensions.get("window");
-  const progress = useRef(new Animated.Value(0)).current;
-  const pieces = useMemo(
-    () =>
-      Array.from({ length: count }, (_, i) => ({
-        key: i,
-        color: COLORS[i % COLORS.length],
-        dx: (Math.random() - 0.5) * width * 1.2,
-        peak: -(height * (0.25 + Math.random() * 0.25)),
-        spin: (Math.random() - 0.5) * 1440,
-        size: 6 + Math.random() * 6,
-      })),
-    [count, width, height],
-  );
+  const [progress] = useState(() => new Animated.Value(0));
+  // One burst per mount: pieces are randomized once.
+  const [pieces] = useState(() => makePieces(count, width, height));
 
   useEffect(() => {
     const anim = Animated.timing(progress, {
