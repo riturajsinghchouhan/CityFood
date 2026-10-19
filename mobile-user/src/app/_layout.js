@@ -8,6 +8,7 @@ import {
   Poppins_900Black,
   useFonts,
 } from "@expo-google-fonts/poppins";
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from "@expo-google-fonts/inter";
 import { router, Stack, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
@@ -110,6 +111,10 @@ export default function RootLayout() {
     Poppins_700Bold,
     Poppins_800ExtraBold,
     Poppins_900Black,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
   if (!fontsLoaded && !fontError) return null;
   return (

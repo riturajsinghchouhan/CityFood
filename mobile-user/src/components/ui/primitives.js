@@ -92,12 +92,15 @@ export function Skeleton({ style }) {
   );
 }
 
-// framer-motion whileTap={{ scale }} -> pressable scale.
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+// framer-motion whileTap={{ scale }} -> pressable scale. The Pressable itself
+// carries the style so width/flex/self-alignment behave like the web element.
 export function ScalePressable({ scaleTo = 0.97, style, children, onPressIn, onPressOut, ...props }) {
-  const scale = useState(() => new Animated.Value(1))[0];
+  const [scale] = useState(() => new Animated.Value(1));
   const to = (v) => Animated.spring(scale, { toValue: v, useNativeDriver: true, speed: 50, bounciness: 0 }).start();
   return (
-    <Pressable
+    <AnimatedPressable
       onPressIn={(e) => {
         to(scaleTo);
         onPressIn?.(e);
@@ -106,10 +109,11 @@ export function ScalePressable({ scaleTo = 0.97, style, children, onPressIn, onP
         to(1);
         onPressOut?.(e);
       }}
+      style={[style, { transform: [{ scale }] }]}
       {...props}
     >
-      <Animated.View style={[style, { transform: [{ scale }] }]}>{children}</Animated.View>
-    </Pressable>
+      {children}
+    </AnimatedPressable>
   );
 }
 

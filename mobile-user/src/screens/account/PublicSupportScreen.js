@@ -2,7 +2,7 @@
 import { router } from "expo-router";
 import { ArrowLeft, Clock, Mail, MessageSquare, Phone, ShieldCheck } from "lucide-react-native";
 import { Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { Screen, Text } from "../../components/ui";
+import { FontScope, Screen, Text } from "../../components/ui";
 import { useAppSettings } from "../../context/AppSettingsContext";
 import { goTo } from "../../navigation/back";
 import { tw } from "../../theme/tokens";
@@ -58,7 +58,7 @@ function InfoCard({ Icon, title, text }) {
   );
 }
 
-export default function PublicSupportScreen() {
+function PublicSupportContent() {
   const { settings: data } = useAppSettings();
   const settings = {
     supportEmail: data?.supportEmail || DEFAULT_EMAIL,
@@ -202,3 +202,12 @@ const styles = StyleSheet.create({
   footerText: { fontSize: 9, fontWeight: "700", color: tw.gray400, letterSpacing: 0.9, textAlign: "center" },
   mb4: { marginBottom: 4 },
 });
+
+// The web public support page renders in Inter.
+export default function PublicSupportScreen() {
+  return (
+    <FontScope family="inter">
+      <PublicSupportContent />
+    </FontScope>
+  );
+}

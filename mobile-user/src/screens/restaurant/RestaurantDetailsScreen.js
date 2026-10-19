@@ -22,7 +22,7 @@ import { Animated, Linking, Pressable, ScrollView, SectionList, Share, StyleShee
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CategoryThumb, FilterSheet, ItemDetailSheet, MenuCategoriesSheet, MenuOptionsSheet, OffersSheet, ShareModal } from "../../components/restaurant/RestaurantSheets";
 import DishCard from "../../components/restaurant/DishCard";
-import MenuFab from "../../components/restaurant/MenuFab";
+import { MenuFab } from "../../components/restaurant/MenuFab";
 import { MenuScanAnimation, RestaurantDetailSkeleton } from "../../components/restaurant/Skeletons";
 import AddToCartAnimation from "../../components/shell/AddToCartAnimation";
 import { Button, Screen, Text, inputFont, toast } from "../../components/ui";

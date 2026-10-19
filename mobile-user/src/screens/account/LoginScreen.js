@@ -27,11 +27,11 @@ import { updateProfile } from "../../api";
 import AccountDialog from "../../components/account/AccountDialog";
 import FadeInUp from "../../components/account/FadeInUp";
 import LoginDecor from "../../components/account/LoginDecor";
-import { ScalePressable, Screen, Text, toast } from "../../components/ui";
+import { FontScope, ScalePressable, Screen, Text, toast } from "../../components/ui";
 import { useAuth } from "../../context/AuthContext";
 import { goTo, useBackOverride } from "../../navigation/back";
 import { KEYS, store } from "../../storage";
-import { fontFamilyByWeight, tw } from "../../theme/tokens";
+import { tw } from "../../theme/tokens";
 
 const RESEND_COOLDOWN_SECONDS = 60;
 const RED = "#E52E2E";
@@ -61,7 +61,7 @@ function LogoBadge() {
   );
 }
 
-export default function LoginScreen() {
+function LoginScreenContent() {
   const { requestOtp, verifyOtp, updateUser } = useAuth();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
@@ -342,7 +342,7 @@ export default function LoginScreen() {
                           selectionColor={RED}
                           style={[
                             styles.phoneInput,
-                            { fontFamily: fontFamilyByWeight[phoneNumber ? "600" : "400"] },
+                            { fontWeight: phoneNumber ? "600" : "400" },
                           ]}
                         />
                       </View>
@@ -382,12 +382,28 @@ export default function LoginScreen() {
                           }}
                           value={otp[index] || ""}
                           onChangeText={(text) => {
-                            const val = text.replace(/\D/g, "").slice(-1);
-                            const newOtp = otp.split("");
-                            newOtp[index] = val || "";
-                            const combined = newOtp.join("").slice(0, 6);
-                            setOtp(combined);
-                            if (index < 5 && val) otpRefs.current[index + 1]?.focus();
+                            // Web logic, but focus moves asynchronously on Android, so fast
+                            // typing or an autofilled code can land several digits in one box:
+                            // spread them over the following boxes.
+                            // A filled box keeps its digit (web maxLength={1}); extra digits continue
+                            // in the next boxes.
+                            let digits = text.replace(/\D/g, "");
+                            let start = index;
+                            if (digits.length > 1 && otp[index] && digits.startsWith(otp[index])) {
+                              digits = digits.slice(1);
+                              start = index + 1;
+                            }
+                            if (start > 5) return;
+                            const chars = digits ? digits.split("").slice(0, 6 - start) : [""];
+                            setOtp((prev) => {
+                              const newOtp = prev.split("");
+                              chars.forEach((c, k) => {
+                                newOtp[start + k] = c;
+                              });
+                              return newOtp.join("").slice(0, 6);
+                            });
+                            const next = start + chars.length;
+                            if (digits && next <= 5) otpRefs.current[next]?.focus();
                           }}
                           onKeyPress={({ nativeEvent }) => {
                             if (nativeEvent.key !== "Backspace") return;
@@ -586,7 +602,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 56,
     fontSize: 24,
-    fontFamily: fontFamilyByWeight["700"],
+    fontWeight: "700",
     color: "#101828",
     backgroundColor: "#ffffff",
     borderWidth: 1,
@@ -623,7 +639,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: tw.gray200,
     color: tw.gray900,
-    fontFamily: fontFamilyByWeight["600"],
+    fontWeight: "600",
     fontSize: 16,
     paddingHorizontal: 12,
   },
@@ -639,3 +655,12 @@ const styles = StyleSheet.create({
   nameButtonDisabled: { opacity: 0.5 },
   nameButtonText: { color: "#ffffff", fontWeight: "700", fontSize: 16 },
 });
+
+// The web login renders in the system font (ui-sans-serif), not Poppins.
+export default function LoginScreen() {
+  return (
+    <FontScope family="system">
+      <LoginScreenContent />
+    </FontScope>
+  );
+}
