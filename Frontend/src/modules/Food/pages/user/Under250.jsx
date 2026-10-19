@@ -1402,18 +1402,16 @@ export default function Under250() {
         )}
       </div>
 
-      {/* Content Section */}
-      <div className="relative max-w-7xl mx-auto space-y-0 pb-6 md:pb-8 lg:pb-10">
-
-        <div className={`sticky z-30 transition-all duration-300 bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-xl shadow-sm border-b border-gray-100 dark:border-gray-800 top-0 md:top-20 [@media(max-height:500px)]:md:top-0 pt-2 sm:pt-3 md:pt-4 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12`}>
+      {/* Sticky Categories Bar - Full Width across desktop */}
+      <div className={`sticky z-30 w-full transition-all duration-300 bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-xl shadow-sm border-b border-gray-100 dark:border-gray-800 top-0 md:top-20 [@media(max-height:500px)]:md:top-0`}>
+        <div className="max-w-7xl w-full mx-auto pt-2 sm:pt-3 md:pt-4 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12">
           <section className="space-y-1 sm:space-y-1.5">
           <div
-            className="flex gap-3 sm:gap-4 md:gap-5 lg:gap-6 overflow-x-auto md:overflow-x-visible overflow-y-visible scrollbar-hide scroll-smooth px-2 sm:px-3 pt-1 pb-1 sm:pt-2 sm:pb-2 md:pt-3 md:pb-3"
+            className="flex gap-3 sm:gap-4 md:gap-5 lg:gap-6 overflow-x-auto scrollbar-hide scroll-smooth px-2 sm:px-3 pt-1 pb-1 sm:pt-2 sm:pb-2 md:pt-3 md:pb-3"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
               touchAction: "pan-x pan-y pinch-zoom",
-              overflowY: "hidden",
             }}
           >
             {/* All Button */}
@@ -1480,6 +1478,10 @@ export default function Under250() {
           </div>
         </section>
         </div>
+      </div>
+
+      {/* Content Section */}
+      <div className="relative max-w-7xl mx-auto space-y-0 pb-6 md:pb-8 lg:pb-10">
 
         {/* Filters Section (Not Sticky) */}
         <div className="px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 pt-1 md:pt-2">
