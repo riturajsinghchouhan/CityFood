@@ -292,10 +292,311 @@ export default function UnifiedOTPFastLogin() {
     },
   })
 
+  const renderAuthForm = (isDesktop = false) => (
+    <AnimatePresence mode="wait">
+      {step === 1 ? (
+        <motion.form
+          key="step-1"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          onSubmit={handleSendOTP}
+          className="w-full flex flex-col items-center"
+        >
+          {/* Phone Input Pill */}
+          <div className="w-full h-[58px] bg-white rounded-full shadow-[0_4px_22px_rgba(0,0,0,0.06)] border border-gray-100/90 px-4 flex items-center transition-all focus-within:shadow-[0_8px_30px_rgba(229,46,46,0.12)] focus-within:border-red-300">
+            {/* Country Selector IN ⌄ */}
+            <div className="flex items-center gap-1 cursor-pointer select-none">
+              <span className="font-bold text-[#111827] text-[15px] tracking-wide">IN</span>
+              <ChevronDown className="w-4 h-4 text-gray-500 stroke-[2.2]" />
+            </div>
+
+            {/* Vertical Divider */}
+            <div className="h-6 w-[1px] bg-gray-200 mx-3 shrink-0" />
+
+            {/* Smartphone Outline Icon */}
+            <Smartphone className="w-5 h-5 text-gray-400 mr-2.5 shrink-0 stroke-[1.8]" />
+
+            {/* Prefix & Input */}
+            <div className="flex items-center flex-1 min-w-0">
+              <span className="font-semibold text-gray-700 text-[15px] mr-1.5 shrink-0">+91</span>
+              <input
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                required
+                autoFocus
+                value={phoneNumber}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 10)
+                  setPhoneNumber(val)
+                  sessionStorage.setItem("draft_phone_login", val)
+                }}
+                maxLength={10}
+                placeholder="9755633314"
+                className="w-full bg-transparent border-none outline-none text-[#111827] font-semibold text-[16px] tracking-wider placeholder:text-gray-400 placeholder:font-normal p-0"
+              />
+            </div>
+          </div>
+
+          {/* Send OTP Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full h-[56px] rounded-full bg-[#E52E2E] hover:bg-[#D92323] text-white font-bold text-[17px] shadow-[0_12px_28px_rgba(229,46,46,0.36)] hover:shadow-[0_16px_34px_rgba(229,46,46,0.46)] hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-4 cursor-pointer"
+          >
+            {loading ? (
+              <Loader2 className="w-6 h-6 animate-spin text-white" />
+            ) : (
+              <>
+                <span>Send OTP</span>
+                <ArrowRight className="w-5 h-5 stroke-[2.5]" />
+              </>
+            )}
+          </button>
+
+          {/* Terms & Privacy Policy */}
+          <p className="text-[12px] sm:text-[13px] text-[#6B7280] font-normal text-center mt-4">
+            By continuing, you agree to our{" "}
+            <Link
+              to="/profile/terms"
+              className="text-[#0A4D27] font-bold underline decoration-[#0A4D27]/40 underline-offset-2 hover:text-[#064E3B] transition-colors"
+            >
+              Terms & Privacy Policy
+            </Link>
+          </p>
+        </motion.form>
+      ) : (
+        <motion.form
+          key="step-2"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          onSubmit={handleVerifyOTP}
+          className="w-full flex flex-col items-center"
+        >
+          {/* 6 Digit OTP Inputs */}
+          <div className="flex justify-between gap-2.5 w-full mb-4">
+            {[0, 1, 2, 3, 4, 5].map((index) => (
+              <input
+                key={index}
+                id={`${isDesktop ? "desktop-" : ""}otp-${index}`}
+                type="tel"
+                inputMode="numeric"
+                maxLength={1}
+                required
+                autoFocus={index === 0}
+                value={otp[index] || ""}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "").slice(-1)
+                  const newOtp = otp.split("")
+                  newOtp[index] = val || ""
+                  const combined = newOtp.join("").slice(0, 6)
+                  setOtp(combined)
+                  if (index < 5 && val) {
+                    document.getElementById(`${isDesktop ? "desktop-" : ""}otp-${index + 1}`)?.focus()
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Backspace") {
+                    if (!otp[index] && index > 0) {
+                      document.getElementById(`${isDesktop ? "desktop-" : ""}otp-${index - 1}`)?.focus()
+                    } else {
+                      const newOtp = otp.split("")
+                      newOtp[index] = ""
+                      setOtp(newOtp.join(""))
+                    }
+                  }
+                }}
+                className="w-12 h-14 text-center text-2xl font-bold bg-white border border-gray-200 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] text-[#111827] focus:border-[#E52E2E] focus:ring-2 focus:ring-[#E52E2E]/20 outline-none transition-all"
+              />
+            ))}
+          </div>
+
+          {/* Resend Timer & Button */}
+          <div className="flex items-center justify-between w-full text-xs text-gray-500 font-medium px-1 mb-2">
+            {resendTimer > 0 ? (
+              <span>Resend code in <strong className="text-gray-800">{resendTimer}s</strong></span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleResendOTP}
+                disabled={loading}
+                className="text-[#E52E2E] font-bold hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <RotateCcw className="w-3 h-3" /> Resend OTP
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleEditNumber}
+              className="text-gray-600 hover:text-gray-900 font-medium cursor-pointer"
+            >
+              Change Number
+            </button>
+          </div>
+
+          {/* Verify OTP Button */}
+          <button
+            type="submit"
+            disabled={loading || otp.replace(/\D/g, "").length !== 6}
+            className="w-full h-[56px] rounded-full bg-[#E52E2E] hover:bg-[#D92323] text-white font-bold text-[17px] shadow-[0_12px_28px_rgba(229,46,46,0.36)] hover:shadow-[0_16px_34px_rgba(229,46,46,0.46)] hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-3 cursor-pointer disabled:opacity-60"
+          >
+            {loading ? (
+              <Loader2 className="w-6 h-6 animate-spin text-white" />
+            ) : (
+              <>
+                <span>Verify & Login</span>
+                <CheckCircle2 className="w-5 h-5 stroke-[2.2]" />
+              </>
+            )}
+          </button>
+        </motion.form>
+      )}
+    </AnimatePresence>
+  )
+
   return (
     <div className="min-h-screen bg-[#FBF9F5] flex justify-center items-center relative overflow-x-hidden selection:bg-red-500 selection:text-white font-sans">
-      {/* Mobile Card Container on Desktop / Full Screen on Mobile */}
-      <div className="w-full max-w-[430px] min-h-screen sm:min-h-[920px] bg-[#FAF7F2] sm:shadow-[0_20px_60px_rgba(0,0,0,0.06)] relative flex flex-col justify-between overflow-hidden">
+      {/* ── DESKTOP VIEW (lg:flex) ── */}
+      <div className="hidden lg:flex w-full min-h-screen relative items-center justify-between px-8 xl:px-20 2xl:px-28 py-10 overflow-hidden bg-[#FAF7F2]">
+        {/* Full-width desktop hero background: pizza, burger, fries & rider */}
+        <div className="absolute inset-0 z-0 pointer-events-none select-none">
+          <img
+            src="/food/user-login-hero.png"
+            alt="CityFood Delivery"
+            className="w-full h-full object-cover object-left-bottom"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FAF7F2]/10 to-[#FAF7F2]/65 pointer-events-none" />
+        </div>
+
+        {/* Delicate floating botanical leaves for desktop atmosphere */}
+        <motion.div animate={floatingAnimation(0, 5, 8)} className="absolute top-12 left-10 pointer-events-none z-10">
+          <BotanicalLeaf className="w-12 h-12" rotate={-25} opacity={0.85} />
+        </motion.div>
+        <motion.div animate={floatingAnimation(1.5, 6, 7)} className="absolute top-1/3 left-1/3 pointer-events-none z-10">
+          <BotanicalLeaf className="w-10 h-10" rotate={35} opacity={0.8} />
+        </motion.div>
+
+        {/* Left Column Content (Branding & Catchphrase) */}
+        <div className="relative z-10 max-w-lg xl:max-w-xl pl-4 xl:pl-8 flex flex-col items-start select-none">
+          {/* Circular CityFood Badge Logo */}
+          <motion.div
+            initial={{ scale: 0.85, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, type: "spring", bounce: 0.35 }}
+            className="w-36 h-36 xl:w-44 xl:h-44 mb-6 relative flex items-center justify-center rounded-full overflow-hidden shadow-[0_16px_36px_rgba(0,0,0,0.12)] bg-white border-4 border-white"
+          >
+            <img
+              src="/logo.png"
+              alt="CityFood Logo"
+              className="w-full h-full object-cover scale-[1.05]"
+              onError={(e) => {
+                e.target.onerror = null
+                e.target.src = "/favicon.ico"
+              }}
+            />
+          </motion.div>
+
+          {/* Heading */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.45, delay: 0.1 }}
+          >
+            <h1 className="text-4xl xl:text-5xl font-black tracking-[-0.03em] leading-[1.12] text-[#0A4D27]">
+              Delicious food
+            </h1>
+            <div className="text-4xl xl:text-5xl font-black tracking-[-0.03em] leading-[1.12] text-[#E52E2E] flex items-center gap-3 mt-1">
+              <span>Delivered fast</span>
+              <span className="inline-block transform hover:rotate-12 transition-transform text-4xl cursor-default select-none">🍕</span>
+            </div>
+            <p className="text-[#4B5563] font-semibold text-lg xl:text-xl mt-3 tracking-wide">
+              Fresh food. Happy people.
+            </p>
+          </motion.div>
+
+          {/* Value Proposition Tags */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.45, delay: 0.2 }}
+            className="mt-8 flex flex-wrap gap-3"
+          >
+            <div className="bg-white/85 backdrop-blur-md px-4 py-2 rounded-full border border-stone-200/60 shadow-sm flex items-center gap-2 text-xs font-bold text-gray-700">
+              <span className="text-sm">⚡</span> Under 30 Mins Delivery
+            </div>
+            <div className="bg-white/85 backdrop-blur-md px-4 py-2 rounded-full border border-stone-200/60 shadow-sm flex items-center gap-2 text-xs font-bold text-gray-700">
+              <span className="text-sm">🍽️</span> 1000+ Top Restaurants
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Right Column: Floating Auth Card */}
+        <div className="relative z-10 w-full max-w-[430px] xl:max-w-[460px] my-auto">
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, type: "spring", damping: 25 }}
+            className="w-full bg-white/95 backdrop-blur-2xl rounded-[32px] shadow-[0_24px_64px_rgba(0,0,0,0.08)] border border-white/80 p-8 xl:p-10 relative overflow-hidden flex flex-col"
+          >
+            {/* Top Bar with Support Button */}
+            <div className="w-full flex items-center justify-between mb-6">
+              <Link
+                to="/food/user"
+                className="text-xs font-black uppercase tracking-widest text-[#0A4D27] bg-[#0A4D27]/10 hover:bg-[#0A4D27]/15 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
+              >
+                ← Back to Home
+              </Link>
+              <Link
+                to="/user/auth/support"
+                className="bg-white px-3.5 py-1.5 rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.06)] border border-gray-100 flex items-center gap-2 hover:shadow-md transition-all active:scale-95 group"
+              >
+                <Headphones className="w-4 h-4 text-[#F97316] stroke-[2.5]" />
+                <span className="text-[#1E293B] font-extrabold text-[12px] tracking-wider uppercase">SUPPORT</span>
+              </Link>
+            </div>
+
+            {/* Card Title */}
+            <div className="mb-6">
+              {step === 1 ? (
+                <>
+                  <h2 className="text-[26px] xl:text-[28px] font-extrabold text-[#0A4D27] leading-tight">
+                    Login with your mobile number
+                  </h2>
+                  <p className="text-gray-500 font-medium text-sm mt-1.5">
+                    Enter your phone number to receive a one-time password
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-[26px] xl:text-[28px] font-extrabold text-[#0A4D27]">
+                    Verify OTP
+                  </h2>
+                  <div className="flex items-center gap-2 mt-1.5 text-gray-600 font-medium text-sm">
+                    <span>Code sent to <strong>+91 {phoneNumber}</strong></span>
+                    <button
+                      onClick={handleEditNumber}
+                      className="p-1 hover:bg-gray-100 rounded-full text-[#E52E2E] transition-colors"
+                      title="Change phone number"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Form */}
+            <div className="w-full">
+              {renderAuthForm(true)}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ── MOBILE VIEW (lg:hidden) ── */}
+      <div className="lg:hidden w-full max-w-[430px] min-h-screen sm:min-h-[920px] bg-[#FAF7F2] sm:shadow-[0_20px_60px_rgba(0,0,0,0.06)] relative flex flex-col justify-between overflow-hidden">
         
         {/* --- Background Delicate Doodles --- */}
         {/* Top-Left Pizza Doodle */}
@@ -428,167 +729,7 @@ export default function UnifiedOTPFastLogin() {
 
           {/* Form Section */}
           <div className="w-full max-w-[360px]">
-            <AnimatePresence mode="wait">
-              {step === 1 ? (
-                <motion.form
-                  key="step-1"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  onSubmit={handleSendOTP}
-                  className="w-full flex flex-col items-center"
-                >
-                  {/* Phone Input Pill */}
-                  <div className="w-full h-[58px] bg-white rounded-full shadow-[0_4px_22px_rgba(0,0,0,0.06)] border border-gray-100/90 px-4 flex items-center transition-all focus-within:shadow-[0_8px_30px_rgba(229,46,46,0.12)] focus-within:border-red-300">
-                    {/* Country Selector IN ⌄ */}
-                    <div className="flex items-center gap-1 cursor-pointer select-none">
-                      <span className="font-bold text-[#111827] text-[15px] tracking-wide">IN</span>
-                      <ChevronDown className="w-4 h-4 text-gray-500 stroke-[2.2]" />
-                    </div>
-
-                    {/* Vertical Divider */}
-                    <div className="h-6 w-[1px] bg-gray-200 mx-3 shrink-0" />
-
-                    {/* Smartphone Outline Icon */}
-                    <Smartphone className="w-5 h-5 text-gray-400 mr-2.5 shrink-0 stroke-[1.8]" />
-
-                    {/* Prefix & Input */}
-                    <div className="flex items-center flex-1 min-w-0">
-                      <span className="font-semibold text-gray-700 text-[15px] mr-1.5 shrink-0">+91</span>
-                      <input
-                        type="tel"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        required
-                        autoFocus
-                        value={phoneNumber}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, "").slice(0, 10)
-                          setPhoneNumber(val)
-                          sessionStorage.setItem("draft_phone_login", val)
-                        }}
-                        maxLength={10}
-                        placeholder="9755633314"
-                        className="w-full bg-transparent border-none outline-none text-[#111827] font-semibold text-[16px] tracking-wider placeholder:text-gray-400 placeholder:font-normal p-0"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Send OTP Button */}
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full h-[56px] rounded-full bg-[#E52E2E] hover:bg-[#D92323] text-white font-bold text-[17px] shadow-[0_12px_28px_rgba(229,46,46,0.36)] hover:shadow-[0_16px_34px_rgba(229,46,46,0.46)] hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-4 cursor-pointer"
-                  >
-                    {loading ? (
-                      <Loader2 className="w-6 h-6 animate-spin text-white" />
-                    ) : (
-                      <>
-                        <span>Send OTP</span>
-                        <ArrowRight className="w-5 h-5 stroke-[2.5]" />
-                      </>
-                    )}
-                  </button>
-
-                  {/* Terms & Privacy Policy */}
-                  <p className="text-[12px] sm:text-[13px] text-[#6B7280] font-normal text-center mt-4">
-                    By continuing, you agree to our{" "}
-                    <Link
-                      to="/profile/terms"
-                      className="text-[#0A4D27] font-bold underline decoration-[#0A4D27]/40 underline-offset-2 hover:text-[#064E3B] transition-colors"
-                    >
-                      Terms & Privacy Policy
-                    </Link>
-                  </p>
-                </motion.form>
-              ) : (
-                <motion.form
-                  key="step-2"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  onSubmit={handleVerifyOTP}
-                  className="w-full flex flex-col items-center"
-                >
-                  {/* 6 Digit OTP Inputs */}
-                  <div className="flex justify-between gap-2.5 w-full mb-4">
-                    {[0, 1, 2, 3, 4, 5].map((index) => (
-                      <input
-                        key={index}
-                        id={`otp-${index}`}
-                        type="tel"
-                        inputMode="numeric"
-                        maxLength={1}
-                        required
-                        autoFocus={index === 0}
-                        value={otp[index] || ""}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, "").slice(-1)
-                          const newOtp = otp.split("")
-                          newOtp[index] = val || ""
-                          const combined = newOtp.join("").slice(0, 6)
-                          setOtp(combined)
-                          if (index < 5 && val) {
-                            document.getElementById(`otp-${index + 1}`)?.focus()
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Backspace") {
-                            if (!otp[index] && index > 0) {
-                              document.getElementById(`otp-${index - 1}`)?.focus()
-                            } else {
-                              const newOtp = otp.split("")
-                              newOtp[index] = ""
-                              setOtp(newOtp.join(""))
-                            }
-                          }
-                        }}
-                        className="w-12 h-14 text-center text-2xl font-bold bg-white border border-gray-200 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] text-[#111827] focus:border-[#E52E2E] focus:ring-2 focus:ring-[#E52E2E]/20 outline-none transition-all"
-                      />
-                    ))}
-                  </div>
-
-                  {/* Resend Timer & Button */}
-                  <div className="flex items-center justify-between w-full text-xs text-gray-500 font-medium px-1 mb-2">
-                    {resendTimer > 0 ? (
-                      <span>Resend code in <strong className="text-gray-800">{resendTimer}s</strong></span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={handleResendOTP}
-                        disabled={loading}
-                        className="text-[#E52E2E] font-bold hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        <RotateCcw className="w-3 h-3" /> Resend OTP
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={handleEditNumber}
-                      className="text-gray-600 hover:text-gray-900 font-medium cursor-pointer"
-                    >
-                      Change Number
-                    </button>
-                  </div>
-
-                  {/* Verify OTP Button */}
-                  <button
-                    type="submit"
-                    disabled={loading || otp.replace(/\D/g, "").length !== 6}
-                    className="w-full h-[56px] rounded-full bg-[#E52E2E] hover:bg-[#D92323] text-white font-bold text-[17px] shadow-[0_12px_28px_rgba(229,46,46,0.36)] hover:shadow-[0_16px_34px_rgba(229,46,46,0.46)] hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-3 cursor-pointer disabled:opacity-60"
-                  >
-                    {loading ? (
-                      <Loader2 className="w-6 h-6 animate-spin text-white" />
-                    ) : (
-                      <>
-                        <span>Verify & Login</span>
-                        <CheckCircle2 className="w-5 h-5 stroke-[2.2]" />
-                      </>
-                    )}
-                  </button>
-                </motion.form>
-              )}
-            </AnimatePresence>
+            {renderAuthForm(false)}
           </div>
         </div>
 
@@ -600,46 +741,46 @@ export default function UnifiedOTPFastLogin() {
             className="w-full object-cover object-top block drop-shadow-sm"
           />
         </div>
-
-        {/* --- New User Name Registration Modal --- */}
-        <Dialog open={showNameModal} onOpenChange={setShowNameModal}>
-          <DialogContent className="sm:max-w-md bg-white rounded-3xl p-6 shadow-2xl border-0">
-            <DialogTitle className="text-xl font-extrabold text-[#0A4D27] text-center">
-              Welcome to CityFood! 🎉
-            </DialogTitle>
-            <DialogDescription className="text-center text-gray-600 text-sm mt-1">
-              What should we call you? Please enter your name to complete your profile.
-            </DialogDescription>
-            <form onSubmit={handleNameSubmit} className="space-y-4 mt-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="user-name" className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Full Name
-                </Label>
-                <Input
-                  id="user-name"
-                  placeholder="e.g. John Doe"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  className="h-12 rounded-xl bg-gray-50 border-gray-200 text-gray-900 font-semibold focus:border-[#E52E2E] focus:ring-1 focus:ring-[#E52E2E]"
-                  autoFocus
-                  required
-                />
-              </div>
-              <Button
-                type="submit"
-                disabled={isUpdatingName || !newName.trim()}
-                className="w-full h-12 rounded-xl bg-[#E52E2E] hover:bg-[#D92323] text-white font-bold text-base shadow-lg shadow-red-500/30 hover:brightness-105"
-              >
-                {isUpdatingName ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  "Continue to CityFood"
-                )}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
       </div>
+
+      {/* --- New User Name Registration Modal (Shared) --- */}
+      <Dialog open={showNameModal} onOpenChange={setShowNameModal}>
+        <DialogContent className="sm:max-w-md bg-white rounded-3xl p-6 shadow-2xl border-0">
+          <DialogTitle className="text-xl font-extrabold text-[#0A4D27] text-center">
+            Welcome to CityFood! 🎉
+          </DialogTitle>
+          <DialogDescription className="text-center text-gray-600 text-sm mt-1">
+            What should we call you? Please enter your name to complete your profile.
+          </DialogDescription>
+          <form onSubmit={handleNameSubmit} className="space-y-4 mt-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="user-name" className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                Full Name
+              </Label>
+              <Input
+                id="user-name"
+                placeholder="e.g. John Doe"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                className="h-12 rounded-xl bg-gray-50 border-gray-200 text-gray-900 font-semibold focus:border-[#E52E2E] focus:ring-1 focus:ring-[#E52E2E]"
+                autoFocus
+                required
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={isUpdatingName || !newName.trim()}
+              className="w-full h-12 rounded-xl bg-[#E52E2E] hover:bg-[#D92323] text-white font-bold text-base shadow-lg shadow-red-500/30 hover:brightness-105"
+            >
+              {isUpdatingName ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                "Continue to CityFood"
+              )}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
