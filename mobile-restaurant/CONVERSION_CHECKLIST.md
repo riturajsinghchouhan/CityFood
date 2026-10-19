@@ -34,7 +34,7 @@ Evidence:
 
 1. **New-order ring on phones (the user's decision).** The web only loops the ringtone at 768px and wider. The app rings on phones: `restaurant-order-ring.wav` every 6 s for up to 120 s, plus vibration and a high-priority push on channel `default` with that sound.
 2. **One socket and one notifications provider.** The web's `GlobalPickupOtpModal` opened a second socket.
-3. **Polling.** The web polls orders every 8 s, which goes over the backend's default limit of 100 requests per 15 minutes per user. The app relies on the socket and polls less often. The interval is in `docs/API_MAP.md`.
+3. **Polling.** The live API allows **3,500 requests per 15 minutes**: the `RateLimit-Policy: 3500;w=900` header, read on 2026-10-19. The code's default of 100 is not what production uses. The notifications provider relies on the socket and falls back to a 30 s poll only while disconnected. Screens keep the web's own polling.
 4. **Navigation.** It follows the web at phone width: a floating bottom nav (Orders, Inventory, Feedback, Explore), the hamburger drawer and the red header. Dashboard, Ratings & reviews and Withdrawal history stay reachable from the drawer only, as on the web.
 5. **Light theme only.** The panel has no dark mode.
 6. **Excel bulk upload (Inventory)** is on hold. The web loads SheetJS 0.19.3 from its CDN. The user's npm config refuses remote tarballs, and registry `xlsx@0.18.5` has CVE-2023-30533. This needs the user's decision.
@@ -110,7 +110,6 @@ Native paths are the web paths without `/food/restaurant`. PR means `ProtectedRo
 - **Status not enforced:** the API never checks restaurant status, so a blocked restaurant that still has a token keeps full access.
 - **Socket rooms:** any logged-in socket can join any restaurant room.
 - **Pickup OTP exposure:** the pickup OTP appears in every order-list row and in push text.
-- **Rate limit:** the web panel's 8 s polling alone goes over the default limit.
 - **Approval reset:** any profile edit or image upload sends an approved restaurant back to `pending` (hidden from customers until re-approved).
 
 ## Device test list
