@@ -42,3 +42,6 @@ yarn-error.*
 
 # local env (public client values; uploaded to EAS via .easignore)
 .env
+
+# web reference screenshots (local only)
+.reference/

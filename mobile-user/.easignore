@@ -41,3 +41,5 @@ yarn-error.*
 /android
 
 # local env (public client values; uploaded to EAS via .easignore)
+
+.reference/
