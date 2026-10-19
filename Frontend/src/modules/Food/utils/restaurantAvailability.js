@@ -137,6 +137,38 @@ const formatClosingCountdown = (minutesUntilClose, closingTime) => {
   return `Closes in ${hours}h ${minutes}m`
 }
 
+/**
+ * When a closed restaurant opens next, from its weekly outlet timings.
+ * Returns { at: Date, label: "Opens today at 10:00 AM" } or null when it can't be known
+ * (switched off by the restaurant/admin, or no timings set).
+ */
+export const getNextOpeningInfo = (restaurant, now = new Date()) => {
+  if (!restaurant || restaurant.isActive === false || restaurant.isAcceptingOrders === false) return null
+
+  const openDays = Array.isArray(restaurant.openDays) ? restaurant.openDays : []
+  const normalizedOpenDays = new Set(openDays.map((day) => normalizeDay(day)).filter(Boolean))
+  const nowMinutes = now.getHours() * 60 + now.getMinutes()
+
+  for (let offset = 0; offset <= 7; offset += 1) {
+    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset)
+    const dayName = DAY_NAMES[date.getDay()]
+    const timing = getTodayTiming(restaurant, dayName)
+    if (timing?.isOpen === false) continue
+    if (!timing && normalizedOpenDays.size > 0 && !normalizedOpenDays.has(dayName)) continue
+
+    const openingTime = timing?.openingTime || restaurant?.deliveryTimings?.openingTime || restaurant?.openingTime || null
+    const openingMinutes = parseTimeToMinutes(openingTime)
+    if (openingMinutes === null) continue
+    // Today only counts if the opening time is still ahead.
+    if (offset === 0 && openingMinutes <= nowMinutes) continue
+
+    const at = new Date(date.getFullYear(), date.getMonth(), date.getDate(), Math.floor(openingMinutes / 60), openingMinutes % 60)
+    const when = offset === 0 ? "today" : offset === 1 ? "tomorrow" : dayName
+    return { at, label: `Opens ${when} at ${formatTimeLabel(openingTime)}` }
+  }
+  return null
+}
+
 export const getRestaurantAvailabilityStatus = (restaurant, now = new Date(), options = {}) => {
   if (!restaurant) {
     return {

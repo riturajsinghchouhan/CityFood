@@ -46,7 +46,7 @@ import { useProfile } from "@food/context/ProfileContext"
 import AddToCartAnimation from "@food/components/user/AddToCartAnimation"
 import { getCompanyNameAsync } from "@food/utils/businessSettings"
 import { isModuleAuthenticated } from "@food/utils/auth"
-import { getRestaurantAvailabilityStatus } from "@food/utils/restaurantAvailability"
+import { getNextOpeningInfo, getRestaurantAvailabilityStatus } from "@food/utils/restaurantAvailability"
 import { extractImages, normalizeImageUrl } from "@food/utils/common"
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
 import {
@@ -2398,6 +2398,7 @@ function RestaurantDetailsContent() {
 
   const availabilityStatus = restaurant ? getRestaurantAvailabilityStatus(restaurant, new Date(availabilityTick)) : { isOpen: false }
   const isRestaurantOffline = !availabilityStatus.isOpen
+  const nextOpening = isRestaurantOffline && restaurant ? getNextOpeningInfo(restaurant, new Date(availabilityTick)) : null
   const shouldShowGrayscale = isOutOfService || isRestaurantOffline
   const ratingValue = Number(restaurant?.rating || 0)
   const hasRating = Number.isFinite(ratingValue) && ratingValue > 0
@@ -2594,6 +2595,12 @@ function RestaurantDetailsContent() {
                 >
                   {isRestaurantOffline ? "Offline" : "Open now"}
                 </span>
+                {nextOpening && (
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600">
+                    <Clock className="h-3.5 w-3.5" />
+                    {nextOpening.label}
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2605,7 +2612,14 @@ function RestaurantDetailsContent() {
 
           {isRestaurantOffline && (
             <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-              This restaurant is currently offline. Orders are unavailable right now.
+              This restaurant is currently offline.{" "}
+              {nextOpening ? (
+                <>
+                  <span className="font-semibold">{nextOpening.label}</span>. You can order once it opens.
+                </>
+              ) : (
+                "Orders are unavailable right now."
+              )}
             </div>
           )}
 
