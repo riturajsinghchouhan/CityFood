@@ -35,6 +35,18 @@ module.exports = {
       blockedPermissions: ["android.permission.SYSTEM_ALERT_WINDOW"],
     },
     plugins: [
+      [
+        "expo-build-properties",
+        {
+          android: {
+            // The SDK 58 template turns R8 on for release builds. R8 strips Room's generated
+            // WorkDatabase_Impl (WorkManager, used by Firebase/expo-notifications) and the app
+            // crashes at launch; Razorpay and other reflection-based SDKs need keep rules too.
+            enableMinifyInReleaseBuilds: false,
+            enableShrinkResourcesInReleaseBuilds: false,
+          },
+        },
+      ],
       "expo-router",
       "expo-status-bar",
       "expo-secure-store",

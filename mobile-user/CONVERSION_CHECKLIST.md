@@ -285,7 +285,7 @@ Between 12:20 and 13:15 on 2026-10-19, all 3 orders of the test account (includi
 |---|---|
 | Package / version | `com.cityfood.user`, 1.0.0 (versionCode 1) |
 | CPU architecture | `arm64-v8a` (all phones from roughly the last 7 years) |
-| Size | 50.7 MB |
+| Size | 60 MB (R8 minification off, see below) |
 | JS bundle | Embedded, so no Metro server is needed |
 | Firebase | `google-services.json` included |
 | Signature | Android **debug** certificate. Installable for testing, not for Play Store upload. |
@@ -299,7 +299,12 @@ cd android && NODE_OPTIONS=--max-old-space-size=1536 ./gradlew assembleRelease -
   -Pkotlin.compiler.execution.strategy=in-process -PreactNativeArchitectures=arm64-v8a
 ```
 
-The release build needed a fix: 21 web images were JPEGs named `.png`, which Android's resource compiler rejects. They were converted to real PNGs.
+The release build needed two fixes:
+
+1. **Mislabeled images.** 21 web images were JPEGs named `.png`, which Android's resource compiler rejects in release builds. They were converted to real PNGs.
+2. **Launch crash.** The first release APK crashed at launch on a real phone. The cause was R8, which the SDK 58 template enables for release builds: it stripped Room's generated `WorkDatabase_Impl`, so WorkManager (used by Firebase and expo-notifications) failed in `androidx.startup.InitializationProvider`. Debug builds aren't minified, so they never showed it.
+   - **Fix:** `expo-build-properties` sets `enableMinifyInReleaseBuilds: false` and `enableShrinkResourcesInReleaseBuilds: false` in `app.config.js`. This also avoids the same problem in Razorpay and other SDKs that rely on reflection.
+   - **Verified:** an x86_64 release APK with identical settings launches and loads Home on the emulator. The arm64 APK can't run on the x86_64 emulator, because React Native's native library loader looks in the wrong ABI folder under translation.
 
 ## Device test list
 
