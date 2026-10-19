@@ -16,7 +16,17 @@ function BgVideo({ uri }) {
     p.muted = true;
     p.play();
   });
-  return <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="cover" nativeControls={false} />;
+  // Two cover-fit videos overlap and cross-fade by opacity; a SurfaceView (the Android
+  // default) ignores parent opacity and mis-clips overlapping videos, so use a TextureView.
+  return (
+    <VideoView
+      player={player}
+      style={StyleSheet.absoluteFill}
+      contentFit="cover"
+      nativeControls={false}
+      surfaceType="textureView"
+    />
+  );
 }
 
 function Slide({ uri, active, index }) {

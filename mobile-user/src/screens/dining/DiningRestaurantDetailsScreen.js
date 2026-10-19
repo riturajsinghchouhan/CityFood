@@ -666,7 +666,7 @@ export default function DiningRestaurantDetailsScreen() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  centerFill: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center" },
+  centerFill: { ...StyleSheet.absoluteFill, alignItems: "center", justifyContent: "center" },
   notFound: { fontSize: 24, fontWeight: "700", color: "#23180f", textAlign: "center" },
   hero: { height: 392, overflow: "hidden" },
   heroTopRow: {

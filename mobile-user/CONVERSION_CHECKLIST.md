@@ -306,6 +306,26 @@ The release build needed two fixes:
    - **Fix:** `expo-build-properties` sets `enableMinifyInReleaseBuilds: false` and `enableShrinkResourcesInReleaseBuilds: false` in `app.config.js`. This also avoids the same problem in Razorpay and other SDKs that rely on reflection.
    - **Verified:** an x86_64 release APK with identical settings launches and loads Home on the emulator. The arm64 APK can't run on the x86_64 emulator, because React Native's native library loader looks in the wrong ABI folder under translation.
 
+### Release tap-through fixes (2026-10-19)
+
+The user's phone crashed when switching tabs. A tap-through of the release build on the emulator then found and fixed:
+
+| Bug | Cause | Fix |
+|---|---|---|
+| Crash when switching tabs (`Cannot read property 'emit' of undefined`) | Expo Router SDK 58 passes `{state, descriptors, emitter, navigateToTab, insets}` to a custom `tabBar`, not `navigation` | `BottomNavigation` uses `emitter.emit` and `navigateToTab`, like the library's own tab bar |
+| Every dialog was pinned to the bottom with no backdrop, and sheets had no dimming (29+ uses: Appearance, logout, delete account, tracking, ratings…) | React Native 0.88 removed `StyleSheet.absoluteFillObject`; spreading it silently gave no style | Replaced with `StyleSheet.absoluteFill` in 9 files, and checked every RN import and `StyleSheet` member against 0.88's exports |
+| Black flashes in the festival hero video | Overlapping cover-fit `VideoView`s on Android's default SurfaceView | `surfaceType="textureView"` (hero and intro splash) |
+| OTP digits lost when typed fast, pasted or autofilled | Six inputs passing focus between them, and Android moves focus asynchronously | One hidden input holds the code and six boxes display it, with the same look. Backspace edits from the end; you can't tap a middle box to replace just that digit. |
+
+**Checked on the release build after the fixes:**
+
+- **Navigation:** every tab; the category page and its back rule; Home filters sheet; search overlay with live results; veg mode dialog.
+- **Restaurant and cart:** restaurant page; ADD while logged out (goes to login) and logged in; cart with the live bill (₹284); payment sheet.
+- **Login and Profile:** OTP login; every Profile row; Appearance → Dark.
+- **Maps and push:**
+  - The address map renders Google tiles, so the Maps key works with this build.
+  - The Test Notification push arrived on the device through FCM.
+
 ## Device test list
 
 Walk through these in order on a real Android phone, using the APK from the EAS build. Log in with phone 9755633147 and OTP 123456.

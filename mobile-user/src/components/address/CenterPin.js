@@ -53,7 +53,7 @@ export default function CenterPin() {
 }
 
 const styles = StyleSheet.create({
-  overlay: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center" },
+  overlay: { ...StyleSheet.absoluteFill, alignItems: "center", justifyContent: "center" },
   pin: { marginBottom: 32, alignItems: "center" },
   halo: {
     width: 40,

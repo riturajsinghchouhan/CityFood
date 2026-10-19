@@ -156,6 +156,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     boxShadow: "0px 4px 6px -1px rgba(0,0,0,0.1), 0px 2px 4px -2px rgba(0,0,0,0.1)",
   },
-  glint: { ...StyleSheet.absoluteFillObject, overflow: "hidden", zIndex: 10 },
+  glint: { ...StyleSheet.absoluteFill, overflow: "hidden", zIndex: 10 },
   label: { fontSize: 11, fontWeight: "800", textAlign: "center", lineHeight: 14, width: "100%", paddingHorizontal: 2 },
 });

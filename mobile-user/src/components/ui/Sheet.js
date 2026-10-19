@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   Animated,
   Dimensions,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Pressable,
@@ -66,10 +67,14 @@ export function BottomSheet({ visible, onClose, children, style, dismissable = t
 export function Dialog({ visible, onClose, children, style, dismissable = true }) {
   const { colors } = useTheme();
   const { mounted, anim } = useModalAnimation(visible);
+  const keyboardHeight = useKeyboardHeight(mounted);
   if (!mounted) return null;
+  // A plain full-screen container: KeyboardAvoidingView inside a translucent Modal
+  // mis-measured on Android and left the dialog pinned off-center with no backdrop.
+  // A centered dialog moves up by half the keyboard height to stay centered above it.
   return (
     <Modal transparent visible statusBarTranslucent navigationBarTranslucent onRequestClose={() => dismissable && onClose?.()}>
-      <KeyboardAvoidingView behavior="padding" style={[styles.fill, styles.center]}>
+      <View style={[styles.fill, styles.center]}>
         <Animated.View style={[styles.backdrop, { opacity: anim }]}>
           <Pressable style={styles.fill} onPress={() => dismissable && onClose?.()} />
         </Animated.View>
@@ -80,16 +85,33 @@ export function Dialog({ visible, onClose, children, style, dismissable = true }
               backgroundColor: colors.card,
               borderColor: colors.border,
               opacity: anim,
-              transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }],
+              transform: [
+                { translateY: -keyboardHeight / 2 },
+                { scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) },
+              ],
             },
             style,
           ]}
         >
           {children}
         </Animated.View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
+}
+
+function useKeyboardHeight(active) {
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    if (!active) return undefined;
+    const show = Keyboard.addListener("keyboardDidShow", (e) => setHeight(e.endCoordinates?.height || 0));
+    const hide = Keyboard.addListener("keyboardDidHide", () => setHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, [active]);
+  return height;
 }
 
 export function SheetHandle() {
@@ -104,7 +126,7 @@ export function SheetHandle() {
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   center: { alignItems: "center", justifyContent: "center", padding: 16 },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.5)" },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.5)" },
   sheet: {
     position: "absolute",
     left: 0,

@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     boxShadow: "0px 4px 12px -4px rgba(0,0,0,0.1)",
   },
-  shine: { ...StyleSheet.absoluteFillObject, zIndex: 30, overflow: "hidden" },
+  shine: { ...StyleSheet.absoluteFill, zIndex: 30, overflow: "hidden" },
   label: { fontSize: 10, fontWeight: "700", textAlign: "center", letterSpacing: -0.25, lineHeight: 12, paddingHorizontal: 4 },
   skelSlot: { width: TILE },
   skelTile: {

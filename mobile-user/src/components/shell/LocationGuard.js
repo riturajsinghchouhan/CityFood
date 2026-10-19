@@ -54,7 +54,7 @@ export function OutOfZoneScreen({ onChangeLocation }) {
 const textShadow = { textShadowColor: "rgba(0,0,0,0.35)", textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 6 };
 
 const styles = StyleSheet.create({
-  root: { ...StyleSheet.absoluteFillObject, backgroundColor: "#1e1332", overflow: "hidden", justifyContent: "center", zIndex: 100 },
+  root: { ...StyleSheet.absoluteFill, backgroundColor: "#1e1332", overflow: "hidden", justifyContent: "center", zIndex: 100 },
   gradient: { position: "absolute", left: 0, right: 0, bottom: 0, height: "70%" },
   content: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24, paddingBottom: 80 },
   title: {

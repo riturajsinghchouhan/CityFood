@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 48 },
   logo: { marginRight: 12, flexShrink: 0 },
   companyName: { fontSize: 16, fontWeight: "700" },
-  center: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center" },
+  center: { ...StyleSheet.absoluteFill, alignItems: "center", justifyContent: "center" },
   locationBtn: { alignItems: "center" },
   loadingText: { fontSize: 14, fontWeight: "700" },
   locationCol: { alignItems: "center", maxWidth: 160 },

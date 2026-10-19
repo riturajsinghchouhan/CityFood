@@ -25,7 +25,16 @@ function IntroVideo({ uri }) {
     p.muted = true;
     p.play();
   });
-  return <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="contain" nativeControls={false} />;
+  // TextureView so the splash's fade animation applies to the video (SurfaceView ignores opacity).
+  return (
+    <VideoView
+      player={player}
+      style={StyleSheet.absoluteFill}
+      contentFit="contain"
+      nativeControls={false}
+      surfaceType="textureView"
+    />
+  );
 }
 
 function Spinner() {

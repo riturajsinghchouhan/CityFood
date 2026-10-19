@@ -79,7 +79,7 @@ function LoginScreenContent() {
   const [phoneFocused, setPhoneFocused] = useState(false);
   const [focusedOtp, setFocusedOtp] = useState(-1);
   const submitting = useRef(false);
-  const otpRefs = useRef([]);
+  const otpInputRef = useRef(null);
 
   const normalizedPhone = () => {
     const digits = String(phoneNumber).replace(/\D/g, "").slice(-15);
@@ -373,63 +373,39 @@ function LoginScreenContent() {
                   </FadeInUp>
                 ) : (
                   <FadeInUp key="step-2" style={styles.formInner}>
+                    {/* One hidden input holds the code and the six boxes display it. The web uses six
+                        inputs that move focus between each other; on Android focus moves
+                        asynchronously, so fast typing, paste and autofill lost digits. */}
                     <View style={styles.otpRow}>
-                      {OTP_INDEXES.map((index) => (
-                        <TextInput
-                          key={index}
-                          ref={(el) => {
-                            otpRefs.current[index] = el;
-                          }}
-                          value={otp[index] || ""}
-                          onChangeText={(text) => {
-                            // Web logic, but focus moves asynchronously on Android, so fast
-                            // typing or an autofilled code can land several digits in one box:
-                            // spread them over the following boxes.
-                            // A filled box keeps its digit (web maxLength={1}); extra digits continue
-                            // in the next boxes.
-                            let digits = text.replace(/\D/g, "");
-                            let start = index;
-                            if (digits.length > 1 && otp[index] && digits.startsWith(otp[index])) {
-                              digits = digits.slice(1);
-                              start = index + 1;
-                            }
-                            if (start > 5) return;
-                            const chars = digits ? digits.split("").slice(0, 6 - start) : [""];
-                            setOtp((prev) => {
-                              const newOtp = prev.split("");
-                              chars.forEach((c, k) => {
-                                newOtp[start + k] = c;
-                              });
-                              return newOtp.join("").slice(0, 6);
-                            });
-                            const next = start + chars.length;
-                            if (digits && next <= 5) otpRefs.current[next]?.focus();
-                          }}
-                          onKeyPress={({ nativeEvent }) => {
-                            if (nativeEvent.key !== "Backspace") return;
-                            if (!otp[index] && index > 0) {
-                              otpRefs.current[index - 1]?.focus();
-                            } else {
-                              const newOtp = otp.split("");
-                              newOtp[index] = "";
-                              setOtp(newOtp.join(""));
-                            }
-                          }}
-                          onFocus={() => setFocusedOtp(index)}
-                          onBlur={() => setFocusedOtp((cur) => (cur === index ? -1 : cur))}
-                          keyboardType="number-pad"
-                          autoFocus={index === 0}
-                          selectionColor={RED}
-                          textAlign="center"
-                          style={[
-                            styles.otpBox,
-                            focusedOtp === index && {
-                              borderColor: RED,
-                              boxShadow: "0px 0px 0px 2px rgba(229,46,46,0.2)",
-                            },
-                          ]}
-                        />
-                      ))}
+                      {OTP_INDEXES.map((index) => {
+                        const active = focusedOtp >= 0 && index === Math.min(otp.length, 5);
+                        return (
+                          <View
+                            key={index}
+                            style={[
+                              styles.otpBox,
+                              active && {
+                                borderColor: RED,
+                                boxShadow: "0px 0px 0px 2px rgba(229,46,46,0.2)",
+                              },
+                            ]}
+                          >
+                            <Text style={styles.otpDigit}>{otp[index] || ""}</Text>
+                          </View>
+                        );
+                      })}
+                      <TextInput
+                        ref={otpInputRef}
+                        value={otp}
+                        onChangeText={(text) => setOtp(text.replace(/\D/g, "").slice(0, 6))}
+                        onFocus={() => setFocusedOtp(0)}
+                        onBlur={() => setFocusedOtp(-1)}
+                        keyboardType="number-pad"
+                        maxLength={6}
+                        autoFocus
+                        caretHidden
+                        style={styles.otpHiddenInput}
+                      />
                     </View>
 
                     <View style={styles.resendRow}>
@@ -601,16 +577,17 @@ const styles = StyleSheet.create({
   otpBox: {
     width: 48,
     height: 56,
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#101828",
     backgroundColor: "#ffffff",
     borderWidth: 1,
     borderColor: tw.gray200,
     borderRadius: 16,
-    padding: 0,
+    alignItems: "center",
+    justifyContent: "center",
     boxShadow: "0px 2px 10px rgba(0,0,0,0.04)",
   },
+  otpDigit: { fontSize: 24, fontWeight: "700", color: "#101828" },
+  // Covers the boxes so a tap anywhere on them focuses it; invisible but still focusable.
+  otpHiddenInput: { ...StyleSheet.absoluteFill, opacity: 0, color: "transparent" },
   resendRow: {
     flexDirection: "row",
     alignItems: "center",

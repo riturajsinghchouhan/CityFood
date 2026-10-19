@@ -17,7 +17,9 @@ const TABS = [
   { name: "profile", label: () => "Profile", Icon: User },
 ];
 
-export default function BottomNavigation({ state, navigation }) {
+// Expo Router SDK 58 passes { state, descriptors, emitter, navigateToTab, insets } to a
+// custom tabBar (no `navigation`); press handling mirrors its default BottomTabBar.
+export default function BottomNavigation({ state, emitter, navigateToTab }) {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const { zoneId, isOutOfService } = useAppLocation();
@@ -65,8 +67,9 @@ export default function BottomNavigation({ state, navigation }) {
               accessibilityState={{ selected: active }}
               onPress={() => {
                 const route = state.routes.find((r) => r.name === name);
-                const event = navigation.emit({ type: "tabPress", target: route?.key, canPreventDefault: true });
-                if (!active && !event.defaultPrevented) navigation.navigate(name);
+                if (!route) return;
+                const event = emitter.emit({ type: "tabPress", target: route.key, canPreventDefault: true });
+                if (!active && !event.defaultPrevented) navigateToTab(route.key);
               }}
               style={[
                 styles.tab,
