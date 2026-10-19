@@ -9,11 +9,10 @@ import {
   ChevronDown,
   RotateCcw,
   Edit2,
-  CheckCircle2,
-  MapPin
+  CheckCircle2
 } from "lucide-react"
 import { toast } from "sonner"
-import { authAPI, userAPI, zoneAPI } from "@food/api"
+import { authAPI, userAPI } from "@food/api"
 import { setAuthData } from "@food/utils/auth"
 import {
   Dialog,
@@ -60,8 +59,6 @@ const BotanicalLeaf = ({ className = "w-8 h-8", rotate = 0, opacity = 0.85 }) =>
   </svg>
 )
 
-const LOGIN_ZONE_KEY = "user_login_zone_id"
-
 export default function UnifiedOTPFastLogin() {
   const RESEND_COOLDOWN_SECONDS = 60
   const [phoneNumber, setPhoneNumber] = useState(() => sessionStorage.getItem("draft_phone_login") || "")
@@ -76,43 +73,6 @@ export default function UnifiedOTPFastLogin() {
   const [pendingVerify, setPendingVerify] = useState(null)
   const navigate = useNavigate()
   const submitting = useRef(false)
-  const [zones, setZones] = useState([])
-  const [zonesLoading, setZonesLoading] = useState(true)
-  const [zoneId, setZoneId] = useState(() => {
-    try {
-      return localStorage.getItem(LOGIN_ZONE_KEY) || ""
-    } catch {
-      return ""
-    }
-  })
-
-  // Service zone the customer belongs to; saved on the account so admins can filter customers by zone.
-  useEffect(() => {
-    let cancelled = false
-    zoneAPI.getPublicZones()
-      .then((res) => {
-        if (cancelled) return
-        const list = res?.data?.data?.zones || res?.data?.data || []
-        const active = Array.isArray(list) ? list : []
-        setZones(active)
-        setZoneId((current) => (active.some((z) => String(z._id || z.id) === current) ? current : ""))
-      })
-      .catch(() => {
-        if (!cancelled) setZones([])
-      })
-      .finally(() => {
-        if (!cancelled) setZonesLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [])
-
-  const handleZoneChange = (value) => {
-    setZoneId(value)
-    try {
-      localStorage.setItem(LOGIN_ZONE_KEY, value)
-    } catch {}
-  }
-
   const normalizedPhone = () => {
     const digits = String(phoneNumber).replace(/\D/g, "").slice(-15)
     return digits.length >= 8 ? digits : ""
@@ -123,10 +83,6 @@ export default function UnifiedOTPFastLogin() {
     const phone = normalizedPhone()
     if (phone.length < 10) {
       toast.error("Please enter a valid 10-digit phone number")
-      return
-    }
-    if (zones.length > 0 && !zoneId) {
-      toast.error("Please select your zone")
       return
     }
     if (submitting.current) return
@@ -222,7 +178,7 @@ export default function UnifiedOTPFastLogin() {
         console.warn("Failed to get FCM token during login", e)
       }
 
-      const response = await authAPI.verifyOTP(phoneNumber, otpDigits, "login", null, null, "user", null, null, fcmToken, platform, zoneId || null)
+      const response = await authAPI.verifyOTP(phoneNumber, otpDigits, "login", null, null, "user", null, null, fcmToken, platform)
       const data = response?.data?.data || response?.data || {}
       const needsName = data.needsName === true || data.isNewUser === true || (data.user && (!data.user.name || String(data.user.name).trim().length === 0 || String(data.user.name).toLowerCase() === "null"))
 
@@ -287,7 +243,6 @@ export default function UnifiedOTPFastLogin() {
           null,
           pendingVerify.fcmToken,
           pendingVerify.platform,
-          zoneId || null,
         )
         const data = response?.data?.data || response?.data || {}
         const accessToken = data.accessToken
@@ -817,29 +772,6 @@ export default function UnifiedOTPFastLogin() {
                         className="w-full bg-transparent border-none outline-none text-[#111827] font-semibold text-[16px] tracking-wider placeholder:text-gray-400 placeholder:font-normal p-0"
                       />
                     </div>
-                  </div>
-
-                  {/* Zone Selector Pill */}
-                  <div className="w-full h-[54px] bg-white rounded-full shadow-[0_4px_22px_rgba(0,0,0,0.06)] border border-gray-100/90 px-4 mt-3 flex items-center transition-all focus-within:shadow-[0_8px_30px_rgba(229,46,46,0.12)] focus-within:border-red-300">
-                    <MapPin className="w-5 h-5 text-gray-400 mr-2.5 shrink-0 stroke-[1.8]" />
-                    <select
-                      aria-label="Select your zone"
-                      value={zoneId}
-                      onChange={(e) => handleZoneChange(e.target.value)}
-                      disabled={zonesLoading}
-                      className={`w-full bg-transparent border-none outline-none text-[15px] font-semibold appearance-none cursor-pointer p-0 ${zoneId ? "text-[#111827]" : "text-gray-400"}`}
-                    >
-                      <option value="">{zonesLoading ? "Loading zones..." : "Select your zone"}</option>
-                      {zones.map((z) => {
-                        const id = String(z._id || z.id)
-                        return (
-                          <option key={id} value={id} className="text-[#111827]">
-                            {z.name || z.zoneName || z.serviceLocation || id}
-                          </option>
-                        )
-                      })}
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-gray-500 stroke-[2.2] shrink-0 pointer-events-none" />
                   </div>
 
                   {/* Send OTP Button */}
