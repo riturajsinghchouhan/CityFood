@@ -29,7 +29,7 @@ Related documents:
 | Socket URL | `https://cityfood.co.in` (path `/socket.io`) | Web `socketOrigin.js` uses the API origin on HTTPS. The live handshake works. |
 | Google Maps key | Copied from `Frontend/.env` (`VITE_GOOGLE_MAPS_API_KEY`) into `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | `Frontend/.env` |
 | Razorpay | Key comes from the server with each order. Production returned a **test** key (`rzp_test_`). | Live wallet top-up order response |
-| Firebase / FCM | **Missing:** `google-services.json` for `com.cityfood.user` | Only web config and the VAPID key exist |
+| Firebase / FCM | `mobile-user/google-services.json` (project `cityfood-69559`; includes `com.cityfood.user`, plus the restaurant and delivery apps) | Provided by the user on 2026-10-19. Same project as the backend's service account. |
 | Runtime theme | `GET /app-config/user_app`: primary `#B80B3D`, secondary `#66001D`, font Poppins | Live API, `themeSettings.js` |
 | Test login | Phone **9755633147**, OTP **123456** | `Backend/src/core/otp/otp.service.js:106`. Verified on the emulator. |
 | Expo account | **Not logged in** | `npx eas-cli whoami` |
@@ -73,7 +73,7 @@ There is no Flutter wrapper, so this list comes from what the web app uses.
 
 | Capability | Native | Status |
 |---|---|---|
-| Push notifications | expo-notifications with a native FCM token, sent to `/fcm-tokens/device/save` (no backend change). Uses channel `default` with sound `zomato_sms`. Tapping a notification goes to its web link, mapped to the native route. | **Blocked**: needs `google-services.json` |
+| Push notifications | expo-notifications with a native FCM token, sent to `/fcm-tokens/device/save` (no backend change). Uses channel `default` with sound `zomato_sms`. Tapping a notification goes to its web link, mapped to the native route. | Built, not tested (`google-services.json` added; needs a device test) |
 | In-app order and OTP toasts (socket) | socket.io → toasts with the web's text and timings | Built, not tested |
 | Location | expo-location, foreground only. Zone detection uses the backend. | Verified: the emulator GPS resolved Indore and the zone is in service |
 | Camera and gallery (avatar) | expo-image-picker | Built, not tested |
@@ -241,9 +241,8 @@ All of these were deliberate; please review.
 
 | Item | Why | What's needed |
 |---|---|---|
-| Push notifications | There is no Android Firebase app for `com.cityfood.user` | In the Firebase console, add an Android app with package `com.cityfood.user`. Download `google-services.json` into `mobile-user/` and rebuild; `app.config.js` picks it up automatically. |
 | 8 images | Corrupted in git and on the live site (LF→CRLF on binary files) and not repairable: `bikelogo.png`, `collectionspagebanner.png`, `explore more icons/{collection,gourmet,offers,top 10}.png`, `fssai.png`, `offerimage.png` | The original files. Put them in `mobile-user/assets/images/` at the same paths; they will also fix the website. 23 other corrupted images were repaired and checked with CRC. The app keeps an empty frame of the same size where these appear, as the web does today. |
-| Release APK (EAS) | Expo isn't logged in | `cd mobile-user && npx eas-cli login`, then `npx eas-cli build --platform android --profile production` |
+| Store-ready signed APK (EAS) | Expo isn't logged in. The local release APK (see Release build below) is signed with the Android debug key, so it can be installed but not published. | `cd mobile-user && npx eas-cli login`, then `npx eas-cli build --platform android --profile production`. EAS creates and keeps the upload keystore. |
 
 ## Backend
 
@@ -277,6 +276,30 @@ Between 12:20 and 13:15 on 2026-10-19, all 3 orders of the test account (includi
 | Live API checks | 46/46 passed |
 | Emulator walkthrough | Login, Home, Under ₹250, restaurant page, Profile, Orders, Wallet, Notifications, address selector and Cart ran and matched the web references. One crash and three UI bugs were found and fixed. |
 | Performance review | No timers or listeners without cleanup. Long lists use FlatList or SectionList (Home is one virtualized list). Images use width-matched variants. Unused packages were removed (netinfo, expo-device, webview). |
+
+## Release build
+
+`releases/CityFood-user-v1.0.0-release.apk` (project root, gitignored), built locally on 2026-10-19:
+
+| Property | Value |
+|---|---|
+| Package / version | `com.cityfood.user`, 1.0.0 (versionCode 1) |
+| CPU architecture | `arm64-v8a` (all phones from roughly the last 7 years) |
+| Size | 50.7 MB |
+| JS bundle | Embedded, so no Metro server is needed |
+| Firebase | `google-services.json` included |
+| Signature | Android **debug** certificate. Installable for testing, not for Play Store upload. |
+
+It was built with low-memory Gradle settings, because this machine has 7 GB of RAM:
+
+```
+cd mobile-user && CI=1 npx expo prebuild --platform android --clean --no-install
+cd android && NODE_OPTIONS=--max-old-space-size=1536 ./gradlew assembleRelease --no-daemon --max-workers=1 \
+  "-Dorg.gradle.jvmargs=-Xmx1536m -XX:MaxMetaspaceSize=512m" -Porg.gradle.parallel=false \
+  -Pkotlin.compiler.execution.strategy=in-process -PreactNativeArchitectures=arm64-v8a
+```
+
+The release build needed a fix: 21 web images were JPEGs named `.png`, which Android's resource compiler rejects. They were converted to real PNGs.
 
 ## Device test list
 
@@ -313,5 +336,5 @@ Walk through these in order on a real Android phone, using the APK from the EAS 
     - For session expiry, delete the account's refresh token on the server or wait out its expiry: the next request should send you to login.
 15. **No network.** Turn on airplane mode on Home, Cart and Orders. Expect the web's error toasts ("Unable to connect…") and no crash. Turn the network back on and retry.
 16. **Uploads and downloads.** Avatar upload works. The invoice PDF opens the share sheet and saves.
-17. **Push notifications.** Only after adding `google-services.json` and rebuilding: allow notifications, place an order, and check that status pushes arrive and tapping one opens the order.
+17. **Push notifications.** Allow notifications after login, place an order, and check that status pushes arrive with the CityFood sound and that tapping one opens the order.
 18. **Maps key.** If maps show blank tiles on the EAS build, add the build's SHA-1 (from `npx eas-cli credentials`) to the Maps key restrictions in Google Cloud.

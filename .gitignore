@@ -4,3 +4,6 @@ temp_interactive_push.bat
 backups/
 *.dump
 
+
+# built APKs (large binaries, not tracked)
+releases/*.apk
