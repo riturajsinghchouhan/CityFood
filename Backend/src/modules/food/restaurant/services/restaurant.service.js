@@ -346,8 +346,11 @@ const populatePreviewItems = async (restaurants = []) => {
                     _id: item._id,
                     name: item.name,
                     price: getFoodDisplayPrice(item),
-                    // Items with sizes need a choice on the restaurant page; the home card can't add them directly.
+                    // Sizes / options: the home card asks which one to add (same ids as the restaurant page).
                     hasVariants: Array.isArray(item.variants) && item.variants.length > 0,
+                    variants: (Array.isArray(item.variants) ? item.variants : [])
+                        .map((v) => ({ id: String(v._id || v.id || ''), name: String(v.name || '').trim(), price: Number(v.price) }))
+                        .filter((v) => v.id && v.name && Number.isFinite(v.price) && v.price > 0),
                     priceOnOtherPlatforms: Number(item.priceOnOtherPlatforms) || null,
                     foodType: item.foodType === 'Veg' ? 'Veg' : 'Non-Veg',
                     image: resolveStoredUploadPath(item.image || ''),

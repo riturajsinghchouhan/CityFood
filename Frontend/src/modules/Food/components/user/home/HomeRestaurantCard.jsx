@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState } from "react";
 import {
   Bookmark,
   Minus,
@@ -19,7 +19,8 @@ import { useDeferredOutletTimings } from "@food/hooks/user/useDeferredOutletTimi
 import { getRestaurantAvailabilityStatus } from "@food/utils/restaurantAvailability";
 import { useCart } from "@food/context/CartContext";
 import { isModuleAuthenticated } from "@food/utils/auth";
-import { buildCartLineId } from "@food/utils/foodVariants";
+import { buildCartLineId, normalizeFoodVariants } from "@food/utils/foodVariants";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@food/components/ui/dialog";
 
 function resolveRestaurantSlug(restaurant, index) {
   const nameStr = typeof restaurant?.name === "string" ? restaurant.name.trim() : "";
@@ -83,6 +84,16 @@ function buildPreviewItems(restaurant, backendOrigin) {
       const offer = resolveItemOffer(restaurant, { ...item, id: item.id || item._id, price });
       const finalPrice = offer ? offer.discountedPrice : price;
       const otherPrice = Number(item.priceOnOtherPlatforms) || 0;
+      const itemId = item.id || item._id;
+      const variants = normalizeFoodVariants(item.variants).map((variant) => {
+        const variantOffer = resolveItemOffer(restaurant, { ...item, id: itemId, price: variant.price });
+        return {
+          id: variant.id,
+          name: variant.name,
+          price: variant.price,
+          finalPrice: variantOffer ? variantOffer.discountedPrice : variant.price,
+        };
+      });
       const lowerPercent =
         otherPrice > finalPrice && finalPrice > 0
           ? Math.round(((otherPrice - finalPrice) / otherPrice) * 100)
@@ -96,7 +107,8 @@ function buildPreviewItems(restaurant, backendOrigin) {
           foodImages[idx % foodImages.length],
         foodType: item.foodType,
         isRecommended: item.isRecommended === true,
-        hasVariants: item.hasVariants === true,
+        hasVariants: item.hasVariants === true || variants.length > 0,
+        variants,
         priceOnOtherPlatforms: otherPrice || null,
         price,
         finalPrice,
@@ -139,7 +151,7 @@ function PreviewItemCard({ item, quantity = 0, onSelect, onAdd, onChangeQuantity
             Popular
           </span>
         )}
-        {quantity > 0 ? (
+        {quantity > 0 && !item.hasVariants ? (
           <div
             onClick={stop}
             className="absolute bottom-2 right-2 flex h-9 items-center gap-1 rounded-full border-2 border-primary bg-white px-1 text-primary shadow-md"
@@ -171,6 +183,11 @@ function PreviewItemCard({ item, quantity = 0, onSelect, onAdd, onChangeQuantity
             className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-primary/60 bg-white text-primary shadow-md hover:scale-110 active:scale-90 transition-transform"
           >
             <Plus className="h-5 w-5" strokeWidth={2.5} />
+            {quantity > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-bold text-white">
+                {quantity}
+              </span>
+            )}
           </button>
         )}
       </div>
@@ -215,6 +232,87 @@ function PreviewItemCard({ item, quantity = 0, onSelect, onAdd, onChangeQuantity
   );
 }
 
+function VariantPicker({ item, restaurantName, quantityOf, onAdd, onChangeQuantity, onClose }) {
+  const open = Boolean(item);
+  return (
+    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
+      <DialogContent className="w-[min(calc(100vw-2rem),26rem)] p-0 overflow-hidden bg-white dark:bg-[#1a1a1a]">
+        {item && (
+          <div className="flex flex-col">
+            <div className="flex items-center gap-3 p-4 pr-12 border-b border-gray-100 dark:border-gray-800">
+              <img src={item.image} alt="" className="h-14 w-14 rounded-xl object-cover bg-gray-100" onError={(e) => { e.currentTarget.src = foodImages[0]; }} />
+              <div className="min-w-0">
+                <DialogTitle className="text-[16px] font-bold text-gray-900 dark:text-white line-clamp-2">{item.name}</DialogTitle>
+                <DialogDescription className="text-[13px] text-gray-500">{restaurantName} · Choose an option</DialogDescription>
+              </div>
+            </div>
+            <ul className="max-h-[60vh] overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
+              {item.variants.map((variant) => {
+                const quantity = quantityOf(item, variant);
+                return (
+                  <li key={variant.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">{variant.name}</p>
+                      <p className="text-[14px]">
+                        {variant.finalPrice < variant.price ? (
+                          <>
+                            <span className="text-gray-400 line-through mr-1.5">₹{Math.round(variant.price)}</span>
+                            <span className="font-bold text-primary">₹{Math.round(variant.finalPrice)}</span>
+                          </>
+                        ) : (
+                          <span className="font-medium text-gray-700 dark:text-gray-300">₹{Math.round(variant.price)}</span>
+                        )}
+                      </p>
+                    </div>
+                    {quantity > 0 ? (
+                      <div className="flex h-9 items-center gap-1 rounded-full border-2 border-primary px-1 text-primary">
+                        <button
+                          type="button"
+                          onClick={() => onChangeQuantity(item, variant, quantity - 1)}
+                          aria-label={`Remove one ${variant.name}`}
+                          className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-primary/10 active:scale-90"
+                        >
+                          <Minus className="h-4 w-4" strokeWidth={2.5} />
+                        </button>
+                        <span className="min-w-[14px] text-center text-sm font-bold">{quantity}</span>
+                        <button
+                          type="button"
+                          onClick={() => onChangeQuantity(item, variant, quantity + 1)}
+                          aria-label={`Add one more ${variant.name}`}
+                          className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-primary/10 active:scale-90"
+                        >
+                          <Plus className="h-4 w-4" strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onAdd(item, variant)}
+                        className="h-9 px-5 rounded-full border-2 border-primary text-primary text-sm font-bold hover:bg-primary hover:text-white active:scale-95 transition"
+                      >
+                        Add
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="p-4 border-t border-gray-100 dark:border-gray-800">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full h-11 rounded-xl bg-primary text-white font-bold hover:brightness-105 active:scale-[0.99] transition"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function HomeRestaurantCard({
   restaurant,
   index = 0,
@@ -227,6 +325,7 @@ function HomeRestaurantCard({
   const navigate = useNavigate();
   const location = useLocation();
   const { addToCart, updateQuantity, getCartItem } = useCart();
+  const [variantItem, setVariantItem] = useState(null);
   const isBanned = Boolean(
     restaurant?.isBanned === true ||
     restaurant?.status === 'banned' ||
@@ -278,9 +377,14 @@ function HomeRestaurantCard({
     navigate(`/user/restaurants/${restaurantSlug}${itemId ? `?highlightItemId=${itemId}` : ""}`);
   };
 
-  // Same cart line id as the restaurant page (item id + "base"), so quantities stay in sync there.
-  const lineIdOf = (item) => buildCartLineId(item.id, "");
-  const quantityOf = (item) => getCartItem(lineIdOf(item))?.quantity || 0;
+  // Same cart line ids as the restaurant page (item id + variant id, or "base"), so quantities stay in sync there.
+  const lineIdOf = (item, variant = null) => buildCartLineId(item.id, variant?.id || "");
+  const lineQuantity = (item, variant = null) => getCartItem(lineIdOf(item, variant))?.quantity || 0;
+  // On the card a variant item shows how many of all its options are in the cart.
+  const quantityOf = (item) =>
+    item.variants?.length > 0
+      ? item.variants.reduce((total, variant) => total + lineQuantity(item, variant), 0)
+      : lineQuantity(item);
 
   const canOrder = () => {
     if (!isModuleAuthenticated("user")) {
@@ -295,28 +399,20 @@ function HomeRestaurantCard({
     return true;
   };
 
-  const handleAddItem = (item, event) => {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    // Items with sizes/options are chosen on the restaurant page.
-    if (item.hasVariants) {
-      openItem(item.id);
-      return;
-    }
+  const addLine = (item, variant = null) => {
     if (!canOrder()) return;
-    const lineItemId = lineIdOf(item);
+    const lineItemId = lineIdOf(item, variant);
+    const finalPrice = variant ? variant.finalPrice : item.finalPrice;
     const result = addToCart({
       id: lineItemId,
       lineItemId,
       itemId: item.id,
       name: item.name,
-      price: item.finalPrice,
-      originalPrice: item.price,
-      variantId: "",
-      variantName: "",
-      variantPrice: item.finalPrice,
+      price: finalPrice,
+      originalPrice: variant ? variant.price : item.price,
+      variantId: variant?.id || "",
+      variantName: variant?.name || "",
+      variantPrice: finalPrice,
       image: item.image,
       restaurant: restaurant.name,
       restaurantId: restaurant.mongoId || restaurant.restaurantId || restaurant._id || restaurant.id,
@@ -328,7 +424,30 @@ function HomeRestaurantCard({
       toast.error(result.error || "Could not add this item.");
       return;
     }
-    toast.success(`Added ${item.name} to cart`);
+    toast.success(`Added ${item.name}${variant ? ` (${variant.name})` : ""} to cart`);
+  };
+
+  const changeLine = (item, variant, quantity) => {
+    if (quantity > lineQuantity(item, variant) && !canOrder()) return;
+    updateQuantity(lineIdOf(item, variant), quantity);
+  };
+
+  const handleAddItem = (item, event) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    if (item.variants?.length > 0) {
+      // Ask which size / option to add.
+      if (canOrder()) setVariantItem(item);
+      return;
+    }
+    // Older API response without variant details: choose on the restaurant page.
+    if (item.hasVariants) {
+      openItem(item.id);
+      return;
+    }
+    addLine(item);
   };
 
   const handleChangeQuantity = (item, quantity, event) => {
@@ -336,8 +455,7 @@ function HomeRestaurantCard({
       event.preventDefault();
       event.stopPropagation();
     }
-    if (quantity > quantityOf(item) && !canOrder()) return;
-    updateQuantity(lineIdOf(item), quantity);
+    changeLine(item, null, quantity);
   };
 
   const handleSlideClick = (slide, event) => {
@@ -464,6 +582,14 @@ function HomeRestaurantCard({
           </Card>
         </RestaurantCarouselStateProvider>
       </CardWrapper>
+      <VariantPicker
+        item={variantItem}
+        restaurantName={restaurant?.name}
+        quantityOf={lineQuantity}
+        onAdd={addLine}
+        onChangeQuantity={changeLine}
+        onClose={() => setVariantItem(null)}
+      />
     </div>
   );
 }
