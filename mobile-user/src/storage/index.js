@@ -77,4 +77,5 @@ export const KEYS = {
   under250Filters: "food-under-250-filters",
   orders: "userOrders",
   localNotifications: "food_user_notifications",
+  editProfileDraft: "user_edit_profile_draft",
 };

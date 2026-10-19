@@ -135,6 +135,7 @@ export function ProfileProvider({ children }) {
       KEYS.vegMode,
       KEYS.vegModeOption,
       KEYS.under250Filters,
+      KEYS.editProfileDraft,
     ]);
   }, []);
 
