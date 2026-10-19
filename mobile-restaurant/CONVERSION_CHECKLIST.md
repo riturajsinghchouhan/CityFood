@@ -45,38 +45,38 @@ Native paths are the web paths without `/food/restaurant`. PR means `ProtectedRo
 
 | # | Web route | Component | Guard | Native route | Status |
 |---|---|---|---|---|---|
-| 1 | `welcome` | `auth/Welcome.jsx` | public | `/welcome` | Pending |
-| 2 | `login` | `auth/Login.jsx` | public | `/login` | Pending |
-| 3 | `otp` | `auth/OTP.jsx` | public | `/otp` | Pending |
-| 4 | `signup` | `auth/Signup.jsx` | public | `/signup` | Pending |
-| 5 | `pending-verification` | `auth/VerificationPending.jsx` | public | `/pending-verification` | Pending |
-| 6 | `onboarding?step=1..3` | `Onboarding.jsx` (3-step registration) | public (reads its own token or pending phone) | `/onboarding` | Pending |
-| 7 | `privacy`, `profile/privacy` | `PrivacyPolicyPage.jsx` | public | `/privacy` | Pending |
-| 8 | `terms`, `profile/terms` | `TermsAndConditionsPage.jsx` | public | `/terms` | Pending |
-| 9 | `` (index) | `OrdersMain.jsx` | PR | `/` (Orders tab) | Pending |
-| 10 | `dashboard` | `RestaurantDashboard.jsx` | PR | `/dashboard` | Pending |
-| 11 | `orders/all` | `AllOrdersPage.jsx` | PR | `/orders/all` | Pending |
-| 12 | `orders/:id` | `OrderDetails.jsx` | PR | `/orders/[id]` | Pending |
-| 13 | `notifications` | `Notifications.jsx` | PR | `/notifications` | Pending |
-| 14 | `delivery-settings` | `DeliverySettings.jsx` | PR | `/delivery-settings` | Pending |
-| 15 | `menu-categories` | `MenuCategoriesPage.jsx` | PR | `/menu-categories` | Pending |
-| 16 | `explore` | `ExploreMore.jsx` | PR | `/explore` (Explore tab) | Pending |
-| 17 | `outlet-timings` | `OutletTimings.jsx` | PR | `/outlet-timings` | Pending |
-| 18 | `outlet-info` | `OutletInfo.jsx` | PR | `/outlet-info` | Pending |
-| 19 | `ratings-reviews` | `RatingsReviews.jsx` (static FAQ) | PR | `/ratings-reviews` | Pending |
-| 20 | `edit-owner` | `EditOwner.jsx` | PR | `/edit-owner` | Pending |
-| 21 | `inventory` | `Inventory.jsx` | PR | `/inventory` (Inventory tab) | Pending (Excel import on hold) |
-| 22 | `feedback?tab=` | `Feedback.jsx` | PR | `/feedback` (Feedback tab) | Pending |
-| 23 | `share-feedback` | `ShareFeedback.jsx` | PR | `/share-feedback` | Pending |
-| 24 | `help-centre/support` | `RestaurantSupport.jsx` | PR | `/help-centre/support` | Pending |
-| 25 | `hub-menu/item/:id` | `ItemDetailsPage.jsx` (`new` = create) | PR | `/hub-menu/item/[id]` | Pending |
-| 26 | `hub-finance?tab=` | `HubFinance.jsx` | PR | `/hub-finance` | Pending |
-| 27 | `withdrawal-history` | `WithdrawalHistoryPage.jsx` | PR | `/withdrawal-history` | Pending |
-| 28 | `promocodes` | `Promocodes.jsx` | PR | `/promocodes` | Pending |
-| 29 | `update-bank-details` | `UpdateBankDetails.jsx` | PR | `/update-bank-details` | Pending |
-| 30 | `zone-setup` | `ZoneSetup.jsx` (map, zones) | PR | `/zone-setup` | Pending |
-| — | (overlays) | New-order popup and ring, `GlobalPickupOtpModal`, block guard screen, dining "New Table Request" popup | n/a | shell | Pending |
-| — | (shell) | `RestaurantLayout`: red navbar, hamburger drawer, `BottomNavOrders` | n/a | layout | Pending |
+| 1 | `welcome` | `auth/Welcome.jsx` | public | `/welcome` | Verified (emulator; matches the web, carousel images blank as on web) |
+| 2 | `login` | `auth/Login.jsx` | public | `/login` | Verified (emulator) |
+| 3 | `otp` | `auth/OTP.jsx` | public | `/otp` | Verified (emulator: fast entry, auto-verify) |
+| 4 | `signup` | `auth/Signup.jsx` | public | `/signup` | Verified (renders; not submitted) |
+| 5 | `pending-verification` | `auth/VerificationPending.jsx` | public | `/pending-verification` | Verified (test restaurant → "Under Review") |
+| 6 | `onboarding?step=1..3` | `Onboarding.jsx` (3-step registration) | public (reads its own token or pending phone) | `/onboarding` | Verified (renders step 1; not submitted, test restaurant already registered) |
+| 7 | `privacy`, `profile/privacy` | `PrivacyPolicyPage.jsx` | public | `/privacy` | Verified (renders) |
+| 8 | `terms`, `profile/terms` | `TermsAndConditionsPage.jsx` | public | `/terms` | Verified (renders; CMS empty state) |
+| 9 | `` (index) | `OrdersMain.jsx` | PR | `/` (Orders tab) | Built, not tested (needs approved test restaurant) |
+| 10 | `dashboard` | `RestaurantDashboard.jsx` | PR | `/dashboard` | Built, not tested (needs approved test restaurant) |
+| 11 | `orders/all` | `AllOrdersPage.jsx` | PR | `/orders/all` | Built, not tested (needs approved test restaurant) |
+| 12 | `orders/:id` | `OrderDetails.jsx` | PR | `/orders/[id]` | Built, not tested (needs approved test restaurant) |
+| 13 | `notifications` | `Notifications.jsx` | PR | `/notifications` | Built, not tested (needs approved test restaurant) |
+| 14 | `delivery-settings` | `DeliverySettings.jsx` | PR | `/delivery-settings` | Built, not tested (needs approved test restaurant) |
+| 15 | `menu-categories` | `MenuCategoriesPage.jsx` | PR | `/menu-categories` | Built, not tested (needs approved test restaurant) |
+| 16 | `explore` | `ExploreMore.jsx` | PR | `/explore` (Explore tab) | Built, not tested (needs approved test restaurant) |
+| 17 | `outlet-timings` | `OutletTimings.jsx` | PR | `/outlet-timings` | Built, not tested (needs approved test restaurant) |
+| 18 | `outlet-info` | `OutletInfo.jsx` | PR | `/outlet-info` | Built, not tested (needs approved test restaurant) |
+| 19 | `ratings-reviews` | `RatingsReviews.jsx` (static FAQ) | PR | `/ratings-reviews` | Built, not tested (needs approved test restaurant) |
+| 20 | `edit-owner` | `EditOwner.jsx` | PR | `/edit-owner` | Built, not tested (needs approved test restaurant) |
+| 21 | `inventory` | `Inventory.jsx` | PR | `/inventory` (Inventory tab) | Built, not tested (Excel import on hold) |
+| 22 | `feedback?tab=` | `Feedback.jsx` | PR | `/feedback` (Feedback tab) | Built, not tested (needs approved test restaurant) |
+| 23 | `share-feedback` | `ShareFeedback.jsx` | PR | `/share-feedback` | Built, not tested (needs approved test restaurant) |
+| 24 | `help-centre/support` | `RestaurantSupport.jsx` | PR | `/help-centre/support` | Built, not tested (needs approved test restaurant) |
+| 25 | `hub-menu/item/:id` | `ItemDetailsPage.jsx` (`new` = create) | PR | `/hub-menu/item/[id]` | Built, not tested (needs approved test restaurant) |
+| 26 | `hub-finance?tab=` | `HubFinance.jsx` | PR | `/hub-finance` | Built, not tested (needs approved test restaurant) |
+| 27 | `withdrawal-history` | `WithdrawalHistoryPage.jsx` | PR | `/withdrawal-history` | Built, not tested (needs approved test restaurant) |
+| 28 | `promocodes` | `Promocodes.jsx` | PR | `/promocodes` | Built, not tested (needs approved test restaurant) |
+| 29 | `update-bank-details` | `UpdateBankDetails.jsx` | PR | `/update-bank-details` | Built, not tested (needs approved test restaurant) |
+| 30 | `zone-setup` | `ZoneSetup.jsx` (map, zones) | PR | `/zone-setup` | Built, not tested (needs approved test restaurant) |
+| — | (overlays) | New-order popup and ring, `GlobalPickupOtpModal`, block guard screen, dining "New Table Request" popup | n/a | shell | Built, not tested (needs approved test restaurant) |
+| — | (shell) | `RestaurantLayout`: red navbar, hamburger drawer, `BottomNavOrders` | n/a | layout | Built, not tested (needs approved test restaurant) |
 
 ### Left out (please confirm)
 
