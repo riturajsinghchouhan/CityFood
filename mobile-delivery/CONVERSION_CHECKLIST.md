@@ -46,31 +46,31 @@ Native paths are the web paths without `/food/delivery`. Login means `ProtectedR
 
 | # | Web route | Component | Guard | Native route | Status |
 |---|---|---|---|---|---|
-| 1 | `login` | `auth/SignIn` | public | `/login` | Pending |
-| 2 | `otp` | `auth/OTP` | public | `/otp` | Pending |
-| 3 | `signup/details` | `auth/SignupStep1` | public | `/signup/details` | Pending |
-| 4 | `signup/documents` | `auth/SignupStep2` (KYC photos) | public | `/signup/documents` | Pending |
-| 5 | `profile/terms`, `terms` | `TermsAndConditionsV2` | public | `/profile/terms` | Pending |
-| 6 | `profile/privacy` | `PrivacyPolicyV2` | public | `/profile/privacy` | Pending |
-| 7 | `support` | `help/PublicSupportV2` | public | `/support` | Pending |
-| 8 | `` / `feed` | `DeliveryHomeV2` feed (map, duty toggle, offers, active trip) | login | `/` (Feed tab) | Pending |
-| 9 | `pocket` | `PocketV2` | login | `/pocket` (tab) | Pending |
-| 10 | `orders` | `OrdersV2` | login | `/orders` (tab) | Pending |
-| 11 | `history` | `HistoryV2` | login | `/history` | Pending |
-| 12 | `profile` | `ProfileV2` | login | `/profile` (tab) | Pending |
-| 13 | `notifications` | `NotificationsV2` | login | `/notifications` | Pending |
-| 14 | `profile/details` | `profile/ProfileDetailsV2` | login | `/profile/details` | Pending |
-| 15 | `help/tickets` | `help/SupportTicketsV2` | login | `/help/tickets` | Pending |
-| 16 | `help/tickets/create` | `help/CreateSupportTicketV2` | login | `/help/tickets/create` | Pending |
-| 17 | `help/tickets/:ticketId` | `help/ViewSupportTicketV2` | login | `/help/tickets/[ticketId]` | Pending |
-| 18 | `help/id-card` | `help/ShowIdCardV2` | login | `/help/id-card` | Pending |
-| 19 | `pocket/payout` | `pocket/PayoutV2` | login | `/pocket/payout` | Pending |
-| 20 | `pocket/deductions` | `pocket/DeductionStatementV2` | login | `/pocket/deductions` | Pending |
-| 21 | `pocket/limit-settlement` | `pocket/LimitSettlementV2` | login | `/pocket/limit-settlement` | Pending |
-| 22 | `pocket/balance` | `pocket/PocketBalanceV2` | login | `/pocket/balance` | Pending |
-| 23 | `pocket/cash-limit` | `pocket/CashLimitInfoV2` | login | `/pocket/cash-limit` | Pending |
-| 24 | `pocket/details` | `pocket/PocketDetailsV2` | login | `/pocket/details` | Pending |
-| — | (overlays) | New-offer popup with ring and 60 s slide-to-accept; go-online selfie flow; trip OTP and payment sheets | n/a | shell | Pending |
+| 1 | `login` | `auth/SignIn` | public | `/login` | Verified (emulator; matches the web) |
+| 2 | `otp` | `auth/OTP` | public | `/otp` | Verified (emulator: OTP sent, 6 digits, routes needsRegistration → signup) |
+| 3 | `signup/details` | `auth/SignupStep1` | public | `/signup/details` | Verified (renders; not submitted) |
+| 4 | `signup/documents` | `auth/SignupStep2` (KYC photos) | public | `/signup/documents` | Verified (renders KYC slots; not submitted) |
+| 5 | `profile/terms`, `terms` | `TermsAndConditionsV2` | public | `/profile/terms` | Verified (renders CMS empty state) |
+| 6 | `profile/privacy` | `PrivacyPolicyV2` | public | `/profile/privacy` | Built, not tested (needs an approved test rider) |
+| 7 | `support` | `help/PublicSupportV2` | public | `/support` | Verified (renders; contacts from business settings) |
+| 8 | `` / `feed` | `DeliveryHomeV2` feed (map, duty toggle, offers, active trip) | login | `/` (Feed tab) | Built, not tested (needs an approved test rider) |
+| 9 | `pocket` | `PocketV2` | login | `/pocket` (tab) | Built, not tested (needs an approved test rider) |
+| 10 | `orders` | `OrdersV2` | login | `/orders` (tab) | Built, not tested (needs an approved test rider) |
+| 11 | `history` | `HistoryV2` | login | `/history` | Built, not tested (needs an approved test rider) |
+| 12 | `profile` | `ProfileV2` | login | `/profile` (tab) | Built, not tested (needs an approved test rider) |
+| 13 | `notifications` | `NotificationsV2` | login | `/notifications` | Built, not tested (needs an approved test rider) |
+| 14 | `profile/details` | `profile/ProfileDetailsV2` | login | `/profile/details` | Built, not tested (needs an approved test rider) |
+| 15 | `help/tickets` | `help/SupportTicketsV2` | login | `/help/tickets` | Built, not tested (needs an approved test rider) |
+| 16 | `help/tickets/create` | `help/CreateSupportTicketV2` | login | `/help/tickets/create` | Built, not tested (needs an approved test rider) |
+| 17 | `help/tickets/:ticketId` | `help/ViewSupportTicketV2` | login | `/help/tickets/[ticketId]` | Built, not tested (needs an approved test rider) |
+| 18 | `help/id-card` | `help/ShowIdCardV2` | login | `/help/id-card` | Built, not tested (needs an approved test rider) |
+| 19 | `pocket/payout` | `pocket/PayoutV2` | login | `/pocket/payout` | Built, not tested (needs an approved test rider) |
+| 20 | `pocket/deductions` | `pocket/DeductionStatementV2` | login | `/pocket/deductions` | Built, not tested (needs an approved test rider) |
+| 21 | `pocket/limit-settlement` | `pocket/LimitSettlementV2` | login | `/pocket/limit-settlement` | Built, not tested (needs an approved test rider) |
+| 22 | `pocket/balance` | `pocket/PocketBalanceV2` | login | `/pocket/balance` | Built, not tested (needs an approved test rider) |
+| 23 | `pocket/cash-limit` | `pocket/CashLimitInfoV2` | login | `/pocket/cash-limit` | Built, not tested (needs an approved test rider) |
+| 24 | `pocket/details` | `pocket/PocketDetailsV2` | login | `/pocket/details` | Built, not tested (needs an approved test rider) |
+| — | (overlays) | New-offer popup with ring and 60 s slide-to-accept; go-online selfie flow; trip OTP and payment sheets | n/a | shell | Built, not tested (needs an approved test rider) |
 
 ### Left out (please confirm)
 
@@ -84,7 +84,7 @@ Native paths are the web paths without `/food/delivery`. Login means `ProtectedR
 
 | Item | Why | What's needed |
 |---|---|---|
-| Logged-in testing | The test rider is pending | Admin approves "CityFood App Test Rider" |
+| Logged-in testing | The test rider "CityFood App Test Rider" (registered 2026-10-21) was removed from the server on the same day: verify-otp now returns needsRegistration | Re-register a test rider and have an admin approve it |
 | Support contact details | The web shows a stale `support@thetuggo.com` and +91 9917675609 | Business settings, if they have them; otherwise the user's real contact details |
 
 ## Backend issues found (not fixed)
