@@ -78,6 +78,29 @@ export function isAllowedForFranchise(method, path) {
 async function hqFranchiseFilter(req, res, next) {
     const franchiseId = String(req.get('x-franchise-filter') || '').trim();
     if (!franchiseId || franchiseId === 'all' || !READ_METHODS.has(req.method)) return next();
+
+    // Own (Admin-operated, non-franchise) scope
+    if (franchiseId.toLowerCase() === 'own') {
+        try {
+            const franchiseZoneIds = await FoodFranchise.distinct('zoneId', { isTerminated: false });
+            const { FoodZone } = await import('../../admin/models/zone.model.js');
+            const ownZones = await FoodZone.find({ _id: { $nin: franchiseZoneIds } }).distinct('_id');
+            return runInFranchiseScope({ isOwn: true, ownZoneIds: ownZones }, () => next());
+        } catch (error) {
+            return next(error);
+        }
+    }
+
+    // All Franchises scope (only records that belong to any active franchise)
+    if (franchiseId.toLowerCase() === 'all_franchises') {
+        try {
+            const franchiseZoneIds = await FoodFranchise.distinct('zoneId', { isTerminated: false });
+            return runInFranchiseScope({ isAllFranchises: true, franchiseZoneIds }, () => next());
+        } catch (error) {
+            return next(error);
+        }
+    }
+
     if (!mongoose.isValidObjectId(franchiseId)) return sendError(res, 400, 'Invalid franchise filter');
     try {
         const franchise = await FoodFranchise.findById(franchiseId).select('zoneId').lean();

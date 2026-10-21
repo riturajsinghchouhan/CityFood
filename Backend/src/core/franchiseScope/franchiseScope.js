@@ -27,32 +27,79 @@ async function cached(scope, key, load) {
 }
 
 const restaurantIds = (scope) =>
-    cached(scope, 'restaurantIds', () =>
-        mongoose.model('FoodRestaurant').find({ zoneId: scope.zoneId }).setOptions({ [SKIP]: true }).distinct('_id').exec());
+    cached(scope, 'restaurantIds', async () => {
+        if (scope.isOwn) {
+            return mongoose.model('FoodRestaurant').find({ zoneId: { $in: scope.ownZoneIds } }).setOptions({ [SKIP]: true }).distinct('_id').exec();
+        }
+        if (scope.isAllFranchises) {
+            return mongoose.model('FoodRestaurant').find({ zoneId: { $in: scope.franchiseZoneIds } }).setOptions({ [SKIP]: true }).distinct('_id').exec();
+        }
+        return mongoose.model('FoodRestaurant').find({ zoneId: scope.zoneId }).setOptions({ [SKIP]: true }).distinct('_id').exec();
+    });
 
 const riderIds = (scope) =>
-    cached(scope, 'riderIds', () =>
-        mongoose.model('FoodDeliveryPartner').find({ zoneId: scope.zoneId }).setOptions({ [SKIP]: true }).distinct('_id').exec());
+    cached(scope, 'riderIds', async () => {
+        if (scope.isOwn) {
+            return mongoose.model('FoodDeliveryPartner').find({
+                $or: [{ zoneId: { $in: scope.ownZoneIds } }, { zoneId: null }, { zoneId: { $exists: false } }]
+            }).setOptions({ [SKIP]: true }).distinct('_id').exec();
+        }
+        if (scope.isAllFranchises) {
+            return mongoose.model('FoodDeliveryPartner').find({ zoneId: { $in: scope.franchiseZoneIds } }).setOptions({ [SKIP]: true }).distinct('_id').exec();
+        }
+        return mongoose.model('FoodDeliveryPartner').find({ zoneId: scope.zoneId }).setOptions({ [SKIP]: true }).distinct('_id').exec();
+    });
 
 const customerIds = (scope) =>
-    cached(scope, 'customerIds', () =>
-        mongoose.model('FoodOrder').find({ franchiseId: scope.franchiseId }).setOptions({ [SKIP]: true }).distinct('userId').exec());
+    cached(scope, 'customerIds', () => {
+        if (scope.isOwn) {
+            return mongoose.model('FoodOrder').find({
+                $or: [{ franchiseId: null }, { franchiseId: { $exists: false } }]
+            }).setOptions({ [SKIP]: true }).distinct('userId').exec();
+        }
+        if (scope.isAllFranchises) {
+            return mongoose.model('FoodOrder').find({
+                franchiseId: { $ne: null, $exists: true }
+            }).setOptions({ [SKIP]: true }).distinct('userId').exec();
+        }
+        return mongoose.model('FoodOrder').find({ franchiseId: scope.franchiseId }).setOptions({ [SKIP]: true }).distinct('userId').exec();
+    });
 
 const byRestaurant = async (s) => ({ restaurantId: { $in: await restaurantIds(s) } });
 const byRider = async (s) => ({ deliveryPartnerId: { $in: await riderIds(s) } });
 
 /** Filter per model. `write` is true for updates / deletes. */
 const RULES = {
-    FoodRestaurant: (s) => ({ zoneId: s.zoneId }),
-    FoodDeliveryPartner: (s) => ({ zoneId: s.zoneId }),
-    FoodZone: (s) => ({ _id: s.zoneId }),
-    FoodOrder: (s) => ({ franchiseId: s.franchiseId }),
-    FoodOffer: (s) => ({ franchiseId: s.franchiseId }),
-    FoodFranchise: (s) => ({ _id: s.franchiseId }),
-    FoodFranchiseUser: (s) => ({ franchiseId: s.franchiseId }),
-    FoodFranchiseAdjustment: (s) => ({ franchiseId: s.franchiseId }),
-    FoodFranchiseSettlement: (s) => ({ franchiseId: s.franchiseId }),
-    FoodFranchiseWithdrawal: (s) => ({ franchiseId: s.franchiseId }),
+    FoodRestaurant: (s) => {
+        if (s.isOwn) return { zoneId: { $in: s.ownZoneIds } };
+        if (s.isAllFranchises) return { zoneId: { $in: s.franchiseZoneIds } };
+        return { zoneId: s.zoneId };
+    },
+    FoodDeliveryPartner: (s) => {
+        if (s.isOwn) return { $or: [{ zoneId: { $in: s.ownZoneIds } }, { zoneId: null }, { zoneId: { $exists: false } }] };
+        if (s.isAllFranchises) return { zoneId: { $in: s.franchiseZoneIds } };
+        return { zoneId: s.zoneId };
+    },
+    FoodZone: (s) => {
+        if (s.isOwn) return { _id: { $in: s.ownZoneIds } };
+        if (s.isAllFranchises) return { _id: { $in: s.franchiseZoneIds } };
+        return { _id: s.zoneId };
+    },
+    FoodOrder: (s) => {
+        if (s.isOwn) return { $or: [{ franchiseId: null }, { franchiseId: { $exists: false } }] };
+        if (s.isAllFranchises) return { franchiseId: { $ne: null, $exists: true } };
+        return { franchiseId: s.franchiseId };
+    },
+    FoodOffer: (s) => {
+        if (s.isOwn) return { $or: [{ franchiseId: null }, { franchiseId: { $exists: false } }] };
+        if (s.isAllFranchises) return { franchiseId: { $ne: null, $exists: true } };
+        return { franchiseId: s.franchiseId };
+    },
+    FoodFranchise: (s) => (s.isOwn ? { _id: null } : (s.isAllFranchises ? {} : { _id: s.franchiseId })),
+    FoodFranchiseUser: (s) => (s.isOwn ? { _id: null } : (s.isAllFranchises ? {} : { franchiseId: s.franchiseId })),
+    FoodFranchiseAdjustment: (s) => (s.isOwn ? { _id: null } : (s.isAllFranchises ? {} : { franchiseId: s.franchiseId })),
+    FoodFranchiseSettlement: (s) => (s.isOwn ? { _id: null } : (s.isAllFranchises ? {} : { franchiseId: s.franchiseId })),
+    FoodFranchiseWithdrawal: (s) => (s.isOwn ? { _id: null } : (s.isAllFranchises ? {} : { franchiseId: s.franchiseId })),
     FoodUser: async (s) => ({ _id: { $in: await customerIds(s) } }),
     // Global categories stay readable (restaurants pick them); only own restaurants' categories can change.
     FoodCategory: async (s, write) => {

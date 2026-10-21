@@ -10,6 +10,7 @@
 const STORAGE_KEY = "admin_franchise_filter"
 export const FRANCHISE_FILTER_EVENT = "adminFranchiseFilterChanged"
 export const ALL_FRANCHISES = "all"
+export const OWN_FRANCHISE = "own"
 
 /** Admin pages (under /admin/food/) that show the franchise filter. */
 const FILTER_PAGE_PREFIXES = [

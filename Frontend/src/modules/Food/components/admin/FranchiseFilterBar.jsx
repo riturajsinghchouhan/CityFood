@@ -19,9 +19,9 @@ export default function FranchiseFilterBar() {
         if (cancelled) return
         const list = res?.data?.data?.franchises || []
         setFranchises(list)
-        // A deleted franchise left in storage would hide everything; fall back to All.
+        // A deleted franchise left in storage would hide everything; fall back to All (except for 'own' and 'all_franchises').
         const current = getFranchiseFilter()
-        if (current !== ALL_FRANCHISES && !list.some((f) => f.id === current)) {
+        if (current !== ALL_FRANCHISES && current !== "own" && current !== "all_franchises" && !list.some((f) => f.id === current)) {
           setValue(ALL_FRANCHISES)
           setFranchiseFilter(ALL_FRANCHISES)
         }
@@ -55,13 +55,25 @@ export default function FranchiseFilterBar() {
           disabled={loading}
           className="w-full sm:w-72 px-3 py-2 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-60"
         >
-          <option value={ALL_FRANCHISES}>{loading ? "Loading franchises..." : "All Franchises"}</option>
+          <option value={ALL_FRANCHISES}>{loading ? "Loading..." : "All (Franchise + Own)"}</option>
+          <option value="all_franchises">All Franchises (Only Franchise)</option>
+          <option value="own">Own (Without Franchise)</option>
           {franchises.map((f) => (
             <option key={f.id} value={f.id}>
               {f.name}{f.zoneName ? ` (${f.zoneName})` : ""}{f.status && f.status !== "active" ? ` - ${f.status}` : ""}
             </option>
           ))}
         </select>
+        {value === "all_franchises" && (
+          <span className="text-xs text-slate-500">
+            Showing <strong className="text-slate-700">Franchise-only</strong> data
+          </span>
+        )}
+        {value === "own" && (
+          <span className="text-xs text-slate-500">
+            Showing <strong className="text-slate-700">Own (Direct Admin / Non-Franchise)</strong> data only
+          </span>
+        )}
         {selected && (
           <span className="text-xs text-slate-500">
             Showing data of zone <strong className="text-slate-700">{selected.zoneName || "-"}</strong> only
