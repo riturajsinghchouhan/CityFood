@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { adminAPI } from "@food/api"
 import { API_BASE_URL } from "@food/api/config"
 import { toast } from "sonner"
+import { isFranchiseSession } from "@food/utils/adminSidebarMenu"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -429,113 +430,115 @@ export default function RestaurantCommission() {
             </div>
           </div>
 
-          {/* Global Configurations Section */}
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-5 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
-                <Percent className="w-4 h-4 text-blue-600" />
-                Global Settings (Applied to all restaurants)
-              </h2>
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-slate-700">Apply Taxes</span>
-                <button
-                  onClick={() => setGlobalSettings({ ...globalSettings, applyGlobalTaxes: !globalSettings.applyGlobalTaxes })}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                    globalSettings.applyGlobalTaxes ? "bg-blue-600" : "bg-slate-300"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      globalSettings.applyGlobalTaxes ? "translate-x-6" : "translate-x-1"
+          {/* Global Configurations Section (HQ Admin only) */}
+          {!isFranchiseSession() && (
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-5 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                  <Percent className="w-4 h-4 text-blue-600" />
+                  Global Settings (Applied to all restaurants)
+                </h2>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-slate-700">Apply Taxes</span>
+                  <button
+                    onClick={() => setGlobalSettings({ ...globalSettings, applyGlobalTaxes: !globalSettings.applyGlobalTaxes })}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      globalSettings.applyGlobalTaxes ? "bg-blue-600" : "bg-slate-300"
                     }`}
-                  />
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        globalSettings.applyGlobalTaxes ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+              
+              <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 transition-opacity ${!globalSettings.applyGlobalTaxes ? 'opacity-50 pointer-events-none' : ''}`}>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Global Default Commission (%)</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={globalSettings.globalRestaurantCommission}
+                      onChange={(e) => setGlobalSettings({ ...globalSettings, globalRestaurantCommission: e.target.value })}
+                      className="w-full pl-3 pr-8 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">GST on Item (%)</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={globalSettings.globalGstOnItem}
+                      onChange={(e) => setGlobalSettings({ ...globalSettings, globalGstOnItem: e.target.value })}
+                      className="w-full pl-3 pr-8 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">GST on Commission (%)</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={globalSettings.globalGstOnCommission}
+                      onChange={(e) => setGlobalSettings({ ...globalSettings, globalGstOnCommission: e.target.value })}
+                      className="w-full pl-3 pr-8 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Payment Gateway Fee (%)</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={globalSettings.globalPaymentGatewayFee}
+                      onChange={(e) => setGlobalSettings({ ...globalSettings, globalPaymentGatewayFee: e.target.value })}
+                      className="w-full pl-3 pr-8 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">TCS (%)</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={globalSettings.globalTcs}
+                      onChange={(e) => setGlobalSettings({ ...globalSettings, globalTcs: e.target.value })}
+                      className="w-full pl-3 pr-8 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={handleSaveGlobal}
+                  disabled={savingGlobal}
+                  className="px-4 py-2 text-sm font-medium rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {savingGlobal && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Save Global Settings
                 </button>
               </div>
             </div>
-            
-            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 transition-opacity ${!globalSettings.applyGlobalTaxes ? 'opacity-50 pointer-events-none' : ''}`}>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Global Default Commission (%)</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    value={globalSettings.globalRestaurantCommission}
-                    onChange={(e) => setGlobalSettings({ ...globalSettings, globalRestaurantCommission: e.target.value })}
-                    className="w-full pl-3 pr-8 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">GST on Item (%)</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    value={globalSettings.globalGstOnItem}
-                    onChange={(e) => setGlobalSettings({ ...globalSettings, globalGstOnItem: e.target.value })}
-                    className="w-full pl-3 pr-8 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">GST on Commission (%)</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    value={globalSettings.globalGstOnCommission}
-                    onChange={(e) => setGlobalSettings({ ...globalSettings, globalGstOnCommission: e.target.value })}
-                    className="w-full pl-3 pr-8 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Payment Gateway Fee (%)</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    value={globalSettings.globalPaymentGatewayFee}
-                    onChange={(e) => setGlobalSettings({ ...globalSettings, globalPaymentGatewayFee: e.target.value })}
-                    className="w-full pl-3 pr-8 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">TCS (%)</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    value={globalSettings.globalTcs}
-                    onChange={(e) => setGlobalSettings({ ...globalSettings, globalTcs: e.target.value })}
-                    className="w-full pl-3 pr-8 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={handleSaveGlobal}
-                disabled={savingGlobal}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {savingGlobal && <Loader2 className="w-4 h-4 animate-spin" />}
-                Save Global Settings
-              </button>
-            </div>
-          </div>
+          )}
 
           <div className="mb-4 flex items-center gap-3">
             <div className="relative flex-1 sm:flex-initial min-w-[250px]">
@@ -626,11 +629,11 @@ export default function RestaurantCommission() {
                                 {item.defaultCommission?.type === 'percentage' ? (
                                   <>{item.defaultCommission.value}%</>
                                 ) : (
-                                  <>${item.defaultCommission.value}</>
+                                  <>₹{item.defaultCommission.value}</>
                                 )}
                               </span>
                               <span className={`text-[10px] font-semibold mt-0.5 px-1.5 py-0.5 rounded-sm inline-block w-fit ${item.hasCustomCommission ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'}`}>
-                                {item.hasCustomCommission ? 'Custom' : 'Global Default'}
+                                {item.hasCustomCommission ? 'Custom' : 'Default'}
                               </span>
                             </div>
                           </td>

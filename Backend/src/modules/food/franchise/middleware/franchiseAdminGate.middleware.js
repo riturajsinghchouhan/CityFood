@@ -57,7 +57,8 @@ const ALLOWED_WRITES = [
     ['PATCH', '/support-tickets/:id'],
     ['PATCH', '/delivery/support-tickets/:id'],
     ['PATCH', '/orders/:id/status'],
-    ['POST', '/orders/:id/(assign-delivery|resend-notification)']
+    ['POST', '/orders/:id/(assign-delivery|resend-notification)'],
+    ['DELETE', '/orders/:id']
 ].map(([method, path]) => ({ method, pattern: re(path) }));
 
 const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);

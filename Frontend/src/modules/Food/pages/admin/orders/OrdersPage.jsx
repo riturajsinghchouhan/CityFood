@@ -890,7 +890,8 @@ export default function OrdersPage({ statusKey = "all" }) {
       }
     } catch (error) {
       debugError("Error deleting order:", error)
-      toast.error(error.response?.data?.message || "Failed to delete order")
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || "Failed to delete order"
+      toast.error(errorMsg)
     } finally {
       setDeletingOrderId(null)
     }

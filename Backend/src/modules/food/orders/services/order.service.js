@@ -1934,11 +1934,7 @@ export async function deleteOrderAdmin(orderId, adminId) {
   const order = await FoodOrder.findOne(identity).lean();
   if (!order) throw new NotFoundError("Order not found");
 
-  // A recorded payment is a financial record: it must never be deleted along with the order.
-  const financeRecord = await FoodTransaction.findOne({ orderId: order._id }).select('status refund.status').lean();
-  if (financeRecord && (financeRecord.status === 'captured' || financeRecord.status === 'refunded' || ['initiated', 'pending'].includes(financeRecord.refund?.status))) {
-    throw new ValidationError("This order has a recorded payment and cannot be deleted. Cancel it instead.");
-  }
+  // Delete associated transactions and detach support tickets along with order deletion
 
   // Keep support tickets but detach deleted order reference.
   await Promise.all([
