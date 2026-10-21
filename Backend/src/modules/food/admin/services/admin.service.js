@@ -4865,6 +4865,63 @@ export async function getDeliverymanReviews(query = {}) {
     return { reviews, total, page, limit };
 }
 
+export async function updateDeliveryPartner(id, payload = {}) {
+    const partner = await FoodDeliveryPartner.findById(id);
+    if (!partner) return null;
+
+    const allowedFields = [
+        'name', 'phone', 'email', 'address', 'city', 'state', 'zoneId',
+        'vehicleType', 'vehicleName', 'vehicleNumber',
+        'panNumber', 'aadharNumber', 'drivingLicenseNumber',
+        'bankAccountHolderName', 'bankAccountNumber', 'bankIfscCode', 'bankName',
+        'upiId', 'availabilityStatus', 'status'
+    ];
+
+    for (const field of allowedFields) {
+        if (payload[field] !== undefined) {
+            if (field === 'zoneId') {
+                partner.zoneId = payload.zoneId ? new mongoose.Types.ObjectId(String(payload.zoneId)) : undefined;
+            } else if (typeof payload[field] === 'string') {
+                partner[field] = payload[field].trim();
+            } else {
+                partner[field] = payload[field];
+            }
+        }
+    }
+
+    if (payload.status === 'approved' && partner.status !== 'approved') {
+        partner.approvedAt = new Date();
+        partner.rejectedAt = undefined;
+        partner.rejectionReason = undefined;
+    } else if (payload.status === 'rejected') {
+        partner.rejectedAt = new Date();
+        partner.rejectionReason = payload.rejectionReason || 'Rejected by admin';
+    }
+
+    await partner.save();
+
+    // If wallet balance update is also requested
+    if (payload.pocketBalance !== undefined || payload.cashInHand !== undefined) {
+        try {
+            const { FoodDeliveryWallet } = await import('../../delivery/models/deliveryWallet.model.js');
+            const wallet = await FoodDeliveryWallet.findOne({ deliveryPartnerId: partner._id });
+            if (wallet) {
+                if (payload.pocketBalance !== undefined && Number.isFinite(Number(payload.pocketBalance))) {
+                    wallet.pocketBalance = Math.max(0, Number(payload.pocketBalance));
+                }
+                if (payload.cashInHand !== undefined && Number.isFinite(Number(payload.cashInHand))) {
+                    wallet.cashInHand = Math.max(0, Number(payload.cashInHand));
+                }
+                await wallet.save();
+            }
+        } catch (walletErr) {
+            console.error('Failed to sync wallet during delivery partner update:', walletErr);
+        }
+    }
+
+    return getDeliveryPartnerById(id);
+}
+
 export async function approveDeliveryPartner(id) {
     const partner = await FoodDeliveryPartner.findById(id);
     if (!partner) return null;

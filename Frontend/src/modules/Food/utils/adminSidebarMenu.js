@@ -323,7 +323,7 @@ const FRANCHISE_HIDDEN_SECTIONS = new Set([
   "EMPLOYEE MANAGEMENT", "SYSTEM SETTINGS", "PAGES & SOCIAL MEDIA", "DEVELOPER",
 ])
 const FRANCHISE_HIDDEN_LABELS = new Set([
-  "Categories", "Zone Setup", "Delivery Cash Limit", "Multiple Orders", "Delivery & Platform Fee",
+  "Categories", "Zone Setup", "Multiple Orders", "Delivery & Platform Fee",
   "Delivery Boy Commission", "Delivery Emergency Help", "Earning Addon", "Earning Addon History",
 ])
 

@@ -51,14 +51,15 @@ const ALLOWED_WRITES = [
     ['POST', '/payouts/mark-as-paid'],
     ['POST', '/delivery/payouts/mark-as-paid'],
     ['POST', '/delivery/:id/cash-limit/settle'],
-    ['PATCH', '/delivery/:id/(approve|reject|availability)'],
+    ['PATCH', '/delivery/:id(/(approve|reject|availability))?'],
     ['DELETE', '/delivery/:id'],
     ['POST', '/delivery/bonus'],
     ['PATCH', '/support-tickets/:id'],
     ['PATCH', '/delivery/support-tickets/:id'],
     ['PATCH', '/orders/:id/status'],
     ['POST', '/orders/:id/(assign-delivery|resend-notification)'],
-    ['DELETE', '/orders/:id']
+    ['DELETE', '/orders/:id'],
+    ['PATCH', '/delivery-cash-limit']
 ].map(([method, path]) => ({ method, pattern: re(path) }));
 
 const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);

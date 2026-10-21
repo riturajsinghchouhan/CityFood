@@ -24,6 +24,10 @@ export default function DeliverymanList() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isViewOpen, setIsViewOpen] = useState(false)
   const [viewDetails, setViewDetails] = useState(null)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [editFormData, setEditFormData] = useState({})
+  const [isSavingEdit, setIsSavingEdit] = useState(false)
+  const [zones, setZones] = useState([])
   const [editingDeliveryId, setEditingDeliveryId] = useState(null)
   const [editValues, setEditValues] = useState({ pocketBalance: "", cashInHand: "" })
   const [savingDeliveryId, setSavingDeliveryId] = useState(null)
@@ -145,6 +149,9 @@ export default function DeliverymanList() {
   // Fetch on mount and setup polling for real-time updates
   useEffect(() => {
     fetchDeliverymen()
+    adminAPI.getZones({ limit: 1000 }).then((res) => {
+      setZones(res?.data?.data?.zones || res?.data?.data || [])
+    }).catch(() => {})
     
     // Polling interval: every 8 seconds refresh data (real-time request)
     const interval = setInterval(() => {
@@ -296,6 +303,90 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
     remainingCashLimit: "Remaining Cash Limit",
     availabilityStatus: "Availability Status",
     actions: "Actions",
+  }
+
+  const handleOpenEdit = async (deliveryman) => {
+    try {
+      setLoading(true)
+      const res = await adminAPI.getDeliveryPartnerById(deliveryman._id)
+      const full = res?.data?.data?.delivery || deliveryman
+      setEditFormData({
+        _id: full._id,
+        name: full.name || "",
+        phone: full.phone || "",
+        email: full.email || "",
+        address: full.address || full.location?.addressLine1 || "",
+        city: full.city || full.location?.city || "",
+        state: full.state || full.location?.state || "",
+        zoneId: full.zoneId?._id || full.zoneId || "",
+        vehicleType: full.vehicleType || full.vehicle?.type || "",
+        vehicleName: full.vehicleName || full.vehicle?.brand || "",
+        vehicleNumber: full.vehicleNumber || full.vehicle?.number || "",
+        aadharNumber: full.aadharNumber || full.documents?.aadhar?.number || "",
+        panNumber: full.panNumber || full.documents?.pan?.number || "",
+        drivingLicenseNumber: full.drivingLicenseNumber || full.documents?.drivingLicense?.number || "",
+        bankAccountHolderName: full.bankAccountHolderName || full.documents?.bankDetails?.accountHolderName || "",
+        bankAccountNumber: full.bankAccountNumber || full.documents?.bankDetails?.accountNumber || "",
+        bankIfscCode: full.bankIfscCode || full.documents?.bankDetails?.ifscCode || "",
+        bankName: full.bankName || full.documents?.bankDetails?.bankName || "",
+        upiId: full.upiId || "",
+        availabilityStatus: full.availabilityStatus || "offline",
+        status: full.status === "blocked" ? "rejected" : (full.status || "approved"),
+        pocketBalance: deliveryman.pocketBalance ?? full.pocketBalance ?? 0,
+        cashInHand: deliveryman.cashInHand ?? full.cashInHand ?? 0,
+      })
+      setIsEditOpen(true)
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to load partner details")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSaveEditPartner = async (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (!editFormData._id) return
+
+    try {
+      setIsSavingEdit(true)
+      const payload = {
+        name: editFormData.name,
+        phone: editFormData.phone,
+        email: editFormData.email,
+        address: editFormData.address,
+        city: editFormData.city,
+        state: editFormData.state,
+        zoneId: editFormData.zoneId || undefined,
+        vehicleType: editFormData.vehicleType,
+        vehicleName: editFormData.vehicleName,
+        vehicleNumber: editFormData.vehicleNumber,
+        aadharNumber: editFormData.aadharNumber,
+        panNumber: editFormData.panNumber,
+        drivingLicenseNumber: editFormData.drivingLicenseNumber,
+        bankAccountHolderName: editFormData.bankAccountHolderName,
+        bankAccountNumber: editFormData.bankAccountNumber,
+        bankIfscCode: editFormData.bankIfscCode,
+        bankName: editFormData.bankName,
+        upiId: editFormData.upiId,
+        availabilityStatus: editFormData.availabilityStatus,
+        status: editFormData.status,
+        pocketBalance: Number(editFormData.pocketBalance) || 0,
+        cashInHand: Number(editFormData.cashInHand) || 0,
+      }
+
+      const res = await adminAPI.updateDeliveryPartner(editFormData._id, payload)
+      if (res?.data?.success) {
+        toast.success("Delivery partner details updated successfully!")
+        setIsEditOpen(false)
+        fetchDeliverymenQuietly()
+      } else {
+        toast.error(res?.data?.message || "Failed to update delivery partner")
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Error saving delivery partner details")
+    } finally {
+      setIsSavingEdit(false)
+    }
   }
 
   const startEditingWallet = (deliveryman) => {
@@ -737,9 +828,9 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                                 </>
                               ) : (
                                 <button
-                                  onClick={() => startEditingWallet(dm)}
+                                  onClick={() => handleOpenEdit(dm)}
                                   className="p-1.5 rounded bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors"
-                                  title="Edit Wallet"
+                                  title="Edit Delivery Partner"
                                 >
                                   <Pencil className="w-4 h-4" />
                                 </button>
@@ -1256,6 +1347,338 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
               Close
             </button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Delivery Partner Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200 sticky top-0 bg-white z-10">
+            <DialogTitle className="flex items-center gap-2 text-lg font-bold text-slate-800">
+              <Pencil className="w-5 h-5 text-amber-500" />
+              Edit Delivery Partner
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveEditPartner} className="p-6 space-y-6">
+            {/* Section 1: Basic Information */}
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2 border-b pb-2">
+                <User className="w-4 h-4 text-emerald-600" /> Basic Details
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.name || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="Enter name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Phone Number *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.phone || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="10-digit phone"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={editFormData.email || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="email@example.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Zone</label>
+                  <select
+                    value={editFormData.zoneId || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, zoneId: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                  >
+                    <option value="">No Zone (HQ Default)</option>
+                    {zones.map((z) => (
+                      <option key={z._id} value={z._id}>
+                        {z.name || z.zoneName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Address */}
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2 border-b pb-2">
+                <MapPin className="w-4 h-4 text-emerald-600" /> Address Details
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-3">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Street Address</label>
+                  <input
+                    type="text"
+                    value={editFormData.address || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="Area, Street, Landmark"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">City</label>
+                  <input
+                    type="text"
+                    value={editFormData.city || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, city: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="City"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">State</label>
+                  <input
+                    type="text"
+                    value={editFormData.state || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, state: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="State"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: Vehicle Information */}
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2 border-b pb-2">
+                <Bike className="w-4 h-4 text-emerald-600" /> Vehicle Details
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Vehicle Type</label>
+                  <select
+                    value={editFormData.vehicleType || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, vehicleType: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                  >
+                    <option value="">Select Type</option>
+                    <option value="Bike">Bike / Motorcycle</option>
+                    <option value="Scooter">Scooter</option>
+                    <option value="Electric Vehicle">Electric Vehicle (EV)</option>
+                    <option value="Cycle">Bicycle</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Vehicle Model / Brand</label>
+                  <input
+                    type="text"
+                    value={editFormData.vehicleName || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, vehicleName: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="e.g. Hero Splendor, Activa"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Vehicle Number</label>
+                  <input
+                    type="text"
+                    value={editFormData.vehicleNumber || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, vehicleNumber: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="MP 09 AB 1234"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 4: Identity & KYC Documents */}
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2 border-b pb-2">
+                <FileCheck className="w-4 h-4 text-emerald-600" /> KYC & Document Numbers
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Aadhar Number</label>
+                  <input
+                    type="text"
+                    value={editFormData.aadharNumber || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, aadharNumber: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="12-digit Aadhar"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">PAN Number</label>
+                  <input
+                    type="text"
+                    value={editFormData.panNumber || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, panNumber: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none uppercase"
+                    placeholder="ABCDE1234F"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Driving License Number</label>
+                  <input
+                    type="text"
+                    value={editFormData.drivingLicenseNumber || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, drivingLicenseNumber: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none uppercase"
+                    placeholder="DL Number"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 5: Bank Details */}
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2 border-b pb-2">
+                <CreditCard className="w-4 h-4 text-emerald-600" /> Bank & Payout Details
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Account Holder Name</label>
+                  <input
+                    type="text"
+                    value={editFormData.bankAccountHolderName || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, bankAccountHolderName: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="Name as per Bank"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Account Number</label>
+                  <input
+                    type="text"
+                    value={editFormData.bankAccountNumber || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, bankAccountNumber: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="Account Number"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">IFSC Code</label>
+                  <input
+                    type="text"
+                    value={editFormData.bankIfscCode || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, bankIfscCode: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none uppercase"
+                    placeholder="SBIN0001234"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Bank Name</label>
+                  <input
+                    type="text"
+                    value={editFormData.bankName || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, bankName: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="Bank Name"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">UPI ID</label>
+                  <input
+                    type="text"
+                    value={editFormData.upiId || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, upiId: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="example@upi"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 6: Status & Wallet Balances */}
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2 border-b pb-2">
+                <Settings className="w-4 h-4 text-emerald-600" /> Status & Balances
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Availability Status</label>
+                  <select
+                    value={editFormData.availabilityStatus || "offline"}
+                    onChange={(e) => setEditFormData({ ...editFormData, availabilityStatus: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                  >
+                    <option value="online">Online</option>
+                    <option value="offline">Offline</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Account Approval Status</label>
+                  <select
+                    value={editFormData.status || "approved"}
+                    onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                  >
+                    <option value="approved">Approved (Active)</option>
+                    <option value="pending">Pending</option>
+                    <option value="rejected">Rejected / Blocked</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Pocket Balance (₹)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editFormData.pocketBalance ?? 0}
+                    onChange={(e) => setEditFormData({ ...editFormData, pocketBalance: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-medium text-emerald-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Cash In Hand (₹)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editFormData.cashInHand ?? 0}
+                    onChange={(e) => setEditFormData({ ...editFormData, cashInHand: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-medium text-amber-600"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 sticky bottom-0 bg-white py-3">
+              <button
+                type="button"
+                onClick={() => setIsEditOpen(false)}
+                disabled={isSavingEdit}
+                className="px-5 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSavingEdit}
+                className="px-6 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
+              >
+                {isSavingEdit ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Save Changes
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
 
