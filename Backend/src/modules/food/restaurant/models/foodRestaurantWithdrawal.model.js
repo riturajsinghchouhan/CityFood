@@ -37,6 +37,10 @@ const foodRestaurantWithdrawalSchema = new mongoose.Schema({
     /** Who paid this withdrawal. A franchise pays its own zone's restaurants and riders; HQ may pay on its behalf. */
     paidBy: { type: String, enum: ['HQ', 'FRANCHISE'], default: undefined },
     franchiseId: { type: mongoose.Schema.Types.ObjectId, ref: 'FoodFranchise', default: undefined, index: true },
+    /** HQ paid: the part charged to the franchise (the money it held for this partner). Missing on old rows = amount. */
+    franchiseCharge: { type: Number, default: undefined },
+    /** Franchise paid: the part HQ credited back (money HQ held for this partner). */
+    franchiseCredit: { type: Number, default: undefined },
     processedAt: Date
 }, { 
     collection: 'payment_restaurant_withdrawals', 

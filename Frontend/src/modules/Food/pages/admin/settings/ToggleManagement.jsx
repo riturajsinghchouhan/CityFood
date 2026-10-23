@@ -3,6 +3,7 @@ import { Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { adminAPI } from "@food/api";
 import { setCachedSettings } from "@food/utils/businessSettings";
+import { setHqPaysPartners } from "@food/utils/hqPaysPartners";
 
 const TOGGLE_LABELS = {
   onlinePaymentOnly: "Online payment only",
@@ -10,6 +11,19 @@ const TOGGLE_LABELS = {
   customerRegistration: "Customer registration",
   restaurantRegistration: "Restaurant registration",
   deliveryRegistration: "Delivery partner registration",
+  hqPaysPartners: "Admin pays restaurants & delivery partners",
+};
+
+const HQ_PAYS_PARTNERS_CONFIRM = {
+  true: [
+    "Turn ON?",
+    "For new franchise orders, admin keeps the restaurant and delivery partner share and pays their withdrawals. Franchises get only their own share and lose the payout pages.",
+    "Withdrawal requests that are still pending also move to admin. When admin pays them, the money the franchise held from older orders is taken from the franchise balance.",
+  ].join("\n\n"),
+  false: [
+    "Turn OFF?",
+    "Franchises pay their restaurants and delivery partners again, for new orders. If a franchise pays money that admin is holding, it is added back to the franchise balance.",
+  ].join("\n\n"),
 };
 
 export default function ToggleManagement() {
@@ -23,6 +37,7 @@ export default function ToggleManagement() {
     customerRegistration: true,
     restaurantRegistration: true,
     deliveryRegistration: true,
+    hqPaysPartners: false,
   });
 
   const codSaveTimerRef = useRef(null);
@@ -49,6 +64,7 @@ export default function ToggleManagement() {
           customerRegistration: settings.customerRegistration !== false,
           restaurantRegistration: settings.restaurantRegistration !== false,
           deliveryRegistration: settings.deliveryRegistration !== false,
+          hqPaysPartners: Boolean(settings.hqPaysPartners),
         }));
       }
     } catch (error) {
@@ -66,6 +82,7 @@ export default function ToggleManagement() {
       if (updated) {
         setCachedSettings(updated);
         window.dispatchEvent(new CustomEvent("businessSettingsUpdated"));
+        setHqPaysPartners(Boolean(updated.hqPaysPartners));
       }
       if (fieldKey && TOGGLE_LABELS[fieldKey]) {
         toast.success(`${TOGGLE_LABELS[fieldKey]} updated`);
@@ -83,6 +100,7 @@ export default function ToggleManagement() {
 
   const handleToggleChange = async (field) => {
     const nextValue = !toggles[field];
+    if (field === "hqPaysPartners" && !window.confirm(HQ_PAYS_PARTNERS_CONFIRM[nextValue])) return;
     setToggles((prev) => ({ ...prev, [field]: nextValue }));
     try {
       await persistToggles({ [field]: nextValue }, field);
@@ -289,6 +307,41 @@ export default function ToggleManagement() {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+          <div className="px-4 py-4">
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">Franchise Payouts</h3>
+
+            <div className="flex items-center justify-between gap-4 border border-slate-100 p-4 rounded-xl bg-slate-50/50">
+              <div>
+                <p className="text-sm font-semibold text-slate-800">Admin Pays Restaurants &amp; Delivery Partners</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {toggles.hqPaysPartners
+                    ? "On: admin keeps the restaurant and delivery share of new franchise orders and handles their withdrawal requests. Franchises get only their own share."
+                    : "Off: admin sends the restaurant and delivery share to the franchise, and the franchise pays them."}
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={isSaving("hqPaysPartners")}
+                onClick={() => handleToggleChange("hqPaysPartners")}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-60 ${
+                  toggles.hqPaysPartners ? "bg-blue-600" : "bg-slate-200"
+                }`}
+              >
+                {isSaving("hqPaysPartners") ? (
+                  <Loader2 className="absolute inset-0 m-auto h-3.5 w-3.5 animate-spin text-white" />
+                ) : (
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      toggles.hqPaysPartners ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                )}
+              </button>
             </div>
           </div>
         </div>

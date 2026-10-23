@@ -7,7 +7,7 @@ import { FoodRestaurant } from '../../restaurant/models/restaurant.model.js';
 import { FoodDeliveryPartner } from '../../delivery/models/deliveryPartner.model.js';
 import { FoodZone } from '../../admin/models/zone.model.js';
 import { resolveFranchiseForZone } from '../../franchise/services/franchiseResolver.service.js';
-import { splitFranchiseOrder } from '../../franchise/services/franchiseFinance.service.js';
+import { splitFranchiseOrder, isHqPayingPartners } from '../../franchise/services/franchiseFinance.service.js';
 import { FoodFeeSettings } from '../../admin/models/feeSettings.model.js';
 import { FoodBusinessSettings } from '../../admin/models/businessSettings.model.js';
 import { ValidationError, ForbiddenError, NotFoundError } from '../../../../core/auth/errors.js';
@@ -340,7 +340,12 @@ export async function createOrder(userId, dto) {
       : restaurant.zoneId,
     franchiseId: franchise?._id || null,
     franchiseSnapshot: franchise
-      ? { revenueModel: franchise.revenueModel, commissionPercent: franchise.commissionPercent || 0, franchiseDiscount }
+      ? {
+          revenueModel: franchise.revenueModel,
+          commissionPercent: franchise.commissionPercent || 0,
+          franchiseDiscount,
+          hqPaysPartners: await isHqPayingPartners(),
+        }
       : undefined,
     items: dto.items,
     deliveryAddress,

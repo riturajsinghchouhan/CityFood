@@ -9,7 +9,7 @@ import * as adminService from '../../admin/services/admin.service.js';
 import { invalidateCache } from '../../../../middleware/cache.js';
 import { invalidateRestaurantCommissionRulesCache } from '../../orders/services/foodTransaction.service.js';
 import { getFranchiseById, listFranchiseRestaurants, listFranchiseDeliveryPartners, listFranchiseOrders } from './franchise.service.js';
-import { getFranchiseBalance } from './franchiseFinance.service.js';
+import { getFranchiseBalance, isHqPayingPartners } from './franchiseFinance.service.js';
 import { logger } from '../../../../utils/logger.js';
 
 const toId = (id, label) => {
@@ -118,6 +118,7 @@ export async function rejectRider(franchise, riderId, reason) {
 
 /** The franchise collected COD cash from its rider. Frees the rider's cash limit; not credited by HQ. */
 export async function collectRiderCash(franchise, riderId, { amount, note = '' }) {
+    if (await isHqPayingPartners()) throw new ValidationError('HQ pays restaurants and delivery partners directly now. Riders deposit cash to HQ.');
     await riderInZone(franchise, riderId);
     return adminService.settleDeliveryCashLimit(
         String(riderId),

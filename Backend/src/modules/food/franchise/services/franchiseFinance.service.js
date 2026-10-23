@@ -10,6 +10,7 @@ import { FoodRestaurantWithdrawal } from '../../restaurant/models/foodRestaurant
 import { FoodDeliveryPartner } from '../../delivery/models/deliveryPartner.model.js';
 import { FoodDeliveryWithdrawal } from '../../delivery/models/foodDeliveryWithdrawal.model.js';
 import { FoodDeliveryCashDeposit } from '../../delivery/models/foodDeliveryCashDeposit.model.js';
+import { FoodBusinessSettings } from '../../admin/models/businessSettings.model.js';
 import { transitionWithdrawal } from '../../../../core/payments/payoutTransitions.js';
 import { acquireJobLock, releaseJobLock } from '../../../../core/payments/jobLock.js';
 import { withTransaction, sessionOpts } from '../../../../utils/dbTransaction.js';
@@ -26,6 +27,16 @@ const toId = (id, label = 'id') => {
     return new mongoose.Types.ObjectId(String(id));
 };
 
+/**
+ * Global toggle (Toggle Management). ON: HQ keeps the restaurant and rider share of franchise orders
+ * and pays their withdrawals itself; the franchise only gets its own earning. Orders keep the value
+ * they were placed with (franchiseSnapshot.hqPaysPartners), so flipping it never changes old orders.
+ */
+export async function isHqPayingPartners() {
+    const settings = await FoodBusinessSettings.findOne().select('hqPaysPartners').lean();
+    return Boolean(settings?.hqPaysPartners);
+}
+
 export const WITHDRAWAL_MODELS = {
     restaurant: { Model: FoodRestaurantWithdrawal, ownerField: 'restaurantId', OwnerModel: FoodRestaurant },
     rider: { Model: FoodDeliveryWithdrawal, ownerField: 'deliveryPartnerId', OwnerModel: FoodDeliveryPartner }
@@ -41,6 +52,8 @@ export const WITHDRAWAL_MODELS = {
  * - net: what this order means between HQ and franchise. Online money sits with HQ, so HQ owes the
  *   franchise restaurant + rider + franchise net. Cash sits with the franchise's rider, so the
  *   customer's payment is subtracted: the franchise then owes HQ the taxes and HQ share.
+ *   When HQ pays the restaurant and rider itself (franchiseSnapshot.hqPaysPartners), the franchise
+ *   is owed only its own earning. Cash reaches HQ through the rider's deposit, so it is not subtracted.
  */
 export function splitFranchiseOrder(order, restaurantShareOverride = null) {
     const p = order?.pricing || {};
@@ -60,7 +73,10 @@ export function splitFranchiseOrder(order, restaurantShareOverride = null) {
         ? franchiseGross * (num(order?.franchiseSnapshot?.commissionPercent) / 100)
         : 0;
     const isCash = String(order?.payment?.method || '').toLowerCase() === 'cash';
-    const net = restaurantShare + riderShare + franchiseGross - hqShare - (isCash ? customerPaid : 0);
+    const hqPaysPartners = Boolean(order?.franchiseSnapshot?.hqPaysPartners);
+    const net = hqPaysPartners
+        ? franchiseGross - hqShare
+        : restaurantShare + riderShare + franchiseGross - hqShare - (isCash ? customerPaid : 0);
     return {
         customerPaid: round2(customerPaid),
         restaurantShare: round2(restaurantShare),
@@ -68,6 +84,7 @@ export function splitFranchiseOrder(order, restaurantShareOverride = null) {
         franchiseGross: round2(franchiseGross),
         hqShare: round2(hqShare),
         isCash,
+        hqPaysPartners,
         net: round2(net)
     };
 }
@@ -158,6 +175,55 @@ async function loadUnsettledRiderDeposits(franchise, upTo) {
         .lean();
 }
 
+/**
+ * How much of the unsettled rider cash deposits counts for the franchise. Cash from orders placed
+ * while HQ pays the partners is HQ's money, so deposits are credited only up to the cash of the
+ * other orders (older cash is taken as deposited first). Without such orders every deposit counts.
+ */
+async function creditableRiderCash(franchise, deposits) {
+    const total = sum(deposits, 'amount');
+    if (!total) return 0;
+    const hasHqCashOrders = await FoodOrder.exists({
+        franchiseId: franchise._id,
+        'franchiseSnapshot.hqPaysPartners': true,
+        'payment.method': 'cash'
+    });
+    if (!hasHqCashOrders) return total;
+
+    const riderIds = await franchiseRiderIds(franchise);
+    const [cashRows, collectedRows, settledRows] = await Promise.all([
+        FoodOrder.aggregate([
+            {
+                $match: {
+                    franchiseId: franchise._id,
+                    orderStatus: 'delivered',
+                    'payment.method': 'cash',
+                    'payment.refund.status': { $nin: ['pending', 'processed'] },
+                    'franchiseSnapshot.hqPaysPartners': { $ne: true }
+                }
+            },
+            { $group: { _id: null, total: { $sum: { $ifNull: ['$pricing.total', 0] } } } }
+        ]),
+        FoodDeliveryCashDeposit.aggregate([
+            {
+                $match: {
+                    deliveryPartnerId: { $in: riderIds },
+                    status: 'Completed',
+                    collectedBy: 'FRANCHISE',
+                    createdAt: { $gte: franchise.startDate || new Date(0) }
+                }
+            },
+            { $group: { _id: null, total: { $sum: '$amount' } } }
+        ]),
+        FoodFranchiseSettlement.aggregate([
+            { $match: { franchiseId: franchise._id } },
+            { $group: { _id: null, total: { $sum: { $ifNull: ['$riderCashDeposited', 0] } } } }
+        ])
+    ]);
+    const franchiseCash = num(cashRows[0]?.total) - num(collectedRows[0]?.total) - num(settledRows[0]?.total);
+    return round2(Math.min(total, Math.max(0, franchiseCash)));
+}
+
 async function loadPendingAdjustments(franchiseId, upTo) {
     return FoodFranchiseAdjustment.find({ franchiseId, settlementId: null, createdAt: { $lte: upTo } })
         .select('_id amount')
@@ -214,7 +280,7 @@ export async function getFranchiseBalance(franchiseId, { now = new Date() } = {}
         FoodFranchiseWithdrawal.find({ franchiseId: franchise._id, status: 'pending' }).select('amount').lean()
     ]);
     const ordersSummary = summarizeOrders(orders);
-    const riderCashDeposited = sum(deposits, 'amount');
+    const riderCashDeposited = await creditableRiderCash(franchise, deposits);
     const adjustmentsTotal = sum(adjustments, 'amount');
     const balance = round2(ordersSummary.net + riderCashDeposited + adjustmentsTotal + openingBalance);
     const pendingWithdrawals = sum(pendingRequests, 'amount');
@@ -359,9 +425,12 @@ async function assertWithdrawalInZone(kind, withdrawalId, zoneId) {
     return withdrawal;
 }
 
+const HQ_PAYS_PARTNERS_ERROR = 'HQ pays restaurants and delivery partners directly now. This request is handled by HQ.';
+
 /** The franchise paid its restaurant / rider (outside the app) and records the reference. */
 export async function franchisePayWithdrawal(franchiseId, kind, withdrawalId, { utr = '', note = '' } = {}) {
     const franchise = await loadFranchise(franchiseId);
+    if (await isHqPayingPartners()) throw new ValidationError(HQ_PAYS_PARTNERS_ERROR);
     if (!String(utr).trim()) throw new ValidationError('Enter the UTR / transaction reference of the payment');
     await assertWithdrawalInZone(kind, withdrawalId, franchise.zoneId);
     const { withdrawal } = await transitionWithdrawal(WITHDRAWAL_MODELS[kind].Model, withdrawalId, 'approved', {
@@ -370,11 +439,13 @@ export async function franchisePayWithdrawal(franchiseId, kind, withdrawalId, { 
         paidBy: 'FRANCHISE',
         franchiseId: franchise._id
     });
-    return withdrawal;
+    await recordFranchisePaidWithdrawal(kind, withdrawal._id, franchise._id);
+    return WITHDRAWAL_MODELS[kind].Model.findById(withdrawal._id).lean();
 }
 
 export async function franchiseRejectWithdrawal(franchiseId, kind, withdrawalId, { reason = '' } = {}) {
     const franchise = await loadFranchise(franchiseId);
+    if (await isHqPayingPartners()) throw new ValidationError(HQ_PAYS_PARTNERS_ERROR);
     if (!String(reason).trim()) throw new ValidationError('Enter a reason for rejecting');
     await assertWithdrawalInZone(kind, withdrawalId, franchise.zoneId);
     const { withdrawal } = await transitionWithdrawal(WITHDRAWAL_MODELS[kind].Model, withdrawalId, 'rejected', {
@@ -384,10 +455,107 @@ export async function franchiseRejectWithdrawal(franchiseId, kind, withdrawalId,
     return withdrawal;
 }
 
+// ----- Who holds a restaurant's / rider's money: the franchise or HQ -----
+
+// One partner's payout is worked out at a time, so two payouts cannot both use the same held money.
+const partnerQueues = new Map();
+function withPartnerQueue(key, fn) {
+    const run = (partnerQueues.get(key) || Promise.resolve()).then(fn);
+    const tail = run.catch(() => {});
+    partnerQueues.set(key, tail);
+    tail.then(() => { if (partnerQueues.get(key) === tail) partnerQueues.delete(key); });
+    return run;
+}
+
+const partnerOrderField = (kind) => (kind === 'restaurant' ? 'restaurantId' : 'dispatch.deliveryPartnerId');
+
+/** True when some of the partner's orders in this franchise were placed while HQ pays the partners. */
+async function partnerHasHqPaidOrders(franchiseId, kind, partnerId) {
+    return Boolean(await FoodOrder.exists({ franchiseId, [partnerOrderField(kind)]: partnerId, 'franchiseSnapshot.hqPaysPartners': true }));
+}
+
 /**
- * HQ paid a franchise-zone restaurant / rider itself (franchise missed the SLA, or HQ approved it
- * from the regular payout screens). The amount is charged to the franchise in its next settlement.
- * Safe to call more than once for the same withdrawal.
+ * Money the franchise still holds for one restaurant / rider: their share of the franchise's orders
+ * placed while the franchise paid the partners, minus what was already paid out of it (by the
+ * franchise, or by HQ and charged to the franchise). The withdrawal being processed is left out.
+ */
+async function franchiseHeldForPartner(franchiseId, kind, partnerId, excludeWithdrawalId) {
+    const cfg = WITHDRAWAL_MODELS[kind];
+    const orders = await FoodOrder.find({
+        franchiseId,
+        [partnerOrderField(kind)]: partnerId,
+        orderStatus: 'delivered',
+        'payment.refund.status': { $nin: ['pending', 'processed'] },
+        'franchiseSnapshot.hqPaysPartners': { $ne: true }
+    })
+        .select('_id pricing riderEarning franchiseSnapshot payment.method')
+        .lean();
+    let earned = 0;
+    if (kind === 'restaurant') {
+        const txs = orders.length
+            ? await FoodTransaction.find({ orderId: { $in: orders.map((o) => o._id) } }).select('orderId amounts.restaurantShare').lean()
+            : [];
+        const shareByOrder = new Map(txs.map((t) => [String(t.orderId), t?.amounts?.restaurantShare]));
+        earned = orders.reduce((acc, o) => acc + splitFranchiseOrder(o, shareByOrder.get(String(o._id)) ?? null).restaurantShare, 0);
+    } else {
+        earned = orders.reduce((acc, o) => acc + num(o.riderEarning), 0);
+    }
+    const paid = await cfg.Model.find({
+        [cfg.ownerField]: partnerId,
+        franchiseId,
+        status: 'approved',
+        _id: { $ne: excludeWithdrawalId }
+    })
+        .select('amount paidBy franchiseCharge franchiseCredit')
+        .lean();
+    const used = paid.reduce((acc, w) => {
+        if (w.paidBy === 'FRANCHISE') return acc + num(w.amount) - num(w.franchiseCredit);
+        if (w.paidBy === 'HQ') return acc + (w.franchiseCharge ?? num(w.amount));
+        return acc;
+    }, 0);
+    return round2(Math.max(0, earned - used));
+}
+
+/**
+ * The franchise paid a restaurant / rider. When part of that money was being held by HQ (orders
+ * placed while HQ paid the partners), HQ credits that part back to the franchise.
+ */
+async function recordFranchisePaidWithdrawal(kind, withdrawalId, franchiseId) {
+    const cfg = WITHDRAWAL_MODELS[kind];
+    const withdrawal = await cfg.Model.findById(withdrawalId).lean();
+    if (!withdrawal || withdrawal.status !== 'approved' || withdrawal.franchiseCredit !== undefined) return null;
+    const partnerId = withdrawal[cfg.ownerField];
+    if (!(await partnerHasHqPaidOrders(franchiseId, kind, partnerId))) return null;
+
+    return withPartnerQueue(`${kind}:${partnerId}`, async () => {
+        const held = await franchiseHeldForPartner(franchiseId, kind, partnerId, withdrawal._id);
+        const credit = round2(Math.max(0, num(withdrawal.amount) - held));
+        let adjustment = null;
+        if (credit > EPSILON) {
+            try {
+                adjustment = await FoodFranchiseAdjustment.create({
+                    franchiseId,
+                    type: 'HQ_HELD_PAYOUT',
+                    amount: credit,
+                    note: `You paid ₹${credit} of a ${kind} withdrawal from money HQ was holding`,
+                    ref: `WDC:${kind}:${withdrawal._id}`,
+                    utr: withdrawal.transactionId || '',
+                    createdBy: { role: 'SYSTEM', id: null }
+                });
+            } catch (err) {
+                if (err?.code === 11000) return null; // already credited
+                throw err;
+            }
+        }
+        await cfg.Model.updateOne({ _id: withdrawal._id }, { $set: { franchiseCredit: credit } });
+        return adjustment;
+    });
+}
+
+/**
+ * HQ paid a franchise-zone restaurant / rider itself (HQ pays the partners, the franchise missed
+ * the SLA, or HQ approved it from the regular payout screens). The part of it the franchise was
+ * holding is charged to the franchise. Safe to call more than once for the same withdrawal.
  */
 export async function recordHqPaidWithdrawal(kind, withdrawalId, { adminId = null } = {}) {
     const cfg = WITHDRAWAL_MODELS[kind];
@@ -396,30 +564,45 @@ export async function recordHqPaidWithdrawal(kind, withdrawalId, { adminId = nul
     const scope = getFranchiseScope();
     if (scope) {
         await cfg.Model.updateOne({ _id: withdrawalId, status: 'approved' }, { $set: { paidBy: 'FRANCHISE', franchiseId: scope.franchiseId } });
+        await recordFranchisePaidWithdrawal(kind, withdrawalId, scope.franchiseId);
         return null;
     }
     const withdrawal = await cfg.Model.findById(withdrawalId).lean();
     if (!withdrawal || withdrawal.status !== 'approved' || withdrawal.paidBy === 'FRANCHISE') return null;
+    if (withdrawal.franchiseCharge !== undefined) return null; // already charged
     const owner = await cfg.OwnerModel.findById(withdrawal[cfg.ownerField]).select('zoneId').lean();
     if (!owner?.zoneId) return null;
     const franchise = await FoodFranchise.findOne({ zoneId: owner.zoneId, isTerminated: false }).select('_id startDate').lean();
     if (!franchise || new Date(withdrawal.createdAt) < new Date(franchise.startDate || 0)) return null;
 
-    await cfg.Model.updateOne({ _id: withdrawal._id }, { $set: { paidBy: 'HQ', franchiseId: franchise._id } });
-    try {
-        return await FoodFranchiseAdjustment.create({
-            franchiseId: franchise._id,
-            type: 'HQ_PAID_PAYOUT',
-            amount: -round2(withdrawal.amount),
-            note: `HQ paid ${kind} withdrawal of ₹${round2(withdrawal.amount)} on your behalf`,
-            ref: `WD:${kind}:${withdrawal._id}`,
-            utr: withdrawal.transactionId || '',
-            createdBy: { role: 'HQ', id: adminId && mongoose.Types.ObjectId.isValid(String(adminId)) ? adminId : null }
-        });
-    } catch (err) {
-        if (err?.code === 11000) return null; // already charged
-        throw err;
-    }
+    const partnerId = withdrawal[cfg.ownerField];
+    const amount = round2(withdrawal.amount);
+    return withPartnerQueue(`${kind}:${partnerId}`, async () => {
+        // When HQ kept this partner's share of some orders, charge only what the franchise holds for them.
+        const charge = (await partnerHasHqPaidOrders(franchise._id, kind, partnerId))
+            ? Math.min(amount, await franchiseHeldForPartner(franchise._id, kind, partnerId, withdrawal._id))
+            : amount;
+        let adjustment = null;
+        if (charge > EPSILON) {
+            try {
+                adjustment = await FoodFranchiseAdjustment.create({
+                    franchiseId: franchise._id,
+                    type: 'HQ_PAID_PAYOUT',
+                    amount: -charge,
+                    note: `HQ paid ${kind} withdrawal of ₹${amount} on your behalf`
+                        + (charge < amount ? ` (₹${charge} of it from money you held)` : ''),
+                    ref: `WD:${kind}:${withdrawal._id}`,
+                    utr: withdrawal.transactionId || '',
+                    createdBy: { role: 'HQ', id: adminId && mongoose.Types.ObjectId.isValid(String(adminId)) ? adminId : null }
+                });
+            } catch (err) {
+                if (err?.code === 11000) return null; // already charged
+                throw err;
+            }
+        }
+        await cfg.Model.updateOne({ _id: withdrawal._id }, { $set: { paidBy: 'HQ', franchiseId: franchise._id, franchiseCharge: charge } });
+        return adjustment;
+    });
 }
 
 /** HQ steps in and pays a franchise-zone withdrawal directly. */
@@ -436,6 +619,8 @@ export async function hqPayWithdrawal(franchiseId, kind, withdrawalId, { utr = '
 }
 
 async function countOverduePayouts(franchise, now) {
+    // While HQ pays the partners, the franchise has no payouts of its own to be late on.
+    if (await isHqPayingPartners()) return 0;
     const [r, d] = await Promise.all([
         listFranchiseWithdrawals(franchise._id, { kind: 'restaurant', overdueOnly: true, now }),
         listFranchiseWithdrawals(franchise._id, { kind: 'rider', overdueOnly: true, now })
@@ -494,7 +679,7 @@ export async function runSettlement(franchiseId, { now = new Date(), final = fal
         if (!orders.length && !deposits.length && !adjustments.length) return null;
 
         const ordersSummary = summarizeOrders(orders);
-        const riderCashDeposited = sum(deposits, 'amount');
+        const riderCashDeposited = await creditableRiderCash(franchise, deposits);
         const adjustmentsTotal = sum(adjustments, 'amount');
         const netPayable = round2(ordersSummary.net + riderCashDeposited + adjustmentsTotal + openingBalance);
         const status = netPayable > EPSILON ? 'payout_pending' : netPayable < -EPSILON ? 'carried_forward' : 'zero';

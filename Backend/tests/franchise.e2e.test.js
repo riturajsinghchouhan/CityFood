@@ -460,6 +460,32 @@ test('8b. Franchise uses the admin panel for its zone; HQ sees only its commissi
     ctx.openRequest = (await api('POST', '/food/franchise/withdrawals', { token: owner, body: { amount: 20 } })).data.withdrawal._id;
 });
 
+test('8c. "HQ pays partners" toggle: only HQ sets it, and the franchise loses partner payouts', opts, async () => {
+    const someId = String(oid());
+    assert.equal((await api('PATCH', '/food/admin/business-settings/toggles', { token: ctx.owner, body: { hqPaysPartners: true } })).status, 403);
+    const on = await api('PATCH', '/food/admin/business-settings/toggles', { token: ctx.hq, body: { hqPaysPartners: true } });
+    assert.equal(on.status, 200);
+    assert.equal(on.data.hqPaysPartners, true);
+    assert.ok(on.data.hqPaysPartnersChangedAt);
+
+    for (const [method, path] of [
+        ['PATCH', `/food/admin/withdrawals/${someId}`],
+        ['PATCH', `/food/admin/delivery/withdrawals/${someId}`],
+        ['POST', '/food/admin/payouts/mark-as-paid'],
+        ['POST', '/food/admin/delivery/payouts/mark-as-paid'],
+        ['POST', `/food/admin/delivery/${ctx.d1}/cash-limit/settle`]
+    ]) {
+        assert.equal((await api(method, path, { token: ctx.owner, body: {} })).status, 403, `${method} ${path}`);
+    }
+    assert.equal((await api('POST', `/food/franchise/riders/${ctx.d1}/collect-cash`, { token: ctx.owner, body: { amount: 10 } })).status, 400);
+    // Reads still work, and HQ itself is not blocked.
+    assert.equal((await api('GET', '/food/admin/withdrawals', { token: ctx.owner })).status, 200);
+    assert.notEqual((await api('PATCH', `/food/admin/withdrawals/${someId}`, { token: ctx.hq, body: { status: 'approved' } })).status, 403);
+
+    assert.equal((await api('PATCH', '/food/admin/business-settings/toggles', { token: ctx.hq, body: { hqPaysPartners: false } })).status, 200);
+    assert.notEqual((await api('PATCH', `/food/admin/withdrawals/${someId}`, { token: ctx.owner, body: { status: 'approved' } })).status, 403);
+});
+
 test('9. Subscription franchise: billed, goes to grace, then suspended, then active after paying', opts, async () => {
     const created = await api('POST', '/food/admin/franchises', {
         token: ctx.hq,

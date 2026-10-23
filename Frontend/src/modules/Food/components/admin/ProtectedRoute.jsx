@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react"
 import { Navigate, useLocation } from "react-router-dom"
 import { isModuleAuthenticated } from "@food/utils/auth"
-import { adminSidebarMenu, blockedPathsForRole, panelBaseForRole, toAdminPath } from "../../utils/adminSidebarMenu.js"
+import { adminSidebarMenu, blockedPathsForRole, isFranchiseRole, panelBaseForRole, toAdminPath } from "../../utils/adminSidebarMenu.js"
+import { useHqPaysPartners } from "../../utils/hqPaysPartners.js"
 
 // Flatten menu to map paths to required permissions
 const buildPathPermissions = () => {
@@ -59,6 +60,8 @@ export default function ProtectedRoute({ children }) {
     return () => window.removeEventListener('adminAuthChanged', handleAuthChange);
   }, []);
 
+  const hqPaysPartners = useHqPaysPartners({ refresh: isAuthenticated && isFranchiseRole(adminUser?.role) })
+
   if (!isAuthenticated) {
     const loginPath = location.pathname.startsWith("/franchise") ? "/franchise/login" : "/admin/login"
     return <Navigate to={loginPath} state={{ from: location.pathname }} replace />
@@ -70,7 +73,7 @@ export default function ProtectedRoute({ children }) {
 
   // Franchise owners use this panel for their zone; HQ-only pages send them to the dashboard,
   // and the franchise-only pages are not for HQ.
-  const blocked = blockedPathsForRole(adminUser?.role)
+  const blocked = blockedPathsForRole(adminUser?.role, { hqPaysPartners })
   if (blocked.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return <Navigate to={home} replace />
   }

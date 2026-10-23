@@ -55,6 +55,7 @@ import { Input } from "@food/components/ui/input"
 import { adminSidebarMenu, menuForRole, isFranchiseRole } from "@food/utils/adminSidebarMenu"
 import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
 import { adminAPI } from "@food/api"
+import { useHqPaysPartners } from "@food/utils/hqPaysPartners"
 const debugLog = (...args) => { }
 const debugWarn = (...args) => { }
 const debugError = (...args) => { }
@@ -113,6 +114,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
   const [searchQuery, setSearchQuery] = useState("")
   const [badges, setBadges] = useState({})
   const [adminUser, setAdminUser] = useState(null)
+  const hqPaysPartners = useHqPaysPartners({ refresh: true })
 
   useEffect(() => {
     const loadAdminUser = () => {
@@ -319,7 +321,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
 
   // Filter menu items based on search query and sub-admin permissions
   const filteredMenuData = useMemo(() => {
-    const roleMenu = menuForRole(adminUser?.role)
+    const roleMenu = menuForRole(adminUser?.role, { hqPaysPartners })
     let sourceMenu = roleMenu
 
     if (adminUser?.role === 'SUB_ADMIN') {
@@ -400,7 +402,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
     })
 
     return filtered
-  }, [searchQuery, adminUser])
+  }, [searchQuery, adminUser, hqPaysPartners])
 
   // Auto-expand sections with matches when searching
   useEffect(() => {

@@ -5,6 +5,7 @@ export const ADJUSTMENT_TYPES = [
     'PAYMENT_RECEIVED', // franchise paid what it owed HQ (positive)
     'HQ_PAID_PAYOUT', // HQ paid a restaurant / rider on the franchise's behalf (negative)
     'WITHDRAWAL_PAID', // HQ paid the franchise's withdrawal request (negative)
+    'HQ_HELD_PAYOUT', // franchise paid a restaurant / rider money HQ was holding for them (positive)
     'MANUAL' // anything else HQ records: penalty, refund share, bonus (either sign)
 ];
 

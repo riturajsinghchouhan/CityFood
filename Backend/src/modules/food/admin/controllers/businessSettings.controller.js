@@ -182,6 +182,7 @@ export async function updateBusinessToggles(req, res, next) {
             customerRegistration,
             restaurantRegistration,
             deliveryRegistration,
+            hqPaysPartners,
         } = req.body || {};
 
         let settings = await FoodBusinessSettings.findOne();
@@ -209,6 +210,10 @@ export async function updateBusinessToggles(req, res, next) {
         }
         if (deliveryRegistration !== undefined) {
             settings.deliveryRegistration = Boolean(deliveryRegistration);
+        }
+        if (hqPaysPartners !== undefined && Boolean(hqPaysPartners) !== Boolean(settings.hqPaysPartners)) {
+            settings.hqPaysPartners = Boolean(hqPaysPartners);
+            settings.hqPaysPartnersChangedAt = new Date();
         }
 
         await settings.save();

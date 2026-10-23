@@ -327,6 +327,11 @@ const FRANCHISE_HIDDEN_LABELS = new Set([
   "Delivery Boy Commission", "Delivery Emergency Help", "Earning Addon", "Earning Addon History",
 ])
 
+/** Restaurant / rider payout pages. HQ runs them itself while the "HQ pays partners" toggle is on. */
+const FRANCHISE_PARTNER_PAYOUT_LABELS = new Set([
+  "Restaurant Payouts", "Restaurant Withdraws", "Delivery Withdrawal", "Delivery boy Wallet", "Cash limit settlement",
+])
+
 export const isFranchiseRole = (role) => String(role || "").toUpperCase() === "FRANCHISE_OWNER"
 
 /** True when the signed-in admin panel user is a franchise owner (reads the stored admin user). */
@@ -358,21 +363,22 @@ const mapMenuPaths = (menu, map) => menu.map((item) => {
 })
 
 /** The sidebar menu for a role, with paths under that role's panel base. */
-export function menuForRole(role) {
-  const menu = filterMenuForRole(role)
+export function menuForRole(role, { hqPaysPartners = false } = {}) {
+  const menu = filterMenuForRole(role, { hqPaysPartners })
   return isFranchiseRole(role) ? mapMenuPaths(menu, (p) => toPanelPath(p, role)) : menu
 }
 
 /** Franchise owners lose HQ-only areas, everyone else loses MY FRANCHISE. Paths stay /admin. */
-function filterMenuForRole(role) {
+function filterMenuForRole(role, { hqPaysPartners = false } = {}) {
   const franchise = isFranchiseRole(role)
+  const hidden = (label) => FRANCHISE_HIDDEN_LABELS.has(label) || (hqPaysPartners && FRANCHISE_PARTNER_PAYOUT_LABELS.has(label))
   return adminSidebarMenu
     .filter((item) => (franchise ? !item.superAdminOnly && !FRANCHISE_HIDDEN_SECTIONS.has(item.label) : !item.franchiseOnly))
     .map((item) => {
       if (!franchise) return item
       if (item.type === "section") {
-        return { ...item, items: item.items.filter((it) => !FRANCHISE_HIDDEN_LABELS.has(it.label)).map((it) => (
-          it.type === "expandable" ? { ...it, subItems: it.subItems.filter((sub) => !FRANCHISE_HIDDEN_LABELS.has(sub.label)) } : it
+        return { ...item, items: item.items.filter((it) => !hidden(it.label)).map((it) => (
+          it.type === "expandable" ? { ...it, subItems: it.subItems.filter((sub) => !hidden(sub.label)) } : it
         )) }
       }
       return item
@@ -387,7 +393,7 @@ const collectPaths = (menu) => menu.flatMap((item) => {
 })
 
 /** Paths a role must not open (used by the route guard). */
-export function blockedPathsForRole(role) {
-  const allowed = new Set(collectPaths(filterMenuForRole(role)))
+export function blockedPathsForRole(role, { hqPaysPartners = false } = {}) {
+  const allowed = new Set(collectPaths(filterMenuForRole(role, { hqPaysPartners })))
   return collectPaths(adminSidebarMenu).filter((p) => !allowed.has(p))
 }

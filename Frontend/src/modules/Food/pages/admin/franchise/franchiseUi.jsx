@@ -91,6 +91,8 @@ export const ADJUSTMENT_LABELS = {
   SUBSCRIPTION_FEE: "Subscription fee",
   PAYMENT_RECEIVED: "Payment received",
   HQ_PAID_PAYOUT: "Paid by HQ for franchise",
+  HQ_HELD_PAYOUT: "Franchise paid from HQ-held money",
+  WITHDRAWAL_PAID: "Withdrawal paid",
   MANUAL: "Adjustment",
 }
 

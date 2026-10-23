@@ -46,7 +46,13 @@ const businessSettingsSchema = new mongoose.Schema(
         maintenanceMode: { type: Boolean, default: false },
         customerRegistration: { type: Boolean, default: true },
         restaurantRegistration: { type: Boolean, default: true },
-        deliveryRegistration: { type: Boolean, default: true }
+        deliveryRegistration: { type: Boolean, default: true },
+        /**
+         * true: HQ keeps the restaurant and rider share of franchise orders and pays their withdrawals
+         * itself; a franchise gets only its own earning. Stamped on each order when it is placed.
+         */
+        hqPaysPartners: { type: Boolean, default: false },
+        hqPaysPartnersChangedAt: { type: Date, default: null }
     },
     { timestamps: true }
 );

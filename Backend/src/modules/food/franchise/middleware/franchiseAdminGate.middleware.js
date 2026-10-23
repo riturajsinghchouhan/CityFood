@@ -4,6 +4,7 @@ import { FoodFranchise } from '../models/franchise.model.js';
 import { sendError } from '../../../../utils/response.js';
 import { runInFranchiseScope } from '../../../../core/franchiseScope/franchiseScope.js';
 import { FRANCHISE_ROLE } from '../services/franchiseAuth.service.js';
+import { isHqPayingPartners } from '../services/franchiseFinance.service.js';
 
 /**
  * Lets a franchise owner use the HQ admin APIs (/v1/food/admin/*) for its own zone only.
@@ -61,6 +62,17 @@ const ALLOWED_WRITES = [
     ['DELETE', '/orders/:id'],
     ['PATCH', '/delivery-cash-limit']
 ].map(([method, path]) => ({ method, pattern: re(path) }));
+
+/** Restaurant / rider payouts and rider cash. HQ takes these over while it pays the partners itself. */
+const PARTNER_MONEY_WRITES = [
+    ['PATCH', '/withdrawals/:id'],
+    ['PATCH', '/delivery/withdrawals/:id'],
+    ['POST', '/payouts/mark-as-paid'],
+    ['POST', '/delivery/payouts/mark-as-paid'],
+    ['POST', '/delivery/:id/cash-limit/settle']
+].map(([method, path]) => ({ method, pattern: re(path) }));
+
+const isPartnerMoneyWrite = (method, path) => PARTNER_MONEY_WRITES.some((w) => w.method === method && w.pattern.test(path));
 
 const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
@@ -123,6 +135,9 @@ export const franchiseAdminGate = async (req, res, next) => {
 
         if (!isAllowedForFranchise(req.method, req.path)) {
             return sendError(res, 403, 'This section is managed by HQ');
+        }
+        if (isPartnerMoneyWrite(req.method, req.path) && (await isHqPayingPartners())) {
+            return sendError(res, 403, 'HQ pays restaurants and delivery partners directly now');
         }
         if (franchise.status === 'suspended' && !READ_METHODS.has(req.method)) {
             return sendError(res, 403, 'Your franchise is suspended. Clear your dues with HQ to make changes.');

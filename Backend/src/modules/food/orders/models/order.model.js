@@ -275,7 +275,9 @@ const orderSchema = new mongoose.Schema(
             revenueModel: { type: String, default: '' },
             commissionPercent: { type: Number, default: 0 },
             /** Coupon discount the franchise funds (its own coupon); HQ coupons are funded by HQ. */
-            franchiseDiscount: { type: Number, default: 0 }
+            franchiseDiscount: { type: Number, default: 0 },
+            /** HQ keeps the restaurant / rider share and pays them (global toggle at order time). */
+            hqPaysPartners: { type: Boolean, default: false }
         },
         /** Set once the order is included in a franchise settlement, so it is never settled twice. */
         franchiseSettlementId: {
