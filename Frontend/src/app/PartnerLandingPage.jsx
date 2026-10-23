@@ -34,13 +34,13 @@ const RED = "#E23744"
 const PAGES = {
   franchise: {
     dark: false,
-    badge: { icon: Building2, text: "City Franchise Program" },
-    title: "Own Your City.",
-    subtitle: "Build a Food Business That Grows With It.",
+    badge: { icon: Building2, text: "Exclusive City Franchise Opportunity" },
+    title: "Start Your Own Food Delivery Business in Your City.",
+    subtitle: "Become a CityFood Franchise Partner & Earn on Every Local Order.",
     intro: (
       <>
-        Bring CityFood to your city. We hand you a proven food delivery platform, a trusted brand and{" "}
-        <b className="font-semibold text-slate-900">complete launch support</b>, so you can focus on growing your local network.
+        Launch and operate CityFood in your city with <b className="font-semibold text-slate-900">100% exclusive territorial rights</b>.
+        You get a ready-to-use customer app, restaurant partner app, delivery rider app, and a powerful city admin dashboard — with zero tech setup required. Onboard your local restaurants, manage deliveries, and build a high-growth food tech business.
       </>
     ),
     showcase: {
