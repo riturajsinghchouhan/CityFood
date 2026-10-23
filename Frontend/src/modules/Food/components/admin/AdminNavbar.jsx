@@ -496,7 +496,11 @@ export default function AdminNavbar({ onMenuClick }) {
                         <button
                           key={item?.id}
                           type="button"
-                          onClick={openNotificationsPage}
+                          onClick={() => {
+                            setNotificationsOpen(false);
+                            if (item?.path) navigate(item.path);
+                            else openNotificationsPage();
+                          }}
                           className="w-full text-left px-4 py-4 border-b border-neutral-100 last:border-b-0 hover:bg-neutral-50 transition-colors"
                         >
                           <div className="flex items-start justify-between gap-3">

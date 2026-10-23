@@ -192,6 +192,59 @@ const mapExpiredFssai = (response) => {
   }));
 };
 
+const mapCashLimitSettlements = (response) => {
+  const payload = response?.data?.data;
+  const rows = payload?.transactions || payload?.data || [];
+
+  return (Array.isArray(rows) ? rows : []).map((item) => ({
+    id: `deposit-cash-${String(item?.id || item?._id || "")}`,
+    title: "Delivery Cash Deposit",
+    message: `${item?.deliveryName || "Delivery Partner"} deposited ₹${item?.amount || 0}. Mobile: ${item?.deliveryIdString || "N/A"}.`,
+    type: "deposit",
+    category: "cash_limit_settlement",
+    path: "/admin/food/cash-limit-settlement",
+    createdAt: item?.createdAt,
+    timeLabel: toDateLabel(item?.createdAt),
+    metaLabel: joinMeta(item?.deliveryName, item?.deliveryIdString, `₹${item?.amount || 0}`),
+  }));
+};
+
+const mapPartnerInquiries = (response) => {
+  const payload = response?.data?.data;
+  const rows = payload?.inquiries || payload?.data || [];
+
+  return (Array.isArray(rows) ? rows : []).map((item) => ({
+    id: `inquiry-partner-${String(item?._id || item?.id || "")}`,
+    title: `New ${item?.type ? item.type.charAt(0).toUpperCase() + item.type.slice(1) : "Partner"} Inquiry`,
+    message: `${item?.fullName || "Lead"} submitted an inquiry for ${item?.type || "partnership"}. City: ${item?.city || "N/A"}. Mobile: ${item?.phone || "N/A"}.`,
+    type: "inquiry",
+    category: "partner_inquiry",
+    path: `/admin/food/inquiries/${item?.type || "restaurant"}`,
+    createdAt: item?.createdAt,
+    timeLabel: toDateLabel(item?.createdAt),
+    metaLabel: joinMeta(item?.fullName, item?.city, item?.phone),
+  }));
+};
+
+const mapFranchiseWithdrawals = (response) => {
+  const payload = response?.data?.data;
+  const rows = Array.isArray(payload) ? payload : payload?.withdrawals || [];
+
+  return (Array.isArray(rows) ? rows : [])
+    .filter((item) => String(item?.status || "").toLowerCase() === "pending")
+    .map((item) => ({
+      id: `withdrawal-franchise-${String(item?._id || item?.id || "")}`,
+      title: "Franchise Withdrawal Request",
+      message: `${item?.franchiseId?.name || "Franchise"} requested withdrawal of ₹${item?.amount || 0}.`,
+      type: "withdrawal",
+      category: "franchise_withdrawal",
+      path: "/admin/food/franchise-withdrawals",
+      createdAt: item?.createdAt,
+      timeLabel: toDateLabel(item?.createdAt),
+      metaLabel: joinMeta(item?.franchiseId?.name, `₹${item?.amount || 0}`),
+    }));
+};
+
 export default function useAdminNotifications(options = {}) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(Boolean(options?.autoload !== false));
@@ -208,27 +261,38 @@ export default function useAdminNotifications(options = {}) {
         supportRes,
         deliverySupportRes,
         fssaiExpiredRes,
-      ] = await Promise.all([
+        cashSettlementsRes,
+        inquiriesRes,
+        franchiseWithdrawalsRes,
+      ] = await Promise.allSettled([
         adminAPI.getPendingRestaurants(),
         adminAPI.getDeliveryPartnerJoinRequests({ page: 1, limit: 50 }),
         adminAPI.getPendingFoodApprovals({ page: 1, limit: 50 }),
         adminAPI.getSupportTicketsAdmin({ page: 1, limit: 50, source: "all" }),
         adminAPI.getDeliverySupportTickets({ page: 1, limit: 50 }),
         adminAPI.getExpiredFssaiNotifications(),
+        adminAPI.getCashLimitSettlements({ page: 1, limit: 30 }),
+        adminAPI.getInquiries({ status: "new", limit: 30 }),
+        adminAPI.getFranchiseWithdrawals({ status: "pending" }),
       ]);
 
+      const val = (r) => (r.status === "fulfilled" ? r.value : null);
+
       const restaurantRows =
-        restaurantsRes?.data?.data ||
-        restaurantsRes?.data?.restaurants ||
+        val(restaurantsRes)?.data?.data ||
+        val(restaurantsRes)?.data?.restaurants ||
         [];
 
       const aggregated = uniqueById([
         ...mapPendingRestaurants(restaurantRows),
-        ...mapDeliveryJoinRequests(deliveryJoinRes),
-        ...mapFoodApprovals(foodApprovalRes),
-        ...mapUserRestaurantSupport(supportRes),
-        ...mapDeliverySupport(deliverySupportRes),
-        ...mapExpiredFssai(fssaiExpiredRes),
+        ...mapDeliveryJoinRequests(val(deliveryJoinRes)),
+        ...mapFoodApprovals(val(foodApprovalRes)),
+        ...mapUserRestaurantSupport(val(supportRes)),
+        ...mapDeliverySupport(val(deliverySupportRes)),
+        ...mapExpiredFssai(val(fssaiExpiredRes)),
+        ...mapCashLimitSettlements(val(cashSettlementsRes)),
+        ...mapPartnerInquiries(val(inquiriesRes)),
+        ...mapFranchiseWithdrawals(val(franchiseWithdrawalsRes)),
       ])
         .filter((item) => !dismissed.has(item.id))
         .sort((a, b) => toDateValue(b.createdAt) - toDateValue(a.createdAt));

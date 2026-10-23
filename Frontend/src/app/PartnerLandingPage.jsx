@@ -57,7 +57,7 @@ const PAGES = {
     ],
     formTitle: "Become a Franchise Partner",
     formText: "Fill out the form below to register your interest, and our franchise team will contact you to discuss your city.",
-    fields: "restaurant",
+    fields: "franchise",
   },
   restaurant: {
     dark: false,
@@ -237,7 +237,8 @@ function validate(form, kind) {
   if (!/^[6-9]\d{9}$/.test(form.phone)) return "Enter a valid 10-digit mobile number"
   if (form.city.trim().length < 2) return "Enter your city"
   if (kind === "delivery" && !form.vehicleType) return "Select your vehicle type"
-  if (kind !== "delivery" && form.restaurantName.trim().length < 2) return "Enter the restaurant name"
+  if (kind === "franchise" && form.restaurantName.trim().length < 2) return "Enter the franchise name"
+  if (kind === "restaurant" && form.restaurantName.trim().length < 2) return "Enter the restaurant name"
   return ""
 }
 
@@ -505,6 +506,11 @@ export default function PartnerLandingPage({ type = "franchise" }) {
                           <option key={v.value} value={v.value} className="text-slate-900">{v.label}</option>
                         ))}
                       </select>
+                    </label>
+                  ) : page.fields === "franchise" ? (
+                    <label className="block">
+                      <span className={`mb-2 block text-xs font-extrabold uppercase tracking-[0.08em] ${t.label}`}>Franchise Name</span>
+                      <input className={inputClass} value={form.restaurantName} onChange={set("restaurantName")} placeholder="Ex: CityFood Indore Hub" maxLength={120} />
                     </label>
                   ) : (
                     <label className="block">

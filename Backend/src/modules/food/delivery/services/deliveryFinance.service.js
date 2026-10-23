@@ -245,6 +245,26 @@ export const recordRiderCashDeposit = async ({ deliveryPartnerId, amount, orderI
             return created.toObject();
         });
         await markIntent();
+
+        // Notify admin panel in real-time
+        try {
+            const { getIO } = await import('../../../../config/socket.js');
+            const io = getIO();
+            const partner = await FoodDeliveryPartner.findById(deliveryPartnerId).select('name phone').lean();
+            io.to('admin').emit('admin_notification', {
+                type: 'deposit',
+                category: 'cash_limit_settlement',
+                title: 'Cash Limit Deposit Received',
+                message: `${partner?.name || 'Delivery Partner'} deposited ₹${amount} via ${method || 'Razorpay'}. Phone: ${partner?.phone || 'N/A'}.`,
+                data: deposit,
+                path: '/admin/food/cash-limit-settlement',
+                createdAt: new Date()
+            });
+            io.to('admin').emit('sidebar_badges_update');
+        } catch (socketErr) {
+            console.error('Failed to emit deposit socket event to admin:', socketErr);
+        }
+
         return { deposit, created: true };
     } catch (err) {
         if (err?.code === 11000) {

@@ -140,8 +140,19 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
       }
     }
     fetchBadges()
-    const timer = setInterval(fetchBadges, 60000)
-    return () => clearInterval(timer)
+    const timer = setInterval(fetchBadges, 30000)
+
+    const handleUpdateEvent = () => {
+      fetchBadges()
+    }
+    window.addEventListener('sidebar_badges_update', handleUpdateEvent)
+    window.addEventListener('adminNotificationsUpdated', handleUpdateEvent)
+
+    return () => {
+      clearInterval(timer)
+      window.removeEventListener('sidebar_badges_update', handleUpdateEvent)
+      window.removeEventListener('adminNotificationsUpdated', handleUpdateEvent)
+    }
   }, [])
 
   const getBadgeCount = (label = "", path = "") => {
@@ -167,12 +178,22 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
     if (p === "/admin/food/support-tickets" || p === "/franchise/food/support-tickets") return badges.userSupportTickets || 0
 
     // DELIVERYMAN MANAGEMENT
-    if (l === "deliveryman") return (badges.deliveryPartners || 0) + (badges.earningAddons || 0)
+    if (l === "deliveryman") return (badges.deliveryPartners || 0) + (badges.earningAddons || 0) + (badges.cashLimitSettlements || 0)
     if (p.includes("delivery-partners/join-request")) return badges.deliveryPartners || 0
     if (p.includes("delivery-withdrawal")) return badges.deliveryWithdrawals || 0
     if (p.includes("delivery-emergency-help")) return badges.emergencyHelp || 0
     if (p.includes("delivery-support-tickets")) return badges.deliverySupportTickets || 0
     if (p.includes("earning-addon-history")) return badges.earningAddons || 0
+    if (p.includes("cash-limit-settlement")) return badges.cashLimitSettlements || 0
+
+    // FRANCHISE MANAGEMENT
+    if (p.includes("franchise-withdrawals")) return badges.franchiseWithdrawals || 0
+
+    // MANAGE INQUIRY
+    if (l === "manage inquiry") return badges.totalInquiries || 0
+    if (p.includes("inquiries/restaurant")) return badges.restaurantInquiries || 0
+    if (p.includes("inquiries/delivery")) return badges.deliveryInquiries || 0
+    if (p.includes("inquiries/franchise")) return badges.franchiseInquiries || 0
 
     // HELP & SUPPORT
     if (p.includes("safety-emergency-reports")) return badges.safetyReports || 0
@@ -435,6 +456,30 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
     }
   }, [searchQuery])
 
+  // Auto-expand the active section based on current URL
+  useEffect(() => {
+    const currentPath = location.pathname.replace(/\/+$/, "") || "/"
+    adminSidebarMenu.forEach((item) => {
+      if (item.type === "section") {
+        item.items?.forEach((subItem) => {
+          if (subItem.type === "expandable" && subItem.subItems) {
+            const hasActiveChild = subItem.subItems.some((si) => {
+              const target = String(si.path || "").replace(/\/+$/, "") || "/"
+              return currentPath === target || currentPath.startsWith(`${target}/`)
+            })
+            if (hasActiveChild) {
+              const sectionKey = subItem.label.toLowerCase().replace(/\s+/g, "")
+              setExpandedSections((prev) => ({
+                ...prev,
+                [sectionKey]: true,
+              }))
+            }
+          }
+        })
+      }
+    })
+  }, [location.pathname])
+
   const isActive = (path, allPaths = []) => {
     const currentPath = location.pathname.replace(/\/+$/, "") || "/"
     const targetPath = String(path || "").replace(/\/+$/, "") || "/"
@@ -549,6 +594,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
         return (
           <div key={item.path || item.label || index} className="menu-item-animate" style={{ animationDelay: `${index * 0.05}s` }}>
             <button
+              type="button"
               onClick={() => toggleSection(sectionKey)}
               className={cn(
                 "w-full flex items-center justify-center px-2 py-2 rounded-lg transition-all duration-300 ease-out text-base font-bold",
@@ -570,9 +616,10 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
       return (
         <div key={item.path || item.label || index} className="menu-item-animate" style={{ animationDelay: `${index * 0.05}s` }}>
           <button
+            type="button"
             onClick={() => toggleSection(sectionKey)}
             className={cn(
-              "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg transition-all duration-300 ease-out text-base font-bold text-left",
+              "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg transition-all duration-300 ease-out text-base font-bold text-left cursor-pointer",
               "text-white hover:bg-white/5"
             )}
           >

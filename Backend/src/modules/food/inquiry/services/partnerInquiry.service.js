@@ -45,7 +45,27 @@ export async function submitInquiry(body) {
         createdAt: { $gte: new Date(Date.now() - 10 * 60 * 1000) }
     }).lean();
     if (recent) return recent;
-    return (await FoodPartnerInquiry.create(dto)).toObject();
+    const created = (await FoodPartnerInquiry.create(dto)).toObject();
+
+    // Notify admin panel in real-time
+    try {
+        const { getIO } = await import('../../../../config/socket.js');
+        const io = getIO();
+        io.to('admin').emit('admin_notification', {
+            type: 'inquiry',
+            category: 'partner_inquiry',
+            title: `New ${created.type ? created.type.charAt(0).toUpperCase() + created.type.slice(1) : 'Partner'} Inquiry`,
+            message: `${created.fullName || 'Lead'} sent an inquiry for ${created.type || 'partnership'}. City: ${created.city || 'N/A'}. Contact: ${created.phone || 'N/A'}.`,
+            data: created,
+            path: `/admin/food/inquiries/${created.type || 'restaurant'}`,
+            createdAt: new Date()
+        });
+        io.to('admin').emit('sidebar_badges_update');
+    } catch (socketErr) {
+        console.error('Failed to emit inquiry socket event to admin:', socketErr);
+    }
+
+    return created;
 }
 
 export async function listInquiries(query = {}) {
