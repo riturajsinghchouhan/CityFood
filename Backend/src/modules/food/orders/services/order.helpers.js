@@ -215,7 +215,18 @@ export function normalizeOrderForClient(orderDoc) {
         lat: order.lastRiderLocation.coordinates[1],
         lng: order.lastRiderLocation.coordinates[0]
       } : (order?.deliveryState?.currentLocation || null)
-    }
+    },
+    restaurantShare: (() => {
+      const p = order?.pricing || {};
+      const subtotal = Number(p.subtotal || p.itemsTotal || p.itemSubtotal || 0) || 0;
+      const packagingFee = Number(p.packagingFee || 0) || 0;
+      const commission = Number(p.restaurantCommission || 0) || 0;
+      const gstOnItem = Number(p.gstOnItem || 0) || 0;
+      const gstOnCommission = Number(p.gstOnCommission || 0) || 0;
+      const paymentGatewayFee = Number(p.paymentGatewayFee || 0) || 0;
+      const tcs = Number(p.tcs || 0) || 0;
+      return Math.max(0, subtotal + packagingFee - commission - gstOnItem - gstOnCommission - paymentGatewayFee - tcs);
+    })()
   };
 }
 
@@ -426,8 +437,10 @@ export async function notifyRestaurantNewOrder(orderDoc) {
 
     const io = getIO();
     if (io) {
+      const normalized = normalizeOrderForClient(orderDoc);
       const payload = {
-        ...orderDoc.toObject(),
+        ...(orderDoc.toObject ? orderDoc.toObject() : orderDoc),
+        ...normalized,
         orderMongoId: orderDoc._id?.toString?.() || undefined,
         orderId: orderDoc.order_id || orderDoc._id?.toString?.(),
       };

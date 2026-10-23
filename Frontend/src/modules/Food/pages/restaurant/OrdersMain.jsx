@@ -1199,6 +1199,7 @@ export default function OrdersMain() {
   const [prepTime, setPrepTime] = useState(11);
   const [countdown, setCountdown] = useState(180); // 3 minutes in seconds
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(true);
+  const [showPopupPayoutBreakdown, setShowPopupPayoutBreakdown] = useState(false);
   const [showRejectPopup, setShowRejectPopup] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [showCancelPopup, setShowCancelPopup] = useState(false);
@@ -1384,26 +1385,61 @@ export default function OrdersMain() {
     );
   };
 
-  const getPopupOrderTotal = (orderLike) => {
-    if (!orderLike) return 0;
+  const getPopupOrderEarnings = (orderLike) => {
+    if (!orderLike) {
+      return {
+        itemSubtotal: 0,
+        packagingFee: 0,
+        commission: 0,
+        gstOnItem: 0,
+        gstOnCommission: 0,
+        paymentGatewayFee: 0,
+        tcs: 0,
+        totalDeductions: 0,
+        restaurantNet: 0,
+      };
+    }
 
-    const directTotal = Number(orderLike.total);
-    if (Number.isFinite(directTotal) && directTotal > 0) return directTotal;
-
-    const pricingTotal = Number(orderLike.pricing?.total);
-    if (Number.isFinite(pricingTotal) && pricingTotal > 0) return pricingTotal;
-
-    const amountDue = Number(orderLike.payment?.amountDue);
-    if (Number.isFinite(amountDue) && amountDue > 0) return amountDue;
-
+    const p = orderLike.pricing || {};
     const items = Array.isArray(orderLike.items) ? orderLike.items : [];
     const itemsTotal = items.reduce((sum, item) => {
       const price = Number(item?.price || 0);
-      const qty = Number(item?.quantity || 0);
+      const qty = Number(item?.quantity || 1);
       return sum + (Number.isFinite(price) ? price : 0) * (Number.isFinite(qty) ? qty : 0);
     }, 0);
 
-    return Number.isFinite(itemsTotal) ? itemsTotal : 0;
+    const itemSubtotal = Number(p.subtotal || p.itemsTotal || p.itemSubtotal) || itemsTotal;
+    const packagingFee = Number(p.packagingFee || 0) || 0;
+    const commission = Number(p.restaurantCommission || 0) || 0;
+    const gstOnItem = Number(p.gstOnItem || 0) || 0;
+    const gstOnCommission = Number(p.gstOnCommission || 0) || 0;
+    const paymentGatewayFee = Number(p.paymentGatewayFee || 0) || 0;
+    const tcs = Number(p.tcs || 0) || 0;
+
+    const totalDeductions = commission + gstOnItem + gstOnCommission + paymentGatewayFee + tcs;
+    const calculatedNet = Math.max(0, itemSubtotal + packagingFee - totalDeductions);
+
+    const explicitShare = Number(orderLike.restaurantShare ?? orderLike.payout);
+    const restaurantNet = Number.isFinite(explicitShare) && explicitShare > 0
+      ? explicitShare
+      : calculatedNet;
+
+    return {
+      itemSubtotal,
+      packagingFee,
+      commission,
+      gstOnItem,
+      gstOnCommission,
+      paymentGatewayFee,
+      tcs,
+      totalDeductions,
+      restaurantNet,
+    };
+  };
+
+  const getPopupOrderTotal = (orderLike) => {
+    const { restaurantNet } = getPopupOrderEarnings(orderLike);
+    return restaurantNet;
   };
 
   // Restaurant notifications hook for real-time orders
@@ -3027,47 +3063,132 @@ export default function OrdersMain() {
                     </span>
                   </div>
 
-                  {/* Total bill */}
-                  <div className="mb-2 flex items-center justify-between py-1.5 border-y border-gray-200">
-                    <div className="flex items-center gap-2">
-                      <svg
-                        className="w-5 h-5 text-gray-700"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"
-                        />
-                      </svg>
-                      <span className="text-sm font-semibold text-gray-900">
-                        Total bill
-                      </span>
-                    </div>
-                    <span className="text-base font-bold text-gray-900">
-                      ₹{getPopupOrderTotal(popupOrder || newOrder)}
-                    </span>
-                  </div>
-
-                  {/* Payment method: treat cash/cod (any case) as COD */}
+                  {/* Restaurant Earning / Net Payout */}
                   {(() => {
+                    const activeOrder = popupOrder || newOrder;
+                    const earnings = getPopupOrderEarnings(activeOrder);
                     const raw =
-                      (popupOrder || newOrder)?.paymentMethod ||
-                      (popupOrder || newOrder)?.payment?.method;
+                      activeOrder?.paymentMethod ||
+                      activeOrder?.payment?.method;
                     const m =
                       raw != null ? String(raw).toLowerCase().trim() : "";
                     const isCod = m === "cash" || m === "cod";
+
                     return (
-                      <div className="mb-2 flex items-center justify-between py-1">
-                        <span className="text-sm font-medium text-gray-700">
-                          Payment
-                        </span>
-                        <span
-                          className={`text-sm font-semibold ${isCod ? "text-amber-600" : "text-green-600"}`}>
-                          {isCod ? "Cash on Delivery" : "Online"}
-                        </span>
+                      <div className="mb-2 py-1.5 border-y border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <svg
+                              className="w-5 h-5 text-emerald-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            <div>
+                              <span className="text-sm font-bold text-gray-900">
+                                Your Earning
+                              </span>
+                              <span className="block text-[10px] text-gray-500 font-medium">
+                                Net payout for this order
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-lg font-extrabold text-emerald-700">
+                            ₹{Number(earnings.restaurantNet || 0).toFixed(2)}
+                          </span>
+                        </div>
+
+                        {/* Expandable Earning Breakdown */}
+                        <div className="mt-2 pt-1 border-t border-dashed border-gray-200">
+                          <button
+                            type="button"
+                            onClick={() => setShowPopupPayoutBreakdown(!showPopupPayoutBreakdown)}
+                            className="w-full flex items-center justify-between text-xs text-gray-500 hover:text-gray-700 py-0.5">
+                            <span className="font-medium">
+                              Earning details {earnings.totalDeductions > 0 ? `(Deductions: -₹${earnings.totalDeductions.toFixed(2)})` : ''}
+                            </span>
+                            {showPopupPayoutBreakdown ? (
+                              <ChevronUp className="w-3.5 h-3.5 text-gray-500" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+                            )}
+                          </button>
+
+                          <AnimatePresence>
+                            {showPopupPayoutBreakdown && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.18 }}
+                                className="overflow-hidden">
+                                <div className="mt-1.5 p-2 rounded-lg bg-gray-50 border border-gray-100 space-y-1.5 text-xs">
+                                  <div className="flex items-center justify-between text-gray-600">
+                                    <span>Food Subtotal</span>
+                                    <span className="font-medium text-gray-900">₹{Number(earnings.itemSubtotal || 0).toFixed(2)}</span>
+                                  </div>
+                                  {Number(earnings.packagingFee || 0) > 0 && (
+                                    <div className="flex items-center justify-between text-gray-600">
+                                      <span>Packaging Fee</span>
+                                      <span className="font-medium text-gray-900">₹{Number(earnings.packagingFee || 0).toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {Number(earnings.commission || 0) > 0 && (
+                                    <div className="flex items-center justify-between text-red-600">
+                                      <span>Platform Commission</span>
+                                      <span className="font-medium">-₹{Number(earnings.commission || 0).toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {Number(earnings.gstOnItem || 0) > 0 && (
+                                    <div className="flex items-center justify-between text-red-600">
+                                      <span>GST on Item</span>
+                                      <span className="font-medium">-₹{Number(earnings.gstOnItem || 0).toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {Number(earnings.gstOnCommission || 0) > 0 && (
+                                    <div className="flex items-center justify-between text-red-600">
+                                      <span>GST on Commission</span>
+                                      <span className="font-medium">-₹{Number(earnings.gstOnCommission || 0).toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {Number(earnings.paymentGatewayFee || 0) > 0 && (
+                                    <div className="flex items-center justify-between text-red-600">
+                                      <span>Payment Gateway Fee</span>
+                                      <span className="font-medium">-₹{Number(earnings.paymentGatewayFee || 0).toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {Number(earnings.tcs || 0) > 0 && (
+                                    <div className="flex items-center justify-between text-red-600">
+                                      <span>TCS</span>
+                                      <span className="font-medium">-₹{Number(earnings.tcs || 0).toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  <div className="pt-1 mt-1 border-t border-gray-200 flex items-center justify-between font-bold text-emerald-700">
+                                    <span>Net Payout</span>
+                                    <span>₹{Number(earnings.restaurantNet || 0).toFixed(2)}</span>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {/* Payment method */}
+                        <div className="mt-2 flex items-center justify-between pt-1 text-xs">
+                          <span className="font-medium text-gray-600">
+                            Payment Mode
+                          </span>
+                          <span
+                            className={`font-semibold ${isCod ? "text-amber-600" : "text-green-600"}`}>
+                            {isCod ? "Cash on Delivery" : "Paid Online"}
+                          </span>
+                        </div>
                       </div>
                     );
                   })()}

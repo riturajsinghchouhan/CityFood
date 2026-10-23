@@ -27,20 +27,32 @@ const supportsBrowserNotifications = () =>
 const buildRestaurantOrderNotification = (orderData = {}) => {
   const orderId = orderData.orderId || orderData.orderMongoId || 'New';
   const itemCount = Array.isArray(orderData.items) ? orderData.items.length : 0;
-  const total = Number(orderData.total || orderData.pricing?.total || 0);
+  
+  const p = orderData.pricing || {};
+  const items = Array.isArray(orderData.items) ? orderData.items : [];
+  const itemsTotal = items.reduce((sum, item) => {
+    const price = Number(item?.price || 0);
+    const qty = Number(item?.quantity || 1);
+    return sum + (Number.isFinite(price) ? price : 0) * (Number.isFinite(qty) ? qty : 0);
+  }, 0);
+  const itemSubtotal = Number(p.subtotal || p.itemsTotal || p.itemSubtotal) || itemsTotal;
+  const packagingFee = Number(p.packagingFee || 0) || 0;
+  const deductions = (Number(p.restaurantCommission) || 0) + (Number(p.gstOnItem) || 0) + (Number(p.gstOnCommission) || 0) + (Number(p.paymentGatewayFee) || 0) + (Number(p.tcs) || 0);
+  const calculatedNet = Math.max(0, itemSubtotal + packagingFee - deductions);
+  const earning = Number(orderData.restaurantShare ?? orderData.payout) || calculatedNet;
 
   return {
     title: `New order #${orderId}`,
     body: itemCount > 0
-      ? `${itemCount} item${itemCount === 1 ? '' : 's'} - ₹${total.toFixed(2)}`
-      : 'A new order is waiting for review',
+      ? `${itemCount} item${itemCount === 1 ? '' : 's'} - Earning: ₹${earning.toFixed(2)}`
+      : `Earning: ₹${earning.toFixed(2)} - Waiting for review`,
     tag: `restaurant-order-${orderId}`,
     data: {
       orderId,
       targetUrl: `/restaurant/orders/${orderData.orderMongoId || orderData.orderId || ''}`,
     },
   };
-}
+};
 
 const triggerWebViewNativeNotification = async (orderData = {}) => {
   if (typeof window === 'undefined') return false;
