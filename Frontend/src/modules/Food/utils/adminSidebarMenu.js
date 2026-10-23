@@ -45,6 +45,22 @@ export const adminSidebarMenu = [
   },
   {
     type: "section",
+    label: "MANAGE INQUIRY",
+    items: [
+      {
+        type: "expandable",
+        label: "Manage Inquiry",
+        icon: "MessageSquare",
+        subItems: [
+          { label: "Restaurant Inquiries", path: "/admin/food/inquiries/restaurant" },
+          { label: "Delivery Inquiries", path: "/admin/food/inquiries/delivery" },
+          { label: "Franchise Inquiries", path: "/admin/food/inquiries/franchise" },
+        ],
+      },
+    ],
+  },
+  {
+    type: "section",
     label: "MY FRANCHISE",
     // Shown only to franchise owners (who use this same admin panel for their own zone).
     franchiseOnly: true,
@@ -319,7 +335,7 @@ export const adminSidebarMenu = [
  * (the backend refuses those for franchises anyway).
  */
 const FRANCHISE_HIDDEN_SECTIONS = new Set([
-  "FRANCHISE MANAGEMENT", "REFERRAL & REWARDS", "HELP & SUPPORT", "BANNER SETTINGS", "DINING MANAGEMENT",
+  "FRANCHISE MANAGEMENT", "MANAGE INQUIRY", "REFERRAL & REWARDS", "HELP & SUPPORT", "BANNER SETTINGS", "DINING MANAGEMENT",
   "EMPLOYEE MANAGEMENT", "SYSTEM SETTINGS", "PAGES & SOCIAL MEDIA", "DEVELOPER",
 ])
 const FRANCHISE_HIDDEN_LABELS = new Set([

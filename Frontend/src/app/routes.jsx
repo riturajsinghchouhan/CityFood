@@ -53,6 +53,7 @@ const RedirectToFood = () => {
 const MasterLandingPage = lazy(() => import('./MasterLandingPage'))
 const AdminRouter = lazy(() => import('../modules/Food/components/admin/AdminRouter'))
 const FranchiseLogin = lazy(() => import('../modules/Franchise/FranchiseLogin'))
+const PartnerLandingPage = lazy(() => import('./PartnerLandingPage'))
 
 /**
  * HQ uses the panel at /admin, franchise owners the same pages at /franchise.
@@ -109,6 +110,10 @@ const AppRoutes = () => {
 
       {/* Franchise owner panel - same pages as admin, scoped by the backend to the owner's zone */}
       <Route path="/franchise/login" element={<Suspense fallback={<PageLoader />}><FranchiseLogin /></Suspense>} />
+      {/* Public "partner with us" pages; their forms land in Admin > Manage Inquiry */}
+      <Route path="/franchise/landingpage" element={<Suspense fallback={<PageLoader />}><PartnerLandingPage key="franchise" type="franchise" /></Suspense>} />
+      <Route path="/res/landingpage" element={<Suspense fallback={<PageLoader />}><PartnerLandingPage key="restaurant" type="restaurant" /></Suspense>} />
+      <Route path="/deli/landingpage" element={<Suspense fallback={<PageLoader />}><PartnerLandingPage key="delivery" type="delivery" /></Suspense>} />
       <Route path="/franchise/*" element={<PanelGate panel="franchise" />} />
 
       {/* Handle root and other paths via FoodAppWrapper */}

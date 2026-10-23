@@ -25,6 +25,8 @@ import franchiseAdminRoutes from '../modules/food/franchise/routes/franchiseAdmi
 import franchisePanelRoutes from '../modules/food/franchise/routes/franchisePanel.routes.js';
 import { franchiseAdminGate } from '../modules/food/franchise/middleware/franchiseAdminGate.middleware.js';
 import { listFranchiseOptionsController } from '../modules/food/franchise/controllers/franchiseAdmin.controller.js';
+import { submitInquiryController } from '../modules/food/inquiry/controllers/partnerInquiry.controller.js';
+import { authRateLimiter } from '../middleware/rateLimit.js';
 
 const router = express.Router();
 
@@ -61,6 +63,9 @@ router.get('/v1/food/dining/bookings/restaurant/:restaurantId', authMiddleware, 
 router.patch('/v1/food/dining/bookings/:bookingId/status', authMiddleware, requireRoles('RESTAURANT', 'ADMIN', 'SUPER_ADMIN', 'SUB_ADMIN'), updateBookingStatus);
 
 router.use('/v1/uploads', uploadRoutes);
+
+// Public "partner with us" form on the franchise / restaurant / delivery landing pages.
+router.post('/v1/food/inquiries', authRateLimiter, submitInquiryController);
 
 // Mark business-settings/public as truly public
 router.get('/v1/food/admin/business-settings/public', businessSettingsController.getBusinessSettings);

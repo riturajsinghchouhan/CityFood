@@ -21,7 +21,7 @@ import { isHqPayingPartners } from '../services/franchiseFinance.service.js';
 const HQ_ONLY = [
     /^\/sub-admins/, /^\/payments\//, /^\/operational-data/, /^\/upload-settings/, /^\/pages-social-media/,
     /^\/app-intro-ads/, /^\/referral-settings/, /^\/notifications\/broadcast/, /^\/dining\//,
-    /^\/safety-emergency-reports/, /^\/contact-messages/, /^\/restaurant-commissions\/global/
+    /^\/safety-emergency-reports/, /^\/contact-messages/, /^\/inquiries/, /^\/restaurant-commissions\/global/
 ];
 
 const ID = '[^/]+';

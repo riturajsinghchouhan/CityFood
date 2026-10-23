@@ -23,7 +23,10 @@ import {
   Twitter,
   Facebook,
   Linkedin,
-  Youtube
+  Youtube,
+  Store,
+  Bike,
+  Home
 } from "lucide-react"
 
 // --- Components for Floating Elements ---
@@ -160,16 +163,37 @@ export default function MasterLandingPage() {
         }
       `}</style>
 
-      <button
-        type="button"
-        onClick={() => navigate("/admin/food/restaurant-delay-alerts")}
-        className="fixed right-4 z-[100] inline-flex items-center gap-2 rounded-full border border-white/20 bg-[#1C1C1C]/95 px-4 py-3 text-sm font-bold text-white shadow-2xl backdrop-blur-md transition active:scale-95 md:right-6 md:px-5"
+      {/* Partner with us: franchise / restaurant / delivery landing pages */}
+      <nav
+        className="fixed right-3 z-[100] flex items-center gap-1.5 md:right-6 md:gap-2"
         style={{ top: "calc(env(safe-area-inset-top, 0px) + 16px)" }}
-        aria-label="Open admin restaurant delay alerts"
+        aria-label="Partner with CityFood"
       >
-        <ShieldCheck className="h-5 w-5 text-orange-400" />
-        Admin Delay Alerts
-      </button>
+        {[
+          { label: "Home", path: null, icon: Home },
+          { label: "Franchise", short: "Franchise", path: "/franchise/landingpage", icon: Store },
+          { label: "Restaurant Partner", short: "Restaurant", path: "/res/landingpage", icon: UtensilsCrossed },
+          { label: "Delivery Partner", short: "Delivery", path: "/deli/landingpage", icon: Bike },
+        ].map(({ label, short, path, icon: Icon }) => (
+          <button
+            key={label}
+            type="button"
+            onClick={() => (path ? navigate(path) : window.scrollTo({ top: 0, behavior: "smooth" }))}
+            title={label}
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/95 px-2.5 py-2 text-[11px] font-bold text-[#1C1C1C] shadow-[0_8px_24px_-10px_rgba(0,0,0,0.45)] backdrop-blur-md transition hover:-translate-y-0.5 hover:text-[#E23744] active:scale-95 sm:text-[12px] md:px-4"
+          >
+            <Icon className="h-3.5 w-3.5 shrink-0" />
+            {short ? (
+              <>
+                <span className="sm:hidden">{short}</span>
+                <span className="hidden sm:inline">{label}</span>
+              </>
+            ) : (
+              <span className="hidden md:inline">{label}</span>
+            )}
+          </button>
+        ))}
+      </nav>
 
       {/* 1. HERO SECTION (SLIDER) */}
       <section className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-[#0a0a0a]">

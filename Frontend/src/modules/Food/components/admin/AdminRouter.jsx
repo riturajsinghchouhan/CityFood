@@ -61,6 +61,7 @@ const AdsList = lazy(() => import("@food/pages/admin/advertisement/AdsList"));
 const Chattings = lazy(() => import("@food/pages/admin/Chattings"));
 const ContactMessages = lazy(() => import("@food/pages/admin/ContactMessages"));
 const SafetyEmergencyReports = lazy(() => import("@food/pages/admin/SafetyEmergencyReports"));
+const PartnerInquiries = lazy(() => import("@food/pages/admin/inquiries/PartnerInquiries"));
 // Customer Management
 const Customers = lazy(() => import("@food/pages/admin/Customers"));
 const SupportTickets = lazy(() => import("@food/pages/admin/SupportTickets"));
@@ -275,6 +276,9 @@ export default function AdminRouter() {
             <Route path="chattings" element={<Chattings />} />
             <Route path="contact-messages" element={<ContactMessages />} />
             <Route path="safety-emergency-reports" element={<SafetyEmergencyReports />} />
+            <Route path="inquiries/restaurant" element={<PartnerInquiries key="restaurant" type="restaurant" />} />
+            <Route path="inquiries/delivery" element={<PartnerInquiries key="delivery" type="delivery" />} />
+            <Route path="inquiries/franchise" element={<PartnerInquiries key="franchise" type="franchise" />} />
             
             <Route path="customers" element={<Customers />} />
             <Route path="support-tickets" element={<SupportTickets />} />

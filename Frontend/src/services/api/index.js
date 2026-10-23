@@ -348,6 +348,13 @@ export const adminAPI = {
     adminClient.get("/food/admin/delivery/reviews", { params }),
   getContactMessages: (params = {}) =>
     adminClient.get("/food/admin/contact-messages", { params }),
+  /** Partner inquiries from the franchise / restaurant / delivery landing pages */
+  getInquiries: (params = {}) =>
+    adminClient.get("/food/admin/inquiries", { params }),
+  updateInquiry: (id, body) =>
+    adminClient.patch(`/food/admin/inquiries/${id}`, body),
+  deleteInquiry: (id) =>
+    adminClient.delete(`/food/admin/inquiries/${id}`),
   /** Dashboard summary stats (admin home) */
   getDashboardStats: (params = {}) =>
     adminClient.get("/food/admin/dashboard-stats", { params }),

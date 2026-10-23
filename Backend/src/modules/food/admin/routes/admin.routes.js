@@ -31,6 +31,7 @@ router.get('/business-settings/public', businessSettingsController.getBusinessSe
 router.get('/fee-settings/public', adminController.getFeeSettings);
 
 import { requireAdmin, requireSuperAdmin } from '../../../../core/auth/auth.middleware.js';
+import * as inquiryController from '../../inquiry/controllers/partnerInquiry.controller.js';
 
 router.use(requireAdmin);
 
@@ -225,6 +226,9 @@ router.delete('/delivery/commission-rules/:id', adminController.deleteDeliveryCo
 router.patch('/delivery/commission-rules/:id/status', adminController.toggleDeliveryCommissionRuleStatus);
 router.get('/delivery/reviews', adminController.getDeliverymanReviews);
 router.get('/contact-messages', adminController.getContactMessages);
+router.get('/inquiries', inquiryController.listInquiriesController);
+router.patch('/inquiries/:id', inquiryController.updateInquiryController);
+router.delete('/inquiries/:id', inquiryController.deleteInquiryController);
 router.get('/delivery/earning-addons', adminController.getEarningAddons);
 router.post('/delivery/earning-addons', adminController.createEarningAddon);
 router.patch('/delivery/earning-addons/:id', adminController.updateEarningAddon);
