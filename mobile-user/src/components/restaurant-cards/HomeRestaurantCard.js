@@ -2,14 +2,19 @@
 // headline, name, rating/meta, open/offline pill, closing countdown, "Items at ₹x",
 // bookmark) with a horizontal row of preview dishes, or the image carousel when the
 // restaurant has none. Banned, closed or out-of-service restaurants render grey.
-import { router } from "expo-router";
-import { Bookmark, Plus, Star, Timer } from "lucide-react-native";
+import { router, usePathname } from "expo-router";
+import { Bookmark, Minus, Plus, Star, Timer } from "lucide-react-native";
 import { memo, useEffect, useMemo, useState } from "react";
 import { Animated, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { getOutletTimingsByRestaurantId } from "../../api/restaurants";
+import { useAuth } from "../../context/AuthContext";
+import { useCart } from "../../context/CartContext";
+import { buildCartLineId, normalizeFoodVariants } from "../../screens/restaurant/lib";
 import { useTheme } from "../../theme/ThemeContext";
 import AppImage from "../ui/AppImage";
+import { Dialog } from "../ui/Sheet";
 import Text from "../ui/Text";
+import { toast } from "../ui/Toast";
 import RestaurantImageCarousel, {
   FOOD_IMAGES,
   RestaurantCarouselStateProvider,
@@ -56,6 +61,16 @@ function buildPreviewItems(restaurant) {
       const offer = resolveItemOffer(restaurant, { ...item, id: item.id || item._id, price });
       const finalPrice = offer ? offer.discountedPrice : price;
       const otherPrice = Number(item.priceOnOtherPlatforms) || 0;
+      const itemId = item.id || item._id;
+      const variants = normalizeFoodVariants(item.variants).map((variant) => {
+        const variantOffer = resolveItemOffer(restaurant, { ...item, id: itemId, price: variant.price });
+        return {
+          id: variant.id,
+          name: variant.name,
+          price: variant.price,
+          finalPrice: variantOffer ? variantOffer.discountedPrice : variant.price,
+        };
+      });
       const lowerPercent =
         otherPrice > finalPrice && finalPrice > 0 ? Math.round(((otherPrice - finalPrice) / otherPrice) * 100) : 0;
       const raw = item.image || item.imageUrl;
@@ -65,6 +80,9 @@ function buildPreviewItems(restaurant) {
         image: typeof raw === "string" && raw.trim() ? raw.trim() : FOOD_IMAGES[idx % FOOD_IMAGES.length],
         foodType: item.foodType,
         isRecommended: item.isRecommended === true,
+        hasVariants: item.hasVariants === true || variants.length > 0,
+        variants,
+        priceOnOtherPlatforms: otherPrice || null,
         price,
         finalPrice,
         hasDiscount: Boolean(offer),
@@ -100,7 +118,7 @@ function useDeferredOutletTimings(restaurantId, initialTimings) {
   return initialTimings ?? fetched;
 }
 
-function PreviewItemCard({ item, onSelect, isDark, primary }) {
+function PreviewItemCard({ item, quantity = 0, onSelect, onAdd, onChangeQuantity, isDark, primary }) {
   const isVeg = item.foodType === "Veg";
   return (
     <Pressable onPress={() => onSelect(item)} style={styles.preview}>
@@ -111,9 +129,41 @@ function PreviewItemCard({ item, onSelect, isDark, primary }) {
             <Text style={styles.popularText}>Popular</Text>
           </View>
         ) : null}
-        <View style={[styles.plus, { borderColor: `${primary}99` }]}>
-          <Plus size={20} color={primary} strokeWidth={2.5} />
-        </View>
+        {quantity > 0 && !item.hasVariants ? (
+          <View style={[styles.stepper, { borderColor: primary }]}>
+            <Pressable
+              onPress={() => onChangeQuantity(item, quantity - 1)}
+              accessibilityLabel={`Remove one ${item.name}`}
+              hitSlop={4}
+              style={styles.stepBtn}
+            >
+              <Minus size={16} color={primary} strokeWidth={2.5} />
+            </Pressable>
+            <Text style={[styles.stepQty, { color: primary }]}>{quantity}</Text>
+            <Pressable
+              onPress={() => onChangeQuantity(item, quantity + 1)}
+              accessibilityLabel={`Add one more ${item.name}`}
+              hitSlop={4}
+              style={styles.stepBtn}
+            >
+              <Plus size={16} color={primary} strokeWidth={2.5} />
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable
+            onPress={() => onAdd(item)}
+            accessibilityLabel={`Add ${item.name} to cart`}
+            hitSlop={6}
+            style={[styles.plus, { borderColor: `${primary}99` }]}
+          >
+            <Plus size={20} color={primary} strokeWidth={2.5} />
+            {quantity > 0 ? (
+              <View style={[styles.qtyBadge, { backgroundColor: primary }]}>
+                <Text style={styles.qtyBadgeText}>{quantity}</Text>
+              </View>
+            ) : null}
+          </Pressable>
+        )}
       </View>
       <View style={styles.previewNameRow}>
         {item.foodType ? (
@@ -144,6 +194,86 @@ function PreviewItemCard({ item, onSelect, isDark, primary }) {
   );
 }
 
+function VariantPicker({ item, restaurantName, quantityOf, onAdd, onChangeQuantity, onClose, isDark, primary }) {
+  const title = isDark ? "#ffffff" : "#101828";
+  const border = isDark ? "#1e2939" : "#f3f4f6";
+  return (
+    <Dialog
+      visible={Boolean(item)}
+      onClose={onClose}
+      style={{ padding: 0, borderRadius: 16, borderWidth: 0, maxWidth: 416, width: "100%", backgroundColor: isDark ? "#1a1a1a" : "#ffffff", overflow: "hidden" }}
+    >
+      {item ? (
+        <View>
+          <View style={[styles.pickerHeader, { borderBottomColor: border }]}>
+            <AppImage src={item.image} width={56} style={styles.pickerImage} fallbackSrc={FOOD_IMAGES[0]} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text numberOfLines={2} style={{ fontSize: 16, fontWeight: "700", color: title }}>
+                {item.name}
+              </Text>
+              <Text numberOfLines={1} style={{ fontSize: 13, color: "#6a7282" }}>
+                {restaurantName} · Choose an option
+              </Text>
+            </View>
+          </View>
+          <ScrollView style={{ maxHeight: 360 }}>
+            {item.variants.map((variant, i) => {
+              const quantity = quantityOf(item, variant);
+              return (
+                <View key={variant.id} style={[styles.variantRow, i > 0 && { borderTopWidth: 1, borderTopColor: border }]}>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={{ fontSize: 15, fontWeight: "600", color: title }}>{variant.name}</Text>
+                    {variant.finalPrice < variant.price ? (
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                        <Text style={styles.strike}>₹{Math.round(variant.price)}</Text>
+                        <Text style={{ fontSize: 14, fontWeight: "700", color: primary }}>₹{Math.round(variant.finalPrice)}</Text>
+                      </View>
+                    ) : (
+                      <Text style={{ fontSize: 14, fontWeight: "500", color: isDark ? "#d1d5dc" : "#364153" }}>
+                        ₹{Math.round(variant.price)}
+                      </Text>
+                    )}
+                  </View>
+                  {quantity > 0 ? (
+                    <View style={[styles.pickerStepper, { borderColor: primary }]}>
+                      <Pressable
+                        onPress={() => onChangeQuantity(item, variant, quantity - 1)}
+                        accessibilityLabel={`Remove one ${variant.name}`}
+                        hitSlop={4}
+                        style={styles.stepBtn}
+                      >
+                        <Minus size={16} color={primary} strokeWidth={2.5} />
+                      </Pressable>
+                      <Text style={[styles.stepQty, { color: primary }]}>{quantity}</Text>
+                      <Pressable
+                        onPress={() => onChangeQuantity(item, variant, quantity + 1)}
+                        accessibilityLabel={`Add one more ${variant.name}`}
+                        hitSlop={4}
+                        style={styles.stepBtn}
+                      >
+                        <Plus size={16} color={primary} strokeWidth={2.5} />
+                      </Pressable>
+                    </View>
+                  ) : (
+                    <Pressable onPress={() => onAdd(item, variant)} style={[styles.variantAdd, { borderColor: primary }]}>
+                      <Text style={{ fontSize: 14, fontWeight: "700", color: primary }}>Add</Text>
+                    </Pressable>
+                  )}
+                </View>
+              );
+            })}
+          </ScrollView>
+          <View style={[styles.pickerFooter, { borderTopColor: border }]}>
+            <Pressable onPress={onClose} style={[styles.doneBtn, { backgroundColor: primary }]}>
+              <Text style={{ fontSize: 16, fontWeight: "700", color: "#ffffff" }}>Done</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
+    </Dialog>
+  );
+}
+
 /**
  * restaurant: list API restaurant. index: position (slug fallback, entrance delay, image priority).
  * isOutOfService: grey out (zone out of service). isFavorite(slug) → bool.
@@ -152,6 +282,10 @@ function PreviewItemCard({ item, onSelect, isDark, primary }) {
  */
 function HomeRestaurantCard({ restaurant, index = 0, isOutOfService = false, isFavorite, onToggleFavorite, animateEntrance = false }) {
   const { colors, isDark } = useTheme();
+  const { isAuthenticated } = useAuth();
+  const pathname = usePathname();
+  const { addToCart, updateQuantity, getCartItem } = useCart();
+  const [variantItem, setVariantItem] = useState(null);
   const isBanned = Boolean(
     restaurant?.isBanned === true ||
       restaurant?.status === "banned" ||
@@ -185,6 +319,75 @@ function HomeRestaurantCard({ restaurant, index = 0, isOutOfService = false, isF
   };
 
   const grey = isBanned || isOutOfService || !availability.isOpen;
+
+  // Same cart line ids as the restaurant page (item id + variant id, or "base"), so quantities stay in sync there.
+  const lineIdOf = (item, variant = null) => buildCartLineId(item.id, variant?.id || "");
+  const lineQuantity = (item, variant = null) => getCartItem(lineIdOf(item, variant))?.quantity || 0;
+  // On the card a variant item shows how many of all its options are in the cart.
+  const quantityOf = (item) =>
+    item.variants?.length > 0
+      ? item.variants.reduce((total, variant) => total + lineQuantity(item, variant), 0)
+      : lineQuantity(item);
+
+  const canOrder = () => {
+    if (!isAuthenticated) {
+      toast.error("Please login to add items to cart");
+      router.push({ pathname: "/login", params: { from: pathname } });
+      return false;
+    }
+    if (isBanned || isOutOfService || !availability.isOpen) {
+      toast.error(isOutOfService ? "This restaurant does not deliver to your location." : "Restaurant is currently offline. Please try again later.");
+      return false;
+    }
+    return true;
+  };
+
+  const addLine = (item, variant = null) => {
+    if (!canOrder()) return;
+    const lineItemId = lineIdOf(item, variant);
+    const finalPrice = variant ? variant.finalPrice : item.finalPrice;
+    const result = addToCart({
+      id: lineItemId,
+      lineItemId,
+      itemId: item.id,
+      name: item.name,
+      price: finalPrice,
+      originalPrice: variant ? variant.price : item.price,
+      variantId: variant?.id || "",
+      variantName: variant?.name || "",
+      variantPrice: finalPrice,
+      image: item.image,
+      restaurant: restaurant.name,
+      restaurantId: restaurant.mongoId || restaurant.restaurantId || restaurant._id || restaurant.id,
+      isVeg: item.foodType === "Veg",
+      foodType: item.foodType,
+      priceOnOtherPlatforms: item.priceOnOtherPlatforms,
+    });
+    if (result?.ok === false) {
+      toast.error(result.error || "Could not add this item.");
+      return;
+    }
+    toast.success(`Added ${item.name}${variant ? ` (${variant.name})` : ""} to cart`);
+  };
+
+  const changeLine = (item, variant, quantity) => {
+    if (quantity > lineQuantity(item, variant) && !canOrder()) return;
+    updateQuantity(lineIdOf(item, variant), quantity);
+  };
+
+  const handleAddItem = (item) => {
+    if (item.variants?.length > 0) {
+      // Ask which size / option to add.
+      if (canOrder()) setVariantItem(item);
+      return;
+    }
+    // Older API response without variant details: choose on the restaurant page.
+    if (item.hasVariants) {
+      openRestaurant(item.id);
+      return;
+    }
+    addLine(item);
+  };
 
   return (
     <Animated.View
@@ -287,7 +490,10 @@ function HomeRestaurantCard({ restaurant, index = 0, isOutOfService = false, isF
                   item={item}
                   isDark={isDark}
                   primary={colors.primary}
+                  quantity={quantityOf(item)}
                   onSelect={(selected) => openRestaurant(selected.id)}
+                  onAdd={handleAddItem}
+                  onChangeQuantity={(selected, quantity) => changeLine(selected, null, quantity)}
                 />
               ))}
             </ScrollView>
@@ -308,6 +514,16 @@ function HomeRestaurantCard({ restaurant, index = 0, isOutOfService = false, isF
           )}
         </Pressable>
       </RestaurantCarouselStateProvider>
+      <VariantPicker
+        item={variantItem}
+        restaurantName={restaurant?.name}
+        quantityOf={lineQuantity}
+        onAdd={addLine}
+        onChangeQuantity={changeLine}
+        onClose={() => setVariantItem(null)}
+        isDark={isDark}
+        primary={colors.primary}
+      />
     </Animated.View>
   );
 }
@@ -359,6 +575,49 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     boxShadow: "0px 4px 6px -1px rgba(0,0,0,0.1), 0px 2px 4px -2px rgba(0,0,0,0.1)",
   },
+  qtyBadge: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    paddingHorizontal: 4,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  qtyBadgeText: { fontSize: 11, fontWeight: "700", color: "#ffffff" },
+  stepper: {
+    position: "absolute",
+    right: 8,
+    bottom: 8,
+    height: 36,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderRadius: 18,
+    borderWidth: 2,
+    paddingHorizontal: 4,
+    backgroundColor: "#ffffff",
+    boxShadow: "0px 4px 6px -1px rgba(0,0,0,0.1), 0px 2px 4px -2px rgba(0,0,0,0.1)",
+  },
+  pickerStepper: {
+    height: 36,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderRadius: 18,
+    borderWidth: 2,
+    paddingHorizontal: 4,
+  },
+  stepBtn: { width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  stepQty: { minWidth: 14, textAlign: "center", fontSize: 14, fontWeight: "700" },
+  pickerHeader: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16, borderBottomWidth: 1 },
+  pickerImage: { width: 56, height: 56, borderRadius: 12, overflow: "hidden" },
+  variantRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
+  variantAdd: { height: 36, paddingHorizontal: 20, borderRadius: 18, borderWidth: 2, alignItems: "center", justifyContent: "center" },
+  pickerFooter: { padding: 16, borderTopWidth: 1 },
+  doneBtn: { height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   previewNameRow: { marginTop: 8, flexDirection: "row", alignItems: "flex-start", gap: 6 },
   vegBox: { marginTop: 3, width: 14, height: 14, borderRadius: 3, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   vegDot: { width: 6, height: 6, borderRadius: 3 },

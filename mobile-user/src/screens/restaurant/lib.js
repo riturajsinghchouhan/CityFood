@@ -75,7 +75,7 @@ export const calculateDistanceKm = (lat1, lng1, lat2, lng2) => {
 export const formatDistanceKm = (km) =>
   km >= 1 ? `${km.toFixed(1)} km` : `${Math.round(km * 1000)} m`;
 
-export { getRestaurantAvailabilityStatus } from "../../components/restaurant-cards/restaurantAvailability";
+export { getNextOpeningInfo, getRestaurantAvailabilityStatus } from "../../components/restaurant-cards/restaurantAvailability";
 
 // ---- RestaurantDetails.jsx helpers ----
 export const buildCartLineId = (itemId, variantId = "") => `${String(itemId || "")}::${String(variantId || "base")}`;

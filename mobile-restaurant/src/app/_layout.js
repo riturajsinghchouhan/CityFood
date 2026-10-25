@@ -12,6 +12,7 @@ import {
 } from "@expo-google-fonts/poppins";
 import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import BrandSplash from "../components/shell/BrandSplash";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -66,6 +67,7 @@ function RootStack() {
       <HardwareBackBinding />
       <PushBinding />
       <Toaster />
+      <BrandSplash />
     </>
   );
 }

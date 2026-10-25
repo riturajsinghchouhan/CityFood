@@ -7,4 +7,4 @@ export {
   RestaurantOfferBanner,
   resolveItemOffer,
 } from "./RestaurantImageCarousel";
-export { getRestaurantAvailabilityStatus } from "./restaurantAvailability";
+export { getNextOpeningInfo, getRestaurantAvailabilityStatus } from "./restaurantAvailability";

@@ -44,6 +44,7 @@ import {
   getDefaultFoodVariant,
   getFinalPrice,
   getFoodVariants,
+  getNextOpeningInfo,
   getRestaurantAvailabilityStatus,
   getSectionCategoryImage,
   getSectionDisplayName,
@@ -449,6 +450,7 @@ function RestaurantDetailsContent() {
 
   const availability = restaurant ? getRestaurantAvailabilityStatus(restaurant, new Date(availabilityTick)) : { isOpen: false };
   const isRestaurantOffline = !availability.isOpen;
+  const nextOpening = isRestaurantOffline && restaurant ? getNextOpeningInfo(restaurant, new Date(availabilityTick)) : null;
   const shouldShowGrayscale = isOutOfService || isRestaurantOffline;
   const ratingValue = Number(restaurant?.rating || 0);
   const hasRating = Number.isFinite(ratingValue) && ratingValue > 0;
@@ -826,8 +828,18 @@ function RestaurantDetailsContent() {
                 {restaurant.distance || "1.2 km"} | {restaurant.location || "Location"}
               </Text>
             </View>
-            <View style={[styles.statusPill, { backgroundColor: isRestaurantOffline ? "#ec003f" : EMERALD }]}>
-              <Text style={{ fontSize: 12, fontWeight: "600", color: "#ffffff" }}>{isRestaurantOffline ? "Offline" : "Open now"}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexShrink: 1 }}>
+              <View style={[styles.statusPill, { backgroundColor: isRestaurantOffline ? "#ec003f" : EMERALD }]}>
+                <Text style={{ fontSize: 12, fontWeight: "600", color: "#ffffff" }}>{isRestaurantOffline ? "Offline" : "Open now"}</Text>
+              </View>
+              {nextOpening ? (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1 }}>
+                  <Clock size={14} color="#e60076" />
+                  <Text numberOfLines={1} style={{ fontSize: 12, fontWeight: "600", color: "#e60076", flexShrink: 1 }}>
+                    {nextOpening.label}
+                  </Text>
+                </View>
+              ) : null}
             </View>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -838,7 +850,16 @@ function RestaurantDetailsContent() {
 
         {isRestaurantOffline ? (
           <View style={styles.offlineBanner}>
-            <Text style={{ fontSize: 14, color: "#c70036" }}>This restaurant is currently offline. Orders are unavailable right now.</Text>
+            <Text style={{ fontSize: 14, color: "#c70036" }}>
+              This restaurant is currently offline.{" "}
+              {nextOpening ? (
+                <>
+                  <Text style={{ fontWeight: "600", color: "#c70036" }}>{nextOpening.label}</Text>. You can order once it opens.
+                </>
+              ) : (
+                "Orders are unavailable right now."
+              )}
+            </Text>
           </View>
         ) : null}
 

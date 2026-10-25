@@ -7,3 +7,7 @@ backups/
 
 # built APKs (large binaries, not tracked)
 releases/*.apk
+releases/*.aab
+
+# upload keystore + credentials (never commit)
+keystores/
