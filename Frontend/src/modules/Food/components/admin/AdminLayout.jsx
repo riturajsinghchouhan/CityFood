@@ -7,6 +7,10 @@ import { isFranchiseSession } from "@food/utils/adminSidebarMenu"
 import { FRANCHISE_FILTER_EVENT, getFranchiseFilter, isFranchiseFilterPage } from "@food/utils/franchiseFilter"
 import { API_BASE_URL } from "@food/api/config"
 import { adminAPI } from "@/services/api/index.js"
+import { resolveSocketOrigin } from "@food/utils/socketOrigin"
+import { getModuleToken } from "@food/utils/auth"
+import io from "socket.io-client"
+import { toast } from "sonner"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -31,6 +35,49 @@ export default function AdminLayout() {
     document.documentElement.classList.add("admin-compact")
     return () => document.documentElement.classList.remove("admin-compact")
   }, [])
+
+  // Global Admin Real-Time Socket Connection
+  useEffect(() => {
+    const origin = resolveSocketOrigin();
+    if (!origin) return;
+
+    const token = getModuleToken("admin") || localStorage.getItem("admin_accessToken");
+    const socket = io(origin, {
+      auth: { token: token ? `Bearer ${token}` : undefined },
+      query: { token: token || undefined },
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+    });
+
+    socket.on("connect", () => {
+      socket.emit("joinRoom", "admin");
+    });
+
+    socket.on("admin_notification", (payload) => {
+      // Toast popup
+      if (payload?.title && payload?.message) {
+        toast.info(payload.title, {
+          description: payload.message,
+          duration: 6000,
+        });
+      }
+      // Trigger notifications and badges update
+      window.dispatchEvent(new Event("adminNotificationsUpdated"));
+      window.dispatchEvent(new Event("sidebar_badges_update"));
+    });
+
+    socket.on("sidebar_badges_update", () => {
+      window.dispatchEvent(new Event("sidebar_badges_update"));
+      window.dispatchEvent(new Event("adminNotificationsUpdated"));
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   // Get initial collapsed state from localStorage to set initial margin
   useEffect(() => {

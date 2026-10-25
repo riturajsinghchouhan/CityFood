@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import { Loader2, MessageCircle, Phone, Search, StickyNote, Trash2 } from "lucide-react"
+import { Loader2, Search, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { adminAPI } from "@food/api"
 
@@ -78,12 +78,6 @@ export default function PartnerInquiries({ type = "restaurant" }) {
     }
   }
 
-  const editNote = (row) => {
-    const note = window.prompt(`Note for ${row.fullName}`, row.adminNote || "")
-    if (note === null) return
-    update(row, { adminNote: note }, "Note saved")
-  }
-
   const remove = async (row) => {
     if (!window.confirm(`Delete the inquiry from ${row.fullName}?`)) return
     setSavingId(row._id)
@@ -154,7 +148,7 @@ export default function PartnerInquiries({ type = "restaurant" }) {
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Mobile</th>
                 <th className="px-4 py-3">City</th>
-                <th className="px-4 py-3">{type === "delivery" ? "Vehicle" : "Restaurant Name"}</th>
+                <th className="px-4 py-3">{type === "delivery" ? "Vehicle" : type === "franchise" ? "Franchise Name" : "Restaurant Name"}</th>
                 <th className="px-4 py-3">Received</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3 text-right">Actions</th>
@@ -204,15 +198,6 @@ export default function PartnerInquiries({ type = "restaurant" }) {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1.5">
-                        <a href={`tel:+91${row.phone}`} title="Call" className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-100">
-                          <Phone className="h-4 w-4" />
-                        </a>
-                        <a href={`https://wa.me/91${row.phone}`} target="_blank" rel="noreferrer" title="WhatsApp" className="rounded-lg border border-slate-200 p-2 text-green-600 hover:bg-green-50">
-                          <MessageCircle className="h-4 w-4" />
-                        </a>
-                        <button type="button" onClick={() => editNote(row)} title="Add note" className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-100">
-                          <StickyNote className="h-4 w-4" />
-                        </button>
                         <button type="button" onClick={() => remove(row)} disabled={savingId === row._id} title="Delete" className="rounded-lg border border-slate-200 p-2 text-red-600 hover:bg-red-50 disabled:opacity-50">
                           <Trash2 className="h-4 w-4" />
                         </button>

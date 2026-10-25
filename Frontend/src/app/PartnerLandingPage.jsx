@@ -34,13 +34,13 @@ const RED = "#E23744"
 const PAGES = {
   franchise: {
     dark: false,
-    badge: { icon: Building2, text: "City Franchise Program" },
-    title: "Own Your City.",
-    subtitle: "Build a Food Business That Grows With It.",
+    badge: { icon: Building2, text: "Exclusive City Franchise Opportunity" },
+    title: "Start Your Own Food Delivery Business in Your City.",
+    subtitle: "Become a CityFood Franchise Partner & Earn on Every Local Order.",
     intro: (
       <>
-        Bring CityFood to your city. We hand you a proven food delivery platform, a trusted brand and{" "}
-        <b className="font-semibold text-slate-900">complete launch support</b>, so you can focus on growing your local network.
+        Launch and operate CityFood in your city with <b className="font-semibold text-slate-900">100% exclusive territorial rights</b>.
+        You get a ready-to-use customer app, restaurant partner app, delivery rider app, and a powerful city admin dashboard — with zero tech setup required. Onboard your local restaurants, manage deliveries, and build a high-growth food tech business.
       </>
     ),
     showcase: {
@@ -57,7 +57,7 @@ const PAGES = {
     ],
     formTitle: "Become a Franchise Partner",
     formText: "Fill out the form below to register your interest, and our franchise team will contact you to discuss your city.",
-    fields: "restaurant",
+    fields: "franchise",
   },
   restaurant: {
     dark: false,
@@ -237,7 +237,8 @@ function validate(form, kind) {
   if (!/^[6-9]\d{9}$/.test(form.phone)) return "Enter a valid 10-digit mobile number"
   if (form.city.trim().length < 2) return "Enter your city"
   if (kind === "delivery" && !form.vehicleType) return "Select your vehicle type"
-  if (kind !== "delivery" && form.restaurantName.trim().length < 2) return "Enter the restaurant name"
+  if (kind === "franchise" && form.restaurantName.trim().length < 2) return "Enter the franchise name"
+  if (kind === "restaurant" && form.restaurantName.trim().length < 2) return "Enter the restaurant name"
   return ""
 }
 
@@ -505,6 +506,11 @@ export default function PartnerLandingPage({ type = "franchise" }) {
                           <option key={v.value} value={v.value} className="text-slate-900">{v.label}</option>
                         ))}
                       </select>
+                    </label>
+                  ) : page.fields === "franchise" ? (
+                    <label className="block">
+                      <span className={`mb-2 block text-xs font-extrabold uppercase tracking-[0.08em] ${t.label}`}>Franchise Name</span>
+                      <input className={inputClass} value={form.restaurantName} onChange={set("restaurantName")} placeholder="Ex: CityFood Indore Hub" maxLength={120} />
                     </label>
                   ) : (
                     <label className="block">

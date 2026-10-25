@@ -330,6 +330,25 @@ export async function requestFranchiseWithdrawal(franchiseId, { amount, note = '
             note: String(note || '').trim(),
             bank: franchise.bank || {}
         });
+
+        // Notify admin in real-time
+        try {
+            const { getIO } = await import('../../../../config/socket.js');
+            const io = getIO();
+            io.to('admin').emit('admin_notification', {
+                type: 'withdrawal',
+                category: 'franchise_withdrawal',
+                title: 'Franchise Withdrawal Request',
+                message: `${franchise.name || 'Franchise'} requested a withdrawal of ₹${value}.`,
+                data: created,
+                path: '/admin/food/franchise-withdrawals',
+                createdAt: new Date()
+            });
+            io.to('admin').emit('sidebar_badges_update');
+        } catch (socketErr) {
+            console.error('Failed to emit franchise withdrawal socket event to admin:', socketErr);
+        }
+
         return created.toObject();
     } finally {
         await releaseJobLock(lockName);

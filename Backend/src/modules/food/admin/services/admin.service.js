@@ -41,6 +41,8 @@ import { transitionWithdrawal } from '../../../../core/payments/payoutTransition
 import { withTransaction, sessionOpts } from '../../../../utils/dbTransaction.js';
 import { round2, gtMoney, isPositiveMoney } from '../../../../utils/money.js';
 import { FoodDeliveryCashDeposit } from '../../delivery/models/foodDeliveryCashDeposit.model.js';
+import { FoodFranchiseWithdrawal } from '../../franchise/models/franchiseWithdrawal.model.js';
+import { FoodPartnerInquiry } from '../../inquiry/models/partnerInquiry.model.js';
 import { getDeliveryMultiOrderSettings, ACTIVE_DELIVERY_ORDER_STATUSES } from '../../delivery/services/deliveryMultiOrderSettings.service.js';
 import {
     backfillLegacyCategoryWorkflow,
@@ -5612,7 +5614,12 @@ export async function getSidebarBadges() {
             pendingEarningAddons,
             pendingSafetyReports,
             pendingEmergencyHelp,
-            pendingRestaurantComplaints
+            pendingRestaurantComplaints,
+            pendingFranchiseWithdrawals,
+            newRestaurantInquiries,
+            newDeliveryInquiries,
+            newFranchiseInquiries,
+            recentCashDeposits
         ] = await Promise.all([
             FoodRestaurant.countDocuments({ status: 'pending' }),
             FoodDeliveryPartner.countDocuments({ status: 'pending' }),
@@ -5627,7 +5634,15 @@ export async function getSidebarBadges() {
             FoodEarningAddonHistory.countDocuments({ status: 'pending' }),
             FoodSafetyEmergencyReport.countDocuments({ status: 'pending' }),
             FoodDeliveryEmergencyHelp.countDocuments({ status: 'pending' }),
-            FoodSupportTicket.countDocuments({ status: 'open', restaurantId: { $exists: true } })
+            FoodSupportTicket.countDocuments({ status: 'open', restaurantId: { $exists: true } }),
+            FoodFranchiseWithdrawal.countDocuments({ status: 'pending' }),
+            FoodPartnerInquiry.countDocuments({ type: 'restaurant', status: 'new' }),
+            FoodPartnerInquiry.countDocuments({ type: 'delivery', status: 'new' }),
+            FoodPartnerInquiry.countDocuments({ type: 'franchise', status: 'new' }),
+            // Recent cash deposits in last 24h or status Completed
+            FoodDeliveryCashDeposit.countDocuments({
+                createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+            })
         ]);
 
         return {
@@ -5644,7 +5659,13 @@ export async function getSidebarBadges() {
             earningAddons: pendingEarningAddons,
             safetyReports: pendingSafetyReports,
             emergencyHelp: pendingEmergencyHelp,
-            restaurantComplaints: pendingRestaurantComplaints
+            restaurantComplaints: pendingRestaurantComplaints,
+            franchiseWithdrawals: pendingFranchiseWithdrawals,
+            restaurantInquiries: newRestaurantInquiries,
+            deliveryInquiries: newDeliveryInquiries,
+            franchiseInquiries: newFranchiseInquiries,
+            totalInquiries: newRestaurantInquiries + newDeliveryInquiries + newFranchiseInquiries,
+            cashLimitSettlements: recentCashDeposits
         };
     } catch (error) {
         console.error('Error fetching sidebar badges:', error);
