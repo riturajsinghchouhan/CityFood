@@ -5,7 +5,6 @@ import {
   Animated,
   Dimensions,
   Keyboard,
-  KeyboardAvoidingView,
   Modal,
   Pressable,
   StyleSheet,
@@ -36,11 +35,16 @@ export function BottomSheet({ visible, onClose, children, style, dismissable = t
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { mounted, anim } = useModalAnimation(visible);
+  const keyboardHeight = useKeyboardHeight(mounted);
   const height = Dimensions.get("window").height;
   if (!mounted) return null;
+  // KeyboardAvoidingView does not resize inside a statusBarTranslucent Android Modal, so the
+  // keyboard used to cover the sheet's buttons. The sheet sits on top of the keyboard instead
+  // and gives up the space it takes, so its own content can scroll.
+  const liftedMaxHeight = keyboardHeight > 0 ? Math.max(220, height - keyboardHeight - insets.top - 8) : maxHeight;
   return (
     <Modal transparent visible statusBarTranslucent navigationBarTranslucent onRequestClose={() => dismissable && onClose?.()}>
-      <KeyboardAvoidingView behavior="padding" style={styles.fill}>
+      <View style={styles.fill}>
         <Animated.View style={[styles.backdrop, { opacity: anim }]}>
           <Pressable style={styles.fill} onPress={() => dismissable && onClose?.()} />
         </Animated.View>
@@ -49,8 +53,9 @@ export function BottomSheet({ visible, onClose, children, style, dismissable = t
             styles.sheet,
             {
               backgroundColor: colors.card,
-              paddingBottom: insets.bottom,
-              maxHeight,
+              bottom: keyboardHeight,
+              paddingBottom: keyboardHeight > 0 ? 0 : insets.bottom,
+              maxHeight: liftedMaxHeight,
               transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [height, 0] }) }],
             },
             style,
@@ -58,7 +63,7 @@ export function BottomSheet({ visible, onClose, children, style, dismissable = t
         >
           {children}
         </Animated.View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
