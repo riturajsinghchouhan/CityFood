@@ -197,14 +197,13 @@ export default function RestaurantLogin() {
           </div>
 
           {/* Top Right "Support" Button with Headphones */}
-          <button
-            type="button"
-            onClick={() => setShowSupportModal(true)}
+          <Link
+            to="/food/restaurant/support"
             className="absolute top-5 right-5 z-20 flex items-center gap-1.5 text-white/95 hover:text-white font-bold text-sm drop-shadow-md px-3 py-1.5 rounded-full bg-black/20 hover:bg-black/30 backdrop-blur-sm transition-all focus:outline-none"
           >
             <Headphones className="w-4 h-4 stroke-[2.4]" />
             <span>Support</span>
-          </button>
+          </Link>
 
           {/* Curved Organic Separator Wave at bottom */}
           <div className="absolute -bottom-1 left-0 right-0 pointer-events-none">
