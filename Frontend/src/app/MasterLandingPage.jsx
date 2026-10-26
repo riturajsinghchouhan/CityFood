@@ -41,24 +41,25 @@ export default function MasterLandingPage() {
     section3Subtitle: settings?.sec3Subtitle || settings?.section3Subtitle || "Our app is packed with features that enable you to experience food delivery like never before",
     
     // Apps Section (Same exact cards & layout as Minutekart)
+    appsSectionSubtitle: settings?.appsSectionSubtitle || "EVERYTHING YOU NEED, DELIVERED IN MINUTES",
     userAppTitle: settings?.userAppTitle || "cityfood user",
     userAppDescription: settings?.userAppDesc || settings?.userAppDescription || "Get the app now to start ordering your favorite food & groceries!",
-    userAppIcon: "/images/cityfood_user.png",
+    userAppIcon: settings?.userAppIcon || "/images/cityfood_user.png",
     userAppUrl: settings?.userAppLink || settings?.userAppUrl || "/food/user",
 
     restaurantAppTitle: settings?.restaurantAppTitle || "cityfood restaurant",
     restaurantAppDescription: settings?.restaurantAppDesc || settings?.restaurantAppDescription || "Partner with us to grow your restaurant business & manage orders!",
-    restaurantAppIcon: "/images/cityfood_partner.png",
+    restaurantAppIcon: settings?.restaurantAppIcon || "/images/cityfood_partner.png",
     restaurantAppUrl: settings?.restaurantAppLink || settings?.restaurantAppUrl || "/res/landingpage",
 
     sellerAppTitle: settings?.sellerAppTitle || "cityfood franchise",
     sellerAppDescription: settings?.sellerAppDesc || settings?.sellerAppDescription || "Join CityFood as our exclusive city franchise partner & grow exponentially!",
-    sellerAppIcon: "/images/cityfood_partner.png",
+    sellerAppIcon: settings?.sellerAppIcon || "/images/cityfood_partner.png",
     sellerAppUrl: settings?.sellerAppLink || settings?.sellerAppUrl || "/franchise/landingpage",
 
     deliveryAppTitle: settings?.deliveryAppTitle || "cityfood delivery",
     deliveryAppDescription: settings?.deliveryAppDesc || settings?.deliveryAppDescription || "Deliver with CityFood & earn flexible daily income with zero hassle!",
-    deliveryAppIcon: "/images/cityfood_delivery.png",
+    deliveryAppIcon: settings?.deliveryAppIcon || "/images/cityfood_delivery.png",
     deliveryAppUrl: settings?.deliveryAppLink || settings?.deliveryAppUrl || "/deli/landingpage",
 
     qrCodeHeadline: settings?.qrCodeHeadline || "Download the app now!",
@@ -595,7 +596,7 @@ export default function MasterLandingPage() {
           >
             <div className="h-px bg-gray-300 flex-1" />
             <span className="text-[11px] sm:text-xs font-extrabold uppercase tracking-[0.25em] text-gray-400 whitespace-nowrap">
-              EVERYTHING YOU NEED, DELIVERED IN MINUTES
+              {content.appsSectionSubtitle}
             </span>
             <div className="h-px bg-gray-300 flex-1" />
           </motion.div>

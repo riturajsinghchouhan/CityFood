@@ -88,6 +88,29 @@ export default function LandingPageManagement() {
         { label: 'Sitemap', url: '#' }
       ]
     },
+    heroHeadline: "India’s #1 food delivery app",
+    heroSubtitle: "Experience fast & easy online ordering on the CityFood app",
+    appsSectionSubtitle: "EVERYTHING YOU NEED, DELIVERED IN MINUTES",
+    userAppTitle: "cityfood user",
+    userAppDesc: "Get the app now to start ordering your favorite food & groceries!",
+    userAppLink: "/food/user",
+    userAppIcon: "",
+    restaurantAppTitle: "cityfood restaurant",
+    restaurantAppDesc: "Partner with us to grow your restaurant business & manage orders!",
+    restaurantAppLink: "/res/landingpage",
+    restaurantAppIcon: "",
+    sellerAppTitle: "cityfood franchise",
+    sellerAppDesc: "Join CityFood as our exclusive city franchise partner & grow exponentially!",
+    sellerAppLink: "/franchise/landingpage",
+    sellerAppIcon: "",
+    deliveryAppTitle: "cityfood delivery",
+    deliveryAppDesc: "Deliver with CityFood & earn flexible daily income with zero hassle!",
+    deliveryAppLink: "/deli/landingpage",
+    deliveryAppIcon: "",
+    qrCodeHeadline: "Download the app now!",
+    qrCodeSubtitle: "Experience seamless online ordering only on the CityFood app",
+    qrCodeText: "Scan the QR code to download the app",
+    qrCodeImage: "",
     copyrightText: '© 2026 CityFood™ Ltd. All rights reserved.',
     heroSlides: []
   })
@@ -1124,7 +1147,30 @@ export default function LandingPageManagement() {
             ]
           },
           copyrightText: nextSettings.copyrightText || '© 2026 CityFood™ Ltd. All rights reserved.',
-          heroSlides: Array.isArray(nextSettings.heroSlides) ? nextSettings.heroSlides : []
+          heroSlides: Array.isArray(nextSettings.heroSlides) ? nextSettings.heroSlides : [],
+          heroHeadline: nextSettings.heroHeadline || "India’s #1 food delivery app",
+          heroSubtitle: nextSettings.heroSubtitle || "Experience fast & easy online ordering on the CityFood app",
+          appsSectionSubtitle: nextSettings.appsSectionSubtitle || "EVERYTHING YOU NEED, DELIVERED IN MINUTES",
+          userAppTitle: nextSettings.userAppTitle || "cityfood user",
+          userAppDesc: nextSettings.userAppDesc || "Get the app now to start ordering your favorite food & groceries!",
+          userAppLink: nextSettings.userAppLink || "/food/user",
+          userAppIcon: nextSettings.userAppIcon || "",
+          restaurantAppTitle: nextSettings.restaurantAppTitle || "cityfood restaurant",
+          restaurantAppDesc: nextSettings.restaurantAppDesc || "Partner with us to grow your restaurant business & manage orders!",
+          restaurantAppLink: nextSettings.restaurantAppLink || "/res/landingpage",
+          restaurantAppIcon: nextSettings.restaurantAppIcon || "",
+          sellerAppTitle: nextSettings.sellerAppTitle || "cityfood franchise",
+          sellerAppDesc: nextSettings.sellerAppDesc || "Join CityFood as our exclusive city franchise partner & grow exponentially!",
+          sellerAppLink: nextSettings.sellerAppLink || "/franchise/landingpage",
+          sellerAppIcon: nextSettings.sellerAppIcon || "",
+          deliveryAppTitle: nextSettings.deliveryAppTitle || "cityfood delivery",
+          deliveryAppDesc: nextSettings.deliveryAppDesc || "Deliver with CityFood & earn flexible daily income with zero hassle!",
+          deliveryAppLink: nextSettings.deliveryAppLink || "/deli/landingpage",
+          deliveryAppIcon: nextSettings.deliveryAppIcon || "",
+          qrCodeHeadline: nextSettings.qrCodeHeadline || "Download the app now!",
+          qrCodeSubtitle: nextSettings.qrCodeSubtitle || "Experience seamless online ordering only on the CityFood app",
+          qrCodeText: nextSettings.qrCodeText || "Scan the QR code to download the app",
+          qrCodeImage: nextSettings.qrCodeImage || ""
         })
       }
     } catch (err) {
@@ -1163,7 +1209,30 @@ export default function LandingPageManagement() {
         socialLinks: settings.socialLinks,
         footerLinks: settings.footerLinks,
         copyrightText: settings.copyrightText,
-        heroSlides: settings.heroSlides
+        heroSlides: settings.heroSlides,
+        heroHeadline: settings.heroHeadline,
+        heroSubtitle: settings.heroSubtitle,
+        appsSectionSubtitle: settings.appsSectionSubtitle,
+        userAppTitle: settings.userAppTitle,
+        userAppDesc: settings.userAppDesc,
+        userAppLink: settings.userAppLink,
+        userAppIcon: settings.userAppIcon,
+        restaurantAppTitle: settings.restaurantAppTitle,
+        restaurantAppDesc: settings.restaurantAppDesc,
+        restaurantAppLink: settings.restaurantAppLink,
+        restaurantAppIcon: settings.restaurantAppIcon,
+        sellerAppTitle: settings.sellerAppTitle,
+        sellerAppDesc: settings.sellerAppDesc,
+        sellerAppLink: settings.sellerAppLink,
+        sellerAppIcon: settings.sellerAppIcon,
+        deliveryAppTitle: settings.deliveryAppTitle,
+        deliveryAppDesc: settings.deliveryAppDesc,
+        deliveryAppLink: settings.deliveryAppLink,
+        deliveryAppIcon: settings.deliveryAppIcon,
+        qrCodeHeadline: settings.qrCodeHeadline,
+        qrCodeSubtitle: settings.qrCodeSubtitle,
+        qrCodeText: settings.qrCodeText,
+        qrCodeImage: settings.qrCodeImage
       }, getAuthConfig())
       if (response.data.success) {
         const savedSettings = response.data.data || {}
@@ -1183,7 +1252,30 @@ export default function LandingPageManagement() {
           socialLinks: savedSettings.socialLinks || prev.socialLinks,
           footerLinks: savedSettings.footerLinks || prev.footerLinks,
           copyrightText: savedSettings.copyrightText || prev.copyrightText,
-          heroSlides: Array.isArray(savedSettings.heroSlides) ? savedSettings.heroSlides : prev.heroSlides
+          heroSlides: Array.isArray(savedSettings.heroSlides) ? savedSettings.heroSlides : prev.heroSlides,
+          heroHeadline: savedSettings.heroHeadline ?? prev.heroHeadline,
+          heroSubtitle: savedSettings.heroSubtitle ?? prev.heroSubtitle,
+          appsSectionSubtitle: savedSettings.appsSectionSubtitle ?? prev.appsSectionSubtitle,
+          userAppTitle: savedSettings.userAppTitle ?? prev.userAppTitle,
+          userAppDesc: savedSettings.userAppDesc ?? prev.userAppDesc,
+          userAppLink: savedSettings.userAppLink ?? prev.userAppLink,
+          userAppIcon: savedSettings.userAppIcon ?? prev.userAppIcon,
+          restaurantAppTitle: savedSettings.restaurantAppTitle ?? prev.restaurantAppTitle,
+          restaurantAppDesc: savedSettings.restaurantAppDesc ?? prev.restaurantAppDesc,
+          restaurantAppLink: savedSettings.restaurantAppLink ?? prev.restaurantAppLink,
+          restaurantAppIcon: savedSettings.restaurantAppIcon ?? prev.restaurantAppIcon,
+          sellerAppTitle: savedSettings.sellerAppTitle ?? prev.sellerAppTitle,
+          sellerAppDesc: savedSettings.sellerAppDesc ?? prev.sellerAppDesc,
+          sellerAppLink: savedSettings.sellerAppLink ?? prev.sellerAppLink,
+          sellerAppIcon: savedSettings.sellerAppIcon ?? prev.sellerAppIcon,
+          deliveryAppTitle: savedSettings.deliveryAppTitle ?? prev.deliveryAppTitle,
+          deliveryAppDesc: savedSettings.deliveryAppDesc ?? prev.deliveryAppDesc,
+          deliveryAppLink: savedSettings.deliveryAppLink ?? prev.deliveryAppLink,
+          deliveryAppIcon: savedSettings.deliveryAppIcon ?? prev.deliveryAppIcon,
+          qrCodeHeadline: savedSettings.qrCodeHeadline ?? prev.qrCodeHeadline,
+          qrCodeSubtitle: savedSettings.qrCodeSubtitle ?? prev.qrCodeSubtitle,
+          qrCodeText: savedSettings.qrCodeText ?? prev.qrCodeText,
+          qrCodeImage: savedSettings.qrCodeImage ?? prev.qrCodeImage
         }))
         setSuccess('Settings saved successfully!')
         setTimeout(() => setSuccess(null), 3000)
@@ -2458,6 +2550,376 @@ export default function LandingPageManagement() {
                 <div>
                   <Label>Orders Delivered Stat</Label>
                   <Input value={settings.stats?.orders || ''} onChange={(e) => setSettings({ ...settings, stats: { ...settings.stats, orders: e.target.value } })} placeholder="e.g. 3 billion+" />
+                </div>
+              </div>
+
+              {/* Hero Section Headlines */}
+              <div className="mb-6 space-y-4 border-b pb-6">
+                <h3 className="text-md font-semibold text-slate-800">Hero Section Content</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Hero Headline</Label>
+                    <Input
+                      value={settings.heroHeadline || ''}
+                      onChange={(e) => setSettings({ ...settings, heroHeadline: e.target.value })}
+                      placeholder="e.g. India’s #1 food delivery app"
+                    />
+                  </div>
+                  <div>
+                    <Label>Hero Subtitle</Label>
+                    <Input
+                      value={settings.heroSubtitle || ''}
+                      onChange={(e) => setSettings({ ...settings, heroSubtitle: e.target.value })}
+                      placeholder="e.g. Experience fast & easy online ordering on the CityFood app"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Apps Showcase Section */}
+              <div className="mb-6 space-y-4 border-b pb-6">
+                <h3 className="text-md font-semibold text-slate-800">Apps Showcase Section</h3>
+                <div>
+                  <Label>Section Subtitle / Tagline</Label>
+                  <Input
+                    value={settings.appsSectionSubtitle || ''}
+                    onChange={(e) => setSettings({ ...settings, appsSectionSubtitle: e.target.value })}
+                    placeholder="e.g. EVERYTHING YOU NEED, DELIVERED IN MINUTES"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Appears directly under the "CityFood" header divider in Section 4.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                  {/* Card 1: User App */}
+                  <div className="p-4 rounded-xl border border-rose-200 bg-rose-50/30 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-sm text-slate-800">1. User App Card</span>
+                      {settings.userAppIcon && (
+                        <img src={settings.userAppIcon} alt="User App Icon" className="w-8 h-8 object-contain rounded" />
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-xs">Title</Label>
+                      <Input
+                        value={settings.userAppTitle || ''}
+                        onChange={(e) => setSettings({ ...settings, userAppTitle: e.target.value })}
+                        placeholder="cityfood user"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Description</Label>
+                      <Input
+                        value={settings.userAppDesc || ''}
+                        onChange={(e) => setSettings({ ...settings, userAppDesc: e.target.value })}
+                        placeholder="Get the app now to start ordering..."
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Action Link / URL</Label>
+                      <Input
+                        value={settings.userAppLink || ''}
+                        onChange={(e) => setSettings({ ...settings, userAppLink: e.target.value })}
+                        placeholder="/food/user or https://..."
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Card Icon (optional custom icon)</Label>
+                      <div className="flex gap-2 items-center mt-1">
+                        <Input
+                          value={settings.userAppIcon || ''}
+                          onChange={(e) => setSettings({ ...settings, userAppIcon: e.target.value })}
+                          placeholder="/images/cityfood_user.png or upload"
+                          className="text-xs"
+                        />
+                        <label className="cursor-pointer px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-xs font-semibold rounded-md flex items-center gap-1 shrink-0">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>Upload</span>
+                          <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                            if (!e.target.files?.[0]) return;
+                            const formData = new FormData();
+                            formData.append('file', e.target.files[0]);
+                            formData.append('folder', 'food/landing');
+                            try {
+                              const res = await api.post('/uploads/image', formData, getAuthConfig());
+                              const url = res.data?.data?.url;
+                              if (url) setSettings({ ...settings, userAppIcon: url });
+                            } catch (err) {
+                              console.error(err);
+                              alert("Upload failed");
+                            }
+                          }} />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Restaurant Partner */}
+                  <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/30 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-sm text-slate-800">2. Restaurant Partner Card</span>
+                      {settings.restaurantAppIcon && (
+                        <img src={settings.restaurantAppIcon} alt="Restaurant App Icon" className="w-8 h-8 object-contain rounded" />
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-xs">Title</Label>
+                      <Input
+                        value={settings.restaurantAppTitle || ''}
+                        onChange={(e) => setSettings({ ...settings, restaurantAppTitle: e.target.value })}
+                        placeholder="cityfood restaurant"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Description</Label>
+                      <Input
+                        value={settings.restaurantAppDesc || ''}
+                        onChange={(e) => setSettings({ ...settings, restaurantAppDesc: e.target.value })}
+                        placeholder="Partner with us to grow..."
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Action Link / URL</Label>
+                      <Input
+                        value={settings.restaurantAppLink || ''}
+                        onChange={(e) => setSettings({ ...settings, restaurantAppLink: e.target.value })}
+                        placeholder="/res/landingpage or https://..."
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Card Icon (optional)</Label>
+                      <div className="flex gap-2 items-center mt-1">
+                        <Input
+                          value={settings.restaurantAppIcon || ''}
+                          onChange={(e) => setSettings({ ...settings, restaurantAppIcon: e.target.value })}
+                          placeholder="/images/cityfood_partner.png or upload"
+                          className="text-xs"
+                        />
+                        <label className="cursor-pointer px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-xs font-semibold rounded-md flex items-center gap-1 shrink-0">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>Upload</span>
+                          <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                            if (!e.target.files?.[0]) return;
+                            const formData = new FormData();
+                            formData.append('file', e.target.files[0]);
+                            formData.append('folder', 'food/landing');
+                            try {
+                              const res = await api.post('/uploads/image', formData, getAuthConfig());
+                              const url = res.data?.data?.url;
+                              if (url) setSettings({ ...settings, restaurantAppIcon: url });
+                            } catch (err) {
+                              console.error(err);
+                              alert("Upload failed");
+                            }
+                          }} />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Franchise Card */}
+                  <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/30 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-sm text-slate-800">3. Franchise Network Card</span>
+                      {settings.sellerAppIcon && (
+                        <img src={settings.sellerAppIcon} alt="Franchise App Icon" className="w-8 h-8 object-contain rounded" />
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-xs">Title</Label>
+                      <Input
+                        value={settings.sellerAppTitle || ''}
+                        onChange={(e) => setSettings({ ...settings, sellerAppTitle: e.target.value })}
+                        placeholder="cityfood franchise"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Description</Label>
+                      <Input
+                        value={settings.sellerAppDesc || ''}
+                        onChange={(e) => setSettings({ ...settings, sellerAppDesc: e.target.value })}
+                        placeholder="Join CityFood as our exclusive..."
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Action Link / URL</Label>
+                      <Input
+                        value={settings.sellerAppLink || ''}
+                        onChange={(e) => setSettings({ ...settings, sellerAppLink: e.target.value })}
+                        placeholder="/franchise/landingpage or https://..."
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Card Icon (optional)</Label>
+                      <div className="flex gap-2 items-center mt-1">
+                        <Input
+                          value={settings.sellerAppIcon || ''}
+                          onChange={(e) => setSettings({ ...settings, sellerAppIcon: e.target.value })}
+                          placeholder="/images/cityfood_partner.png or upload"
+                          className="text-xs"
+                        />
+                        <label className="cursor-pointer px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-xs font-semibold rounded-md flex items-center gap-1 shrink-0">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>Upload</span>
+                          <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                            if (!e.target.files?.[0]) return;
+                            const formData = new FormData();
+                            formData.append('file', e.target.files[0]);
+                            formData.append('folder', 'food/landing');
+                            try {
+                              const res = await api.post('/uploads/image', formData, getAuthConfig());
+                              const url = res.data?.data?.url;
+                              if (url) setSettings({ ...settings, sellerAppIcon: url });
+                            } catch (err) {
+                              console.error(err);
+                              alert("Upload failed");
+                            }
+                          }} />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 4: Delivery Partner */}
+                  <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/30 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-sm text-slate-800">4. Delivery Partner Card</span>
+                      {settings.deliveryAppIcon && (
+                        <img src={settings.deliveryAppIcon} alt="Delivery App Icon" className="w-8 h-8 object-contain rounded" />
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-xs">Title</Label>
+                      <Input
+                        value={settings.deliveryAppTitle || ''}
+                        onChange={(e) => setSettings({ ...settings, deliveryAppTitle: e.target.value })}
+                        placeholder="cityfood delivery"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Description</Label>
+                      <Input
+                        value={settings.deliveryAppDesc || ''}
+                        onChange={(e) => setSettings({ ...settings, deliveryAppDesc: e.target.value })}
+                        placeholder="Deliver with CityFood & earn..."
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Action Link / URL</Label>
+                      <Input
+                        value={settings.deliveryAppLink || ''}
+                        onChange={(e) => setSettings({ ...settings, deliveryAppLink: e.target.value })}
+                        placeholder="/deli/landingpage or https://..."
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Card Icon (optional)</Label>
+                      <div className="flex gap-2 items-center mt-1">
+                        <Input
+                          value={settings.deliveryAppIcon || ''}
+                          onChange={(e) => setSettings({ ...settings, deliveryAppIcon: e.target.value })}
+                          placeholder="/images/cityfood_delivery.png or upload"
+                          className="text-xs"
+                        />
+                        <label className="cursor-pointer px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-xs font-semibold rounded-md flex items-center gap-1 shrink-0">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>Upload</span>
+                          <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                            if (!e.target.files?.[0]) return;
+                            const formData = new FormData();
+                            formData.append('file', e.target.files[0]);
+                            formData.append('folder', 'food/landing');
+                            try {
+                              const res = await api.post('/uploads/image', formData, getAuthConfig());
+                              const url = res.data?.data?.url;
+                              if (url) setSettings({ ...settings, deliveryAppIcon: url });
+                            } catch (err) {
+                              console.error(err);
+                              alert("Upload failed");
+                            }
+                          }} />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* QR Code & App Download Section */}
+              <div className="mb-6 space-y-4 border-b pb-6">
+                <h3 className="text-md font-semibold text-slate-800">QR Code & Download App Section</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Headline</Label>
+                    <Input
+                      value={settings.qrCodeHeadline || ''}
+                      onChange={(e) => setSettings({ ...settings, qrCodeHeadline: e.target.value })}
+                      placeholder="Download the app now!"
+                    />
+                  </div>
+                  <div>
+                    <Label>Subtitle</Label>
+                    <Input
+                      value={settings.qrCodeSubtitle || ''}
+                      onChange={(e) => setSettings({ ...settings, qrCodeSubtitle: e.target.value })}
+                      placeholder="Experience seamless online ordering..."
+                    />
+                  </div>
+                  <div>
+                    <Label>Phone Mockup Instruction Text</Label>
+                    <Input
+                      value={settings.qrCodeText || ''}
+                      onChange={(e) => setSettings({ ...settings, qrCodeText: e.target.value })}
+                      placeholder="Scan the QR code to download the app"
+                    />
+                  </div>
+                  <div>
+                    <Label>Custom QR Code Image (optional)</Label>
+                    <div className="flex gap-3 items-center mt-1">
+                      {settings.qrCodeImage ? (
+                        <div className="relative w-12 h-12 rounded border border-slate-200 overflow-hidden shrink-0 bg-white p-1">
+                          <img src={settings.qrCodeImage} alt="QR Code" className="w-full h-full object-contain" />
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 rounded border border-dashed border-slate-300 flex items-center justify-center shrink-0 bg-slate-50 text-[10px] text-slate-400 text-center">
+                          Default Vector
+                        </div>
+                      )}
+                      <Input
+                        value={settings.qrCodeImage || ''}
+                        onChange={(e) => setSettings({ ...settings, qrCodeImage: e.target.value })}
+                        placeholder="Image URL or upload"
+                        className="text-xs flex-1"
+                      />
+                      <label className="cursor-pointer px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-xs font-semibold rounded-md flex items-center gap-1 shrink-0">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload</span>
+                        <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                          if (!e.target.files?.[0]) return;
+                          const formData = new FormData();
+                          formData.append('file', e.target.files[0]);
+                          formData.append('folder', 'food/landing/qr');
+                          try {
+                            const res = await api.post('/uploads/image', formData, getAuthConfig());
+                            const url = res.data?.data?.url;
+                            if (url) setSettings({ ...settings, qrCodeImage: url });
+                          } catch (err) {
+                            console.error(err);
+                            alert("Upload failed");
+                          }
+                        }} />
+                      </label>
+                      {settings.qrCodeImage && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSettings({ ...settings, qrCodeImage: '' })}
+                          className="text-red-500 hover:text-red-700 px-2 text-xs"
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 
