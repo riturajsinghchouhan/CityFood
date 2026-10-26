@@ -21,6 +21,7 @@ import BrandSplash from "../components/shell/BrandSplash";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SheetHost } from "../components/ui/Sheet";
 import { Toaster } from "../components/ui/Toast";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { DeliveryProvider } from "../context/DeliveryContext";
@@ -64,6 +65,7 @@ function RootStack() {
       />
       <HardwareBackBinding />
       <PushBinding />
+      <SheetHost />
       <Toaster />
       <BrandSplash />
     </>

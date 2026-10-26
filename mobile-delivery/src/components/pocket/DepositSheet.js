@@ -11,7 +11,7 @@ import { dvCard } from "./common";
 export default function DepositSheet({ visible, onClose, cashInHand, amount, onChangeAmount, depositing, onSubmit }) {
   const inputFont = useScopedFont("700");
   return (
-    <BottomSheet visible={visible} onClose={onClose} style={styles.sheet}>
+    <BottomSheet visible={visible} onClose={onClose} style={styles.sheet} inWindow>
       <View style={styles.handle} />
 
       <ScrollView
