@@ -361,7 +361,13 @@ export default function UnifiedOTPFastLogin() {
               to="/profile/terms"
               className="text-[#0A4D27] font-bold underline decoration-[#0A4D27]/40 underline-offset-2 hover:text-[#064E3B] transition-colors"
             >
-              Terms & Privacy Policy
+              Terms
+            </Link>{" "}and{" "}
+            <Link
+              to="/profile/privacy"
+              className="text-[#0A4D27] font-bold underline decoration-[#0A4D27]/40 underline-offset-2 hover:text-[#064E3B] transition-colors"
+            >
+              Privacy Policy
             </Link>
           </p>
         </motion.form>
@@ -797,7 +803,13 @@ export default function UnifiedOTPFastLogin() {
                       to="/profile/terms"
                       className="text-[#0A4D27] font-bold underline decoration-[#0A4D27]/40 underline-offset-2 hover:text-[#064E3B] transition-colors"
                     >
-                      Terms & Privacy Policy
+                      Terms
+                    </Link>{" "}and{" "}
+                    <Link
+                      to="/profile/privacy"
+                      className="text-[#0A4D27] font-bold underline decoration-[#0A4D27]/40 underline-offset-2 hover:text-[#064E3B] transition-colors"
+                    >
+                      Privacy Policy
                     </Link>
                   </p>
                 </motion.form>

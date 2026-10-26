@@ -52,6 +52,7 @@ const Login = lazy(() => import("@food/pages/restaurant/auth/Login"))
 const OTP = lazy(() => import("@food/pages/restaurant/auth/OTP"))
 const Signup = lazy(() => import("@food/pages/restaurant/auth/Signup"))
 const ForgotPassword = lazy(() => import("@food/pages/restaurant/auth/ForgotPassword"))
+const PublicSupport = lazy(() => import("../../../auth/pages/PublicSupport"))
 const VerificationPending = lazy(() => import("@food/pages/restaurant/auth/VerificationPending"))
 
 export default function RestaurantRouter() {
@@ -69,6 +70,7 @@ export default function RestaurantRouter() {
 
           {/* Unprotected Static/Onboarding Routes */}
           <Route path="onboarding" element={<RestaurantOnboarding />} />
+          <Route path="support" element={<PublicSupport />} />
           <Route path="privacy" element={<PrivacyPolicyPage />} />
           <Route path="terms" element={<TermsAndConditionsPage />} />
           <Route path="profile/privacy" element={<PrivacyPolicyPage />} />
