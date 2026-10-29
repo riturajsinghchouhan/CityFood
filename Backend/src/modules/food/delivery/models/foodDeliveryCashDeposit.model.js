@@ -38,13 +38,22 @@ const foodDeliveryCashDepositSchema = new mongoose.Schema({
     adminNote: String,
     /** HQ (default) or the rider's franchise. Only cash that reached HQ is credited to the franchise in settlement. */
     collectedBy: { type: String, enum: ['HQ', 'FRANCHISE'], default: 'HQ' },
-    franchiseSettlementId: { type: mongoose.Schema.Types.ObjectId, ref: 'FoodFranchiseSettlement', default: null }
+    franchiseSettlementId: { type: mongoose.Schema.Types.ObjectId, ref: 'FoodFranchiseSettlement', default: null },
+    adminSeen: {
+        type: Boolean,
+        default: false,
+        index: true
+    },
+    seenAt: {
+        type: Date
+    }
 }, { 
     collection: 'payment_delivery_cash_deposits', 
     timestamps: true 
 });
 
 foodDeliveryCashDepositSchema.index({ createdAt: -1 });
+foodDeliveryCashDepositSchema.index({ adminSeen: 1, createdAt: -1 });
 // One Razorpay payment can be recorded as exactly one cash deposit
 foodDeliveryCashDepositSchema.index(
     { razorpayPaymentId: 1 },

@@ -1771,6 +1771,15 @@ export async function settleDeliveryCashLimitController(req, res, next) {
     }
 }
 
+export async function markCashLimitSettlementsSeen(req, res, next) {
+    try {
+        const result = await adminService.markCashLimitSettlementsSeen();
+        res.status(200).json({ success: true, message: 'Cash limit settlements marked as seen', data: result });
+    } catch (error) {
+        next(error);
+    }
+}
+
 export async function getSidebarBadges(req, res, next) {
     try {
         const counts = await adminService.getSidebarBadges();

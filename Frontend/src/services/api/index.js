@@ -622,6 +622,7 @@ export const adminAPI = {
   getEmergencyHelp: () => adminClient.get("/food/admin/delivery-emergency-help"),
   createOrUpdateEmergencyHelp: (body = {}) => adminClient.put("/food/admin/delivery-emergency-help", body),
   getCashLimitSettlements: (params = {}) => adminClient.get("/food/admin/delivery/cash-limit-settlements", { params }),
+  markCashLimitSettlementsSeen: () => adminClient.post("/food/admin/delivery/cash-limit-settlements/mark-seen"),
 
   /** Delivery wallets, earnings, bonuses, and commissions */
   getDeliveryWallets: (params = {}) => adminClient.get("/food/admin/delivery/wallets", { params }),

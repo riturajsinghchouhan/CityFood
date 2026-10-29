@@ -5422,6 +5422,7 @@ export async function getCashLimitSettlements(query = {}) {
         deliveryIdString: d.deliveryPartnerId?.phone || 'N/A',
         amount: Number(d.amount || 0),
         status: d.status,
+        adminSeen: Boolean(d.adminSeen),
         razorpayPaymentId: d.razorpayPaymentId || '-'
     }));
 
@@ -5557,7 +5558,9 @@ export async function settleDeliveryCashLimit(deliveryPartnerId, { amount, admin
             status: 'Completed',
             adminId: adminUser?._id,
             adminNote: adminNote || (collectedBy === 'FRANCHISE' ? 'Cash collected by franchise' : 'Cash limit settled by admin'),
-            collectedBy
+            collectedBy,
+            adminSeen: true,
+            seenAt: new Date()
         }], sessionOpts(session));
         return created;
     });
@@ -5639,9 +5642,9 @@ export async function getSidebarBadges() {
             FoodPartnerInquiry.countDocuments({ type: 'restaurant', status: 'new' }),
             FoodPartnerInquiry.countDocuments({ type: 'delivery', status: 'new' }),
             FoodPartnerInquiry.countDocuments({ type: 'franchise', status: 'new' }),
-            // Recent cash deposits in last 24h or status Completed
+            // Unseen cash deposits
             FoodDeliveryCashDeposit.countDocuments({
-                createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+                adminSeen: { $ne: true }
             })
         ]);
 
@@ -5671,6 +5674,14 @@ export async function getSidebarBadges() {
         console.error('Error fetching sidebar badges:', error);
         return {};
     }
+}
+
+export async function markCashLimitSettlementsSeen() {
+    const updated = await FoodDeliveryCashDeposit.updateMany(
+        { adminSeen: { $ne: true } },
+        { $set: { adminSeen: true, seenAt: new Date() } }
+    );
+    return { modifiedCount: updated.modifiedCount };
 }
 
 export async function updateRestaurantZoneRank(restaurantId, rank) {

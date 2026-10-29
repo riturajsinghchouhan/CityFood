@@ -196,17 +196,19 @@ const mapCashLimitSettlements = (response) => {
   const payload = response?.data?.data;
   const rows = payload?.transactions || payload?.data || [];
 
-  return (Array.isArray(rows) ? rows : []).map((item) => ({
-    id: `deposit-cash-${String(item?.id || item?._id || "")}`,
-    title: "Delivery Cash Deposit",
-    message: `${item?.deliveryName || "Delivery Partner"} deposited ₹${item?.amount || 0}. Mobile: ${item?.deliveryIdString || "N/A"}.`,
-    type: "deposit",
-    category: "cash_limit_settlement",
-    path: "/admin/food/cash-limit-settlement",
-    createdAt: item?.createdAt,
-    timeLabel: toDateLabel(item?.createdAt),
-    metaLabel: joinMeta(item?.deliveryName, item?.deliveryIdString, `₹${item?.amount || 0}`),
-  }));
+  return (Array.isArray(rows) ? rows : [])
+    .filter((item) => !item?.adminSeen)
+    .map((item) => ({
+      id: `deposit-cash-${String(item?.id || item?._id || "")}`,
+      title: "Delivery Cash Deposit",
+      message: `${item?.deliveryName || "Delivery Partner"} deposited ₹${item?.amount || 0}. Mobile: ${item?.deliveryIdString || "N/A"}.`,
+      type: "deposit",
+      category: "cash_limit_settlement",
+      path: "/admin/food/cash-limit-settlement",
+      createdAt: item?.createdAt,
+      timeLabel: toDateLabel(item?.createdAt),
+      metaLabel: joinMeta(item?.deliveryName, item?.deliveryIdString, `₹${item?.amount || 0}`),
+    }));
 };
 
 const mapPartnerInquiries = (response) => {

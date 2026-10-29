@@ -210,6 +210,7 @@ router.get('/delivery/withdrawals', adminController.getDeliveryWithdrawals);
 router.patch('/delivery/withdrawals/:id', adminController.updateDeliveryWithdrawalStatus);
 router.post('/delivery/payouts/mark-as-paid', adminController.markDeliveryPayoutAsPaidController);
 router.get('/delivery/cash-limit-settlements', adminController.getCashLimitSettlements);
+router.post('/delivery/cash-limit-settlements/mark-seen', adminController.markCashLimitSettlementsSeen);
 router.post('/delivery/:id/cash-limit/settle', adminController.settleDeliveryCashLimitController);
 
 // ----- Delivery partners & general -----

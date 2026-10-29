@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Search, Receipt, Loader2, Package } from "lucide-react"
 import { adminAPI } from "@food/api"
 import { toast } from "sonner"
@@ -67,6 +67,25 @@ export default function CashLimitSettlement() {
   useEffect(() => {
     fetchData()
   }, [page])
+
+  useEffect(() => {
+    const markSeen = async () => {
+      try {
+        await adminAPI.markCashLimitSettlementsSeen()
+        window.dispatchEvent(
+          new CustomEvent("sidebar_badges_update", {
+            detail: { badges: { cashLimitSettlements: 0 } },
+          })
+        )
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("adminNotificationsUpdated"))
+        }
+      } catch (err) {
+        debugError("Failed to mark settlements as seen:", err)
+      }
+    }
+    markSeen()
+  }, [])
 
   useEffect(() => {
     const t = setTimeout(() => {

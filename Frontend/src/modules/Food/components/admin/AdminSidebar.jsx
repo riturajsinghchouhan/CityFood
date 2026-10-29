@@ -142,7 +142,10 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
     fetchBadges()
     const timer = setInterval(fetchBadges, 30000)
 
-    const handleUpdateEvent = () => {
+    const handleUpdateEvent = (e) => {
+      if (e?.detail?.badges) {
+        setBadges((prev) => ({ ...prev, ...e.detail.badges }))
+      }
       fetchBadges()
     }
     window.addEventListener('sidebar_badges_update', handleUpdateEvent)
@@ -158,6 +161,8 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
   const getBadgeCount = (label = "", path = "") => {
     const l = label.toLowerCase()
     const p = path?.toLowerCase() || ""
+    const isCurrentCashLimitPage = location.pathname?.toLowerCase().includes("cash-limit-settlement")
+    const cashLimitCount = isCurrentCashLimitPage ? 0 : (badges.cashLimitSettlements || 0)
 
     // FOOD MANAGEMENT
     if (p.includes("food-approval")) return badges.foodApprovals || 0
@@ -178,13 +183,13 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
     if (p === "/admin/food/support-tickets" || p === "/franchise/food/support-tickets") return badges.userSupportTickets || 0
 
     // DELIVERYMAN MANAGEMENT
-    if (l === "deliveryman") return (badges.deliveryPartners || 0) + (badges.earningAddons || 0) + (badges.cashLimitSettlements || 0)
+    if (l === "deliveryman") return (badges.deliveryPartners || 0) + (badges.earningAddons || 0) + cashLimitCount
     if (p.includes("delivery-partners/join-request")) return badges.deliveryPartners || 0
     if (p.includes("delivery-withdrawal")) return badges.deliveryWithdrawals || 0
     if (p.includes("delivery-emergency-help")) return badges.emergencyHelp || 0
     if (p.includes("delivery-support-tickets")) return badges.deliverySupportTickets || 0
     if (p.includes("earning-addon-history")) return badges.earningAddons || 0
-    if (p.includes("cash-limit-settlement")) return badges.cashLimitSettlements || 0
+    if (p.includes("cash-limit-settlement")) return cashLimitCount
 
     // FRANCHISE MANAGEMENT
     if (p.includes("franchise-withdrawals")) return badges.franchiseWithdrawals || 0
