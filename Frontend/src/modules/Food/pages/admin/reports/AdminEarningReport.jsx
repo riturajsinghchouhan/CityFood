@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { adminAPI } from "@food/api"
+import { isFranchiseSession } from "@food/utils/adminSidebarMenu"
 import { ArrowLeft, Loader2, DollarSign, ChevronDown, ChevronUp } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
@@ -8,6 +9,7 @@ import { toast } from "sonner"
 export default function AdminEarningReport() {
   const location = useLocation()
   const navigate = useNavigate()
+  const isFranchise = isFranchiseSession() || location.pathname?.startsWith("/franchise")
   
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(true)
@@ -89,7 +91,7 @@ export default function AdminEarningReport() {
       <div className="p-2 lg:p-3 bg-slate-50 min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-          <p className="text-gray-600">Loading admin earning details...</p>
+          <p className="text-gray-600">Loading {isFranchise ? "franchise" : "admin"} earning details...</p>
         </div>
       </div>
     )
@@ -112,7 +114,7 @@ export default function AdminEarningReport() {
               <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
                 <DollarSign className="w-4 h-4 text-green-600" />
               </div>
-              <h1 className="text-xl font-bold text-slate-900">Admin Earning Breakdown</h1>
+              <h1 className="text-xl font-bold text-slate-900">{isFranchise ? "Franchise Earning Breakdown" : "Admin Earning Breakdown"}</h1>
             </div>
           </div>
           <div className="text-sm font-medium text-slate-500">
