@@ -11,3 +11,5 @@ releases/*.aab
 
 # upload keystore + credentials (never commit)
 keystores/
+config.bat
+node_modules
